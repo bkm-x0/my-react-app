@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-black text-white font-rajdhani overflow-x-hidden;
+  }
+  
+  /* Cyberpunk scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-cyber-dark;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cyber-muted-purple rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyber-muted-cyan;
+  }
+}
+
+@layer components {
+  /* Cyberpunk buttons */
+  .cyber-button {
+    @apply relative px-6 py-3 font-orbitron font-bold tracking-wider 
+           border-2 border-cyber-muted-blue bg-cyber-dark
+           text-cyber-muted-blue uppercase transition-all duration-300
+           hover:bg-cyber-muted-blue hover:text-cyber-black
+           hover:shadow-[0_0_20px_#5b8fa3] active:scale-95;
+  }
+  
+  .cyber-button-secondary {
+    @apply border-cyber-muted-pink text-cyber-muted-pink
+           hover:bg-cyber-muted-pink hover:text-cyber-black
+           hover:shadow-[0_0_20px_#c9988b];
+  }
+  
+  /* Cyberpunk cards */
+  .cyber-card {
+    @apply relative bg-cyber-gray border border-cyber-muted-purple
+           p-6 rounded-lg transition-all duration-300
+           hover:border-cyber-muted-cyan hover:shadow-[0_0_30px_rgba(109,179,200,0.2)]
+           hover:-translate-y-1 overflow-hidden;
+  }
+  
+  .cyber-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyber-muted-pink via-cyber-muted-blue to-cyber-muted-sage;
+  }
+  
+  /* Cyberpunk inputs */
+  .cyber-input {
+    @apply w-full px-4 py-3 bg-cyber-dark border-2 border-cyber-muted-blue
+           text-white font-mono placeholder-gray-400 rounded-none
+           focus:outline-none focus:border-cyber-muted-pink
+           focus:shadow-[0_0_15px_rgba(91,143,163,0.3)] transition-all;
+  }
+  
+  /* Cyberpunk badge */
+  .cyber-badge {
+    @apply inline-block px-3 py-1 text-xs font-orbitron font-bold
+           bg-cyber-dark border border-cyber-muted-green text-cyber-muted-green
+           uppercase tracking-wider;
+  }
+  
+  /* Scanline effect */
+  .scanlines {
+    @apply relative overflow-hidden;
+  }
+  
+  .scanlines::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-full pointer-events-none
+           bg-[linear-gradient(to_bottom,transparent_50%,rgba(109,179,200,0.03)_50%)];
+    background-size: 100% 4px;
+    z-index: 10;
+    animation: scanline 10s linear infinite;
+  }
+  
+  /* Glitch text effect */
+  .glitch-text {
+    @apply relative;
+  }
+  
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    @apply absolute top-0 left-0 w-full h-full;
+  }
+  
+  .glitch-text::before {
+    @apply text-cyber-muted-pink left-[2px] animate-glitch;
+    clip: rect(44px, 450px, 56px, 0);
+  }
+  
+  .glitch-text::after {
+    @apply text-cyber-muted-blue left-[-2px] animate-glitch;
+    clip: rect(44px, 450px, 56px, 0);
+    animation-delay: 0.5s;
+  }
+}
