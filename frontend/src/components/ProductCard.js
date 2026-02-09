@@ -3,6 +3,14 @@ import { Star, ShoppingCart, Eye, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ProductCard = ({ product, view = 'grid' }) => {
+  // Safe defaults
+  const category = product?.category_name || product?.category || 'UNKNOWN';
+  const features = Array.isArray(product?.features) ? product.features : [];
+  const getCategoryColor = (cat) => {
+    const colors = { 'biotech': 'pink', 'hardware': 'green', 'visuals': 'purple', 'augmentations': 'yellow', 'software': 'blue', 'accessories': 'pink' };
+    return colors[cat?.toLowerCase()] || 'blue';
+  };
+
   if (view === 'list') {
     return (
       <div className="cyber-card">
