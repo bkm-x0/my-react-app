@@ -1,8 +1,9 @@
 import React from 'react';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Cart = () => {
+  const navigate = useNavigate();
   const cartItems = [
     {
       id: 1,
@@ -179,7 +180,9 @@ const Cart = () => {
               </div>
 
               {/* Checkout Button */}
-              <button className="w-full cyber-button py-4 text-lg mb-6">
+              <button 
+                onClick={() => navigate('/checkout')}
+                className="w-full cyber-button py-4 text-lg mb-6">
                 <CreditCard className="inline mr-2 h-5 w-5" />
                 PROCEED TO CHECKOUT
               </button>

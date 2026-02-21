@@ -1,0 +1,17 @@
+{
+  "name": "cyberstore",
+  "version": "1.0.0",
+  "description": "CyberStore E-commerce - Full Stack Application",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend start",
+    "build": "npm run build --prefix frontend",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -963,32 +963,441 @@ const UsersManagement = () => {
   );
 };
 
-const OrdersManagement = () => (
-  <div className="cyber-card">
-    <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">ORDERS MANAGEMENT</h2>
-    <p className="text-gray-300 mt-4">Orders management will be implemented here</p>
-  </div>
-);
+const OrdersManagement = () => {
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('pending');
 
-const AnalyticsDashboard = () => (
-  <div className="cyber-card">
-    <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">ANALYTICS DASHBOARD</h2>
-    <p className="text-gray-300 mt-4">Analytics dashboard will be implemented here</p>
-  </div>
-);
+  useEffect(() => {
+    fetchOrders();
+  }, [statusFilter]);
 
-const InventoryManagement = () => (
-  <div className="cyber-card">
-    <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">INVENTORY MANAGEMENT</h2>
-    <p className="text-gray-300 mt-4">Inventory management will be implemented here</p>
-  </div>
-);
+  useEffect(() => {
+    if (searchTerm) {
+      setFilteredOrders(orders.filter(o => 
+        String(o.id).includes(searchTerm) ||
+        (o.user_username && o.user_username.toLowerCase().includes(searchTerm.toLowerCase()))
+      ));
+    } else {
+      setFilteredOrders(orders);
+    }
+  }, [searchTerm, orders]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const params = statusFilter !== 'all' ? { status: statusFilter } : {};
+      const response = await axios.get('http://localhost:5000/api/orders', {
+        params,
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const ordersData = Array.isArray(response.data) ? response.data : response.data.orders || [];
+      setOrders(ordersData);
+      setFilteredOrders(ordersData);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, {
+        status: newStatus
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setOrders(orders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
+      setEditingOrderId(null);
+      alert('Order status updated successfully');
+    } catch (error) {
+      console.error('Error updating order:', error);
+      alert('Error updating order status');
+    }
+  };
+
+  return (
+    <div className="cyber-card">
+      <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue mb-6">ORDERS MANAGEMENT</h2>
+
+      <div className="mb-6 grid grid-cols-2 gap-4">
+        <input
+          type="text"
+          placeholder="Search by Order ID or Customer..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="cyber-input"
+        />
+        <select 
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="cyber-input"
+        >
+          <option value="all">ALL STATUSES</option>
+          <option value="pending">PENDING</option>
+          <option value="processing">PROCESSING</option>
+          <option value="shipped">SHIPPED</option>
+          <option value="delivered">DELIVERED</option>
+          <option value="cancelled">CANCELLED</option>
+        </select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-cyber-muted-blue/30">
+              <th className="text-left py-3 px-4 font-orbitron">ORDER ID</th>
+              <th className="text-left py-3 px-4 font-orbitron">CUSTOMER</th>
+              <th className="text-left py-3 px-4 font-orbitron">TOTAL</th>
+              <th className="text-left py-3 px-4 font-orbitron">STATUS</th>
+              <th className="text-left py-3 px-4 font-orbitron">DATE</th>
+              <th className="text-left py-3 px-4 font-orbitron">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map(order => (
+                <tr key={order.id} className="border-b border-cyber-gray/10 hover:bg-cyber-dark/50">
+                  <td className="py-3 px-4 font-mono">#ORD-{order.id}</td>
+                  <td className="py-3 px-4">{order.user_username || 'N/A'}</td>
+                  <td className="py-3 px-4 text-cyber-muted-green font-bold">{(order.total_amount || 0).toLocaleString()}₡</td>
+                  <td className="py-3 px-4">
+                    {editingOrderId === order.id ? (
+                      <select 
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="cyber-input text-xs py-1"
+                      >
+                        <option value="pending">PENDING</option>
+                        <option value="processing">PROCESSING</option>
+                        <option value="shipped">SHIPPED</option>
+                        <option value="delivered">DELIVERED</option>
+                        <option value="cancelled">CANCELLED</option>
+                      </select>
+                    ) : (
+                      <span className={`px-2 py-1 rounded text-xs font-orbitron ${
+                        order.status === 'delivered' ? 'bg-cyber-muted-green/20 text-cyber-muted-green' :
+                        order.status === 'shipped' ? 'bg-cyber-muted-blue/20 text-cyber-muted-blue' :
+                        order.status === 'processing' ? 'bg-cyber-muted-taupe/20 text-cyber-muted-taupe' :
+                        order.status === 'cancelled' ? 'bg-cyber-muted-pink/20 text-cyber-muted-pink' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {String(order.status || 'pending').toUpperCase()}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-gray-400 text-xs">{new Date(order.created_at).toLocaleDateString()}</td>
+                  <td className="py-3 px-4">
+                    {editingOrderId === order.id ? (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleUpdateStatus(order.id, selectedStatus)}
+                          className="text-cyber-muted-green text-xs hover:underline"
+                        >
+                          SAVE
+                        </button>
+                        <button 
+                          onClick={() => setEditingOrderId(null)}
+                          className="text-gray-400 text-xs hover:underline"
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          setEditingOrderId(order.id);
+                          setSelectedStatus(order.status);
+                        }}
+                        className="text-cyber-muted-blue hover:text-cyber-muted-pink transition-colors"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="py-8 px-4 text-center text-gray-400">
+                  {loading ? 'Loading orders...' : 'No orders found'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const AnalyticsDashboard = () => {
+  const [analytics, setAnalytics] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    averageOrderValue: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    ordersDailyData: []
+  });
+  const [dateRange, setDateRange] = useState('7days');
+
+  useEffect(() => {
+    // Mock analytics data
+    setAnalytics({
+      totalRevenue: 125450,
+      totalOrders: 356,
+      averageOrderValue: 352.41,
+      totalProducts: 127,
+      totalUsers: 892,
+      ordersDailyData: [
+        { date: 'Mon', orders: 12, revenue: 4200 },
+        { date: 'Tue', orders: 15, revenue: 5100 },
+        { date: 'Wed', orders: 18, revenue: 6200 },
+        { date: 'Thu', orders: 22, revenue: 7500 },
+        { date: 'Fri', orders: 28, revenue: 9200 },
+        { date: 'Sat', orders: 35, revenue: 11800 },
+        { date: 'Sun', orders: 25, revenue: 8500 }
+      ]
+    });
+  }, [dateRange]);
+
+  return (
+    <div className="space-y-6">
+      <div className="cyber-card">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">ANALYTICS DASHBOARD</h2>
+          <select 
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="cyber-input text-sm py-2 px-3"
+          >
+            <option value="24hours">LAST 24 HOURS</option>
+            <option value="7days">LAST 7 DAYS</option>
+            <option value="30days">LAST 30 DAYS</option>
+          </select>
+        </div>
+
+        {/* Analytics Cards */}
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
+          <div className="p-4 bg-cyber-dark border border-cyber-muted-green/30 rounded-lg">
+            <p className="text-xs text-gray-400 mb-1 font-orbitron">REVENUE</p>
+            <p className="text-2xl font-orbitron font-bold text-cyber-muted-green">${analytics.totalRevenue.toLocaleString()}</p>
+            <p className="text-xs text-green-400 mt-2">↑ 12.5% from last period</p>
+          </div>
+          
+          <div className="p-4 bg-cyber-dark border border-cyber-muted-blue/30 rounded-lg">
+            <p className="text-xs text-gray-400 mb-1 font-orbitron">ORDERS</p>
+            <p className="text-2xl font-orbitron font-bold text-cyber-muted-blue">{analytics.totalOrders}</p>
+            <p className="text-xs text-blue-400 mt-2">↑ 8.3% from last period</p>
+          </div>
+          
+          <div className="p-4 bg-cyber-dark border border-cyber-muted-taupe/30 rounded-lg">
+            <p className="text-xs text-gray-400 mb-1 font-orbitron">AVG ORDER VALUE</p>
+            <p className="text-2xl font-orbitron font-bold text-cyber-muted-taupe">${analytics.averageOrderValue.toFixed(2)}</p>
+            <p className="text-xs text-yellow-400 mt-2">↑ 3.1% from last period</p>
+          </div>
+          
+          <div className="p-4 bg-cyber-dark border border-cyber-muted-purple/30 rounded-lg">
+            <p className="text-xs text-gray-400 mb-1 font-orbitron">PRODUCTS</p>
+            <p className="text-2xl font-orbitron font-bold text-cyber-muted-purple">{analytics.totalProducts}</p>
+            <p className="text-xs text-purple-400 mt-2">→ No change</p>
+          </div>
+          
+          <div className="p-4 bg-cyber-dark border border-cyber-muted-pink/30 rounded-lg">
+            <p className="text-xs text-gray-400 mb-1 font-orbitron">CUSTOMERS</p>
+            <p className="text-2xl font-orbitron font-bold text-cyber-muted-pink">{analytics.totalUsers}</p>
+            <p className="text-xs text-pink-400 mt-2">↑ 5.2% from last period</p>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+          <h3 className="font-orbitron font-bold mb-4">DAILY ORDERS & REVENUE</h3>
+          <div className="space-y-4">
+            {analytics.ordersDailyData.map((data, idx) => (
+              <div key={idx}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-orbitron">{data.date}</span>
+                  <span className="text-sm">
+                    <span className="text-cyber-muted-blue mr-4">{data.orders} Orders</span>
+                    <span className="text-cyber-muted-green">${data.revenue.toLocaleString()}</span>
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 h-8 bg-cyber-muted-blue/20 rounded" style={{width: `${(data.orders / 40) * 100}%`}}></div>
+                  <div className="flex-1 h-8 bg-cyber-muted-green/20 rounded" style={{width: `${(data.revenue / 12000) * 100}%`}}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const InventoryManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  useEffect(() => {
+    fetchInventory();
+  }, [selectedCategory]);
+
+  const fetchInventory = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/api/products', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const productsData = Array.isArray(response.data) ? response.data : response.data.products || [];
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Error fetching inventory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const lowStockProducts = products.filter(p => p.stock < 10);
+  const outOfStockProducts = products.filter(p => p.stock === 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="p-4 bg-cyber-dark border border-cyber-muted-green/30 rounded-lg">
+          <p className="text-xs text-gray-400 mb-1 font-orbitron">TOTAL PRODUCTS</p>
+          <p className="text-2xl font-orbitron font-bold text-cyber-muted-green">{products.length}</p>
+        </div>
+        <div className="p-4 bg-cyber-dark border border-cyber-muted-taupe/30 rounded-lg">
+          <p className="text-xs text-gray-400 mb-1 font-orbitron">LOW STOCK</p>
+          <p className="text-2xl font-orbitron font-bold text-cyber-muted-taupe">{lowStockProducts.length}</p>
+        </div>
+        <div className="p-4 bg-cyber-dark border border-cyber-muted-pink/30 rounded-lg">
+          <p className="text-xs text-gray-400 mb-1 font-orbitron">OUT OF STOCK</p>
+          <p className="text-2xl font-orbitron font-bold text-cyber-muted-pink">{outOfStockProducts.length}</p>
+        </div>
+      </div>
+
+      <div className="cyber-card">
+        <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue mb-6">INVENTORY LEVELS</h2>
+        
+        <div className="mb-4">
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="cyber-input"
+          >
+            <option value="all">ALL CATEGORIES</option>
+            <option value="neural">Neural Tech</option>
+            <option value="cybernetic">Cybernetic</option>
+            <option value="quantum">Quantum</option>
+          </select>
+        </div>
+
+        <div className="space-y-4">
+          {products.map(product => (
+            <div key={product.id} className={`p-4 border rounded-lg ${
+              product.stock === 0 ? 'border-cyber-muted-pink/50 bg-cyber-muted-pink/5' :
+              product.stock < 10 ? 'border-cyber-muted-taupe/50 bg-cyber-muted-taupe/5' :
+              'border-cyber-gray/30'
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-orbitron font-bold">{product.name}</p>
+                  <p className="text-xs text-gray-400">{product.sku}</p>
+                </div>
+                <p className={`font-orbitron font-bold ${
+                  product.stock === 0 ? 'text-cyber-muted-pink' :
+                  product.stock < 10 ? 'text-cyber-muted-taupe' :
+                  'text-cyber-muted-green'
+                }`}>
+                  {product.stock} UNITS
+                </p>
+              </div>
+              <div className="h-2 bg-cyber-gray rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${
+                    product.stock === 0 ? 'bg-cyber-muted-pink' :
+                    product.stock < 10 ? 'bg-cyber-muted-taupe' :
+                    'bg-cyber-muted-green'
+                  }`}
+                  style={{ width: `${Math.min((product.stock / 50) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SystemSettings = () => (
   <div className="cyber-card">
-    <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">SYSTEM SETTINGS</h2>
-    <p className="text-gray-300 mt-4">System settings will be implemented here</p>
+    <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue mb-6">SYSTEM SETTINGS</h2>
+    
+    <div className="space-y-6">
+      <div className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+        <h3 className="font-orbitron font-bold mb-3">STORE INFORMATION</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">STORE NAME</label>
+            <input type="text" value="CYBERSTORE" className="cyber-input" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">DESCRIPTION</label>
+            <textarea className="cyber-input" defaultValue="Next-gen cybernetic upgrades and quantum tech"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+        <h3 className="font-orbitron font-bold mb-3">EMAIL SETTINGS</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">SMTP SERVER</label>
+            <input type="text" placeholder="smtp.gmail.com" className="cyber-input" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">EMAIL ADDRESS</label>
+            <input type="email" placeholder="noreply@cyberstore.com" className="cyber-input" />
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+        <h3 className="font-orbitron font-bold mb-3">PAYMENT METHODS</h3>
+        <div className="space-y-2">
+          <label className="flex items-center">
+            <input type="checkbox" defaultChecked className="mr-3" />
+            <span className="text-sm">Credit Card</span>
+          </label>
+          <label className="flex items-center">
+            <input type="checkbox" defaultChecked className="mr-3" />
+            <span className="text-sm">Cryptocurrency</span>
+          </label>
+          <label className="flex items-center">
+            <input type="checkbox" className="mr-3" />
+            <span className="text-sm">PayPal</span>
+          </label>
+        </div>
+      </div>
+
+      <button className="cyber-button w-full">SAVE SETTINGS</button>
+    </div>
   </div>
 );
+
 
 export default AdminDashboard;

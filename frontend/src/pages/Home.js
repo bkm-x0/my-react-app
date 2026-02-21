@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Cpu, Sparkles, ShoppingCart, Star, TrendingUp, Clock, Award, Users, Globe } from 'lucide-react';
 import axios from 'axios';
+import useAuthStore from './store/authStore';
 
 const Home = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     fetchTrendingProducts();
@@ -108,9 +110,11 @@ const Home = () => {
                     EXPLORE STORE
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
-                  <Link to="/register" className="cyber-button cyber-button-secondary text-lg py-4 px-8">
-                    JOIN THE NETWORK
-                  </Link>
+                  {!isAuthenticated && (
+                    <Link to="/register" className="cyber-button cyber-button-secondary text-lg py-4 px-8">
+                      JOIN THE NETWORK
+                    </Link>
+                  )}
                 </div>
               </div>
 

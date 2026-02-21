@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderConfirmation from './pages/OrderConfirmation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -18,6 +20,7 @@ import NewArrivals from './pages/NewArrivals';
 import Trending from './pages/Trending';
 import Sale from './pages/Sale';
 import PreOrder from './pages/PreOrder';
+import Categories from './pages/Categories';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -64,6 +67,15 @@ function App() {
           </>
         } />
         
+        <Route path="/categories" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <Categories />
+            </div>
+          </>
+        } />
+        
         <Route path="/products/:id" element={
           <>
             <CyberNavbar />
@@ -80,6 +92,24 @@ function App() {
               <Cart />
             </div>
           </>
+        } />
+        
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <Checkout />
+            </div>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/order-confirmation/:orderId" element={
+          <ProtectedRoute>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <OrderConfirmation />
+            </div>
+          </ProtectedRoute>
         } />
         
         <Route path="/login" element={

@@ -399,6 +399,15 @@ const CyberNavbar = () => {
                   )}
                 </div>
 
+                {/* Categories Link */}
+                <Link 
+                  to="/categories" 
+                  className="font-rajdhani font-semibold text-lg hover:text-cyber-muted-green transition-colors flex items-center"
+                >
+                  <Grid className="h-4 w-4 mr-2" />
+                  CATEGORIES
+                </Link>
+
                 {/* Additional Pages */}
                 <Link 
                   to="/about" 
@@ -756,6 +765,16 @@ const CyberNavbar = () => {
                     })}
                   </div>
                 </div>
+
+                {/* Categories Link */}
+                <Link 
+                  to="/categories" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center p-3 text-lg font-orbitron font-bold text-cyber-muted-green hover:bg-cyber-muted-green/10 rounded-lg"
+                >
+                  <Grid className="h-5 w-5 mr-3" />
+                  CATEGORIES
+                </Link>
 
                 {/* Other Pages */}
                 <Link 
