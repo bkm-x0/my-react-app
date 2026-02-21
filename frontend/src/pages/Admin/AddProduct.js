@@ -23,6 +23,19 @@ const AddProduct = () => {
     image: null
   });
 
+  const addSpec = () => setFormData(f => ({ ...f, specifications: { ...f.specifications, '': '' } }));
+  const updateSpecKey = (oldKey, newKey) => {
+    setFormData(f => {
+      const specs = { ...f.specifications };
+      const val = specs[oldKey];
+      delete specs[oldKey];
+      if (newKey) specs[newKey] = val;
+      return { ...f, specifications: specs };
+    });
+  };
+  const updateSpecValue = (key, value) => setFormData(f => ({ ...f, specifications: { ...f.specifications, [key]: value } }));
+  const removeSpec = (key) => setFormData(f => { const s = { ...f.specifications }; delete s[key]; return { ...f, specifications: s }; });
+
   const categories = [
     { value: 'neural', label: 'Neural Tech' },
     { value: 'cybernetic', label: 'Cybernetic Limbs' },
@@ -336,6 +349,26 @@ const AddProduct = () => {
                       )}
                     </div>
                   ))}
+                </div>
+
+                {/* Specifications editor */}
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-orbitron font-bold text-cyber-muted-blue">SPECIFICATIONS</h3>
+                    <button type="button" onClick={addSpec} className="px-3 py-2 border border-cyber-muted-green text-cyber-muted-green rounded-lg">Add spec</button>
+                  </div>
+                  <div className="space-y-3">
+                    {Object.keys(formData.specifications || {}).length === 0 && (
+                      <div className="text-sm text-gray-400">No specifications added yet.</div>
+                    )}
+                    {Object.entries(formData.specifications || {}).map(([k, v], idx) => (
+                      <div key={String(k) + idx} className="flex gap-2 items-center">
+                        <input className="cyber-input w-1/3" value={k} onChange={(e) => updateSpecKey(k, e.target.value)} placeholder="Spec name" />
+                        <input className="cyber-input flex-1" value={v} onChange={(e) => updateSpecValue(k, e.target.value)} placeholder="Spec value" />
+                        <button type="button" onClick={() => removeSpec(k)} className="p-2 border border-cyber-muted-pink text-cyber-muted-pink rounded-lg"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

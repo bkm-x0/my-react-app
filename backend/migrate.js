@@ -7,25 +7,57 @@ async function migrate() {
   try {
     console.log('🔄 Running migrations...\n');
 
-    // Check if image column exists
+    // Check products table structure
     console.log('1️⃣  Checking products table structure...');
     const [columns] = await connection.execute(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-      WHERE TABLE_NAME = 'products' AND COLUMN_NAME = 'image'
+      WHERE TABLE_NAME = 'products'
     `);
 
-    if (columns.length === 0) {
+    const columnNames = columns.map(c => c.COLUMN_NAME);
+
+    // image
+    if (!columnNames.includes('image')) {
       console.log('⚠️  Image column not found. Adding it now...');
-      
-      await connection.execute(`
-        ALTER TABLE products 
-        ADD COLUMN image VARCHAR(255) DEFAULT NULL 
-        AFTER features
-      `);
-      
+      await connection.execute(`ALTER TABLE products ADD COLUMN image VARCHAR(255) DEFAULT NULL AFTER features`);
       console.log('✅ Image column added successfully!');
     } else {
       console.log('✅ Image column already exists');
+    }
+
+    // specifications
+    if (!columnNames.includes('specifications')) {
+      console.log('⚠️  specifications column not found. Adding it now...');
+      await connection.execute(`ALTER TABLE products ADD COLUMN specifications JSON NULL AFTER features`);
+      console.log('✅ specifications column added successfully!');
+    } else {
+      console.log('✅ specifications column already exists');
+    }
+
+    // Create reviews table if missing
+    const [reviewCols] = await connection.execute(`
+      SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'reviews'
+    `);
+
+    if (reviewCols.length === 0) {
+      console.log('⚠️  reviews table not found. Creating it now...');
+      await connection.execute(`
+        CREATE TABLE reviews (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          product_id INT NOT NULL,
+          user_id INT DEFAULT NULL,
+          rating TINYINT NOT NULL,
+          comment TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+          INDEX idx_product_id (product_id),
+          INDEX idx_user_id (user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+      `);
+      console.log('✅ reviews table created');
+    } else {
+      console.log('✅ reviews table already exists');
     }
 
     // Check other important columns

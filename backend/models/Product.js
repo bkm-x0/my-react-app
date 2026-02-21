@@ -9,9 +9,11 @@ class Product {
     // Ensure description is provided
     const description = productData.description || '';
     
+    const specifications = productData.specifications ? JSON.stringify(productData.specifications) : JSON.stringify({});
+
     const [result] = await pool.execute(`
-      INSERT INTO products (name, slug, description, price, category_id, stock, sku, features, image, rating, is_featured, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (name, slug, description, price, category_id, stock, sku, features, specifications, image, rating, is_featured, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       productData.name,
       productData.slug || productData.name.toLowerCase().replace(/\s+/g, '-'),
@@ -21,12 +23,13 @@ class Product {
       productData.stock || 0,
       productData.sku,
       features,
+      specifications,
       productData.image || null,
       productData.rating || 0,
       productData.isFeatured ? 1 : 0,
       productData.isActive !== undefined ? (productData.isActive ? 1 : 0) : 1
     ]);
-    
+
     return await this.findById(result.insertId);
   }
 
@@ -41,7 +44,30 @@ class Product {
       WHERE p.id = ?
     `, [id]);
     
-    return products[0] || null;
+    const product = products[0] || null;
+    if (product) {
+      if (product.features) {
+        try {
+          product.features = JSON.parse(product.features);
+        } catch (err) {
+          product.features = Array.isArray(product.features) ? product.features : [product.features];
+        }
+      } else {
+        product.features = [];
+      }
+
+      if (product.specifications) {
+        try {
+          product.specifications = JSON.parse(product.specifications);
+        } catch (err) {
+          product.specifications = typeof product.specifications === 'object' ? product.specifications : {};
+        }
+      } else {
+        product.specifications = {};
+      }
+    }
+
+    return product;
   }
 
   static async findBySlug(slug) {
@@ -65,6 +91,16 @@ class Product {
         }
       } else {
         product.features = [];
+      }
+
+      if (product.specifications) {
+        try {
+          product.specifications = JSON.parse(product.specifications);
+        } catch (err) {
+          product.specifications = typeof product.specifications === 'object' ? product.specifications : {};
+        }
+      } else {
+        product.specifications = {};
       }
     }
 
@@ -198,6 +234,11 @@ class Product {
     if (updateData.features !== undefined) {
       fields.push('features = ?');
       values.push(JSON.stringify(updateData.features));
+    }
+
+    if (updateData.specifications !== undefined) {
+      fields.push('specifications = ?');
+      values.push(JSON.stringify(updateData.specifications));
     }
     
     if (updateData.rating !== undefined) {

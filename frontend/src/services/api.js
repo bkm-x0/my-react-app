@@ -50,7 +50,9 @@ export const productAPI = {
   updateProduct: (id, productData) => api.put(`/products/${id}`, productData),
   deleteProduct: (id) => api.delete(`/products/${id}`),
   getCategories: () => api.get('/products/categories'),
-  getFeatured: () => api.get('/products/featured')
+  getFeatured: () => api.get('/products/featured'),
+  getReviews: (productId, params) => api.get(`/products/${productId}/reviews`, { params }),
+  addReview: (productId, review) => api.post(`/products/${productId}/reviews`, review)
 };
 
 export const orderAPI = {

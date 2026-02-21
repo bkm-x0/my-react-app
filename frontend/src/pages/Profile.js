@@ -130,14 +130,14 @@ const Profile = () => {
                 Joined: {new Date(user.createdAt).toLocaleDateString()}
               </div>
               <div className="px-3 py-1 bg-cyber-muted-green/20 border border-cyber-muted-green text-cyber-muted-green text-sm font-orbitron inline-block rounded">
-                {user.role.toUpperCase()}
+                {String(user.role || '').toUpperCase()}
               </div>
               
               {/* Balance */}
               <div className="mt-6 p-4 bg-cyber-dark/50 rounded-lg">
                 <div className="text-sm text-gray-400 mb-1">BALANCE</div>
                 <div className="text-2xl font-orbitron font-bold text-cyber-muted-green">
-                  {user.balance.toLocaleString()}₡
+                  {(user.balance || 0).toLocaleString()}₡
                 </div>
               </div>
             </div>
@@ -401,7 +401,7 @@ const Profile = () => {
           {activeTab !== 'overview' && activeTab !== 'security' && (
             <div className="cyber-card">
               <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
-                {activeTab.toUpperCase()}
+                {String(activeTab || '').toUpperCase()}
               </h2>
               <p className="text-gray-300">
                 {activeTab} features are coming soon. Stay tuned for updates!

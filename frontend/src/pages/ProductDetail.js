@@ -1,54 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Star, ShoppingCart, Package, Shield, Zap, CreditCard, Truck, RotateCcw, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import useAuthStore from './store/authStore';
+import { productAPI } from '../services/api';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedOption, setSelectedOption] = useState('standard');
+  const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
 
-  // Mock product data
-  const product = {
-    id: 1,
-    name: 'Neural Interface MK.II',
-    description: 'The Neural Interface MK.II represents the pinnacle of brain-computer interface technology. Featuring 256-channel neural sensors, quantum-safe encryption, and AI-assisted calibration, this device allows for seamless interaction with digital systems through thought alone.',
-    price: 2999,
-    category: 'biotech',
-    rating: 4.8,
-    reviews: 128,
-    stock: 15,
-    sku: 'NI-MKII-256-QS',
-    features: [
-      '256-Channel Neural Sensors',
-      'Quantum-Safe Encryption',
-      'AI-Assisted Calibration',
-      'Wireless Data Transfer (10Gb/s)',
-      'Biometric Security',
-      'Multi-Platform Compatibility',
-      'Real-Time Neural Monitoring',
-      'Self-Healing Firmware'
-    ],
-    specifications: {
-      'Neural Channels': '256',
-      'Data Rate': '10 Gb/s',
-      'Latency': '< 2ms',
-      'Battery Life': '72 hours',
-      'Encryption': 'Quantum-Safe AES-512',
-      'Compatibility': 'All major OS',
-      'Warranty': '5 years',
-      'Weight': '45g'
+  const { user, isAuthenticated } = useAuthStore();
+
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await productAPI.getProduct(id);
+      setProduct(res.data || res.data.product || res.data);
+    } catch (err) {
+      console.error('Failed to load product', err);
+      setError('فشل تحميل المنتج');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const relatedProducts = [
-    { id: 2, name: 'Neural OS v2.1', price: 899, category: 'software' },
-    { id: 3, name: 'Data Jack Pro', price: 499, category: 'accessories' },
-    { id: 4, name: 'Cybernetic Eye Sigma', price: 3499, category: 'augmentations' },
-  ];
+  const fetchReviews = async () => {
+    try {
+      const res = await productAPI.getReviews(id, { limit: 20 });
+      setReviews(res.data?.reviews || []);
+    } catch (err) {
+      console.error('Failed to load reviews', err);
+      setReviews([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchProduct();
+    fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // simple loading / error guards to avoid runtime crashes while data loads
+  if (loading) return <div className="container mx-auto px-4 py-20">Loading product…</div>;
+  if (error) return <div className="container mx-auto px-4 py-20 text-red-400">{error}</div>;
+  if (!product) return null;
+
+  const relatedProducts = product.related_products || [];
 
   const options = [
-    { id: 'standard', name: 'Standard Package', price: product.price },
+    { id: 'standard', name: 'Standard Package', price: product?.price || 0 },
     { id: 'pro', name: 'Pro Package', price: 3499, includes: ['Interface', 'Neural OS', 'Installation Kit'] },
     { id: 'enterprise', name: 'Enterprise Package', price: 4999, includes: ['Interface', 'Neural OS', 'Priority Support', 'Training'] }
   ];
@@ -71,7 +79,7 @@ const ProductDetail = () => {
             <div className="h-96 bg-cyber-dark border border-cyber-muted-blue/30 rounded-lg mb-4 relative">
               <div className="absolute top-4 left-4">
                 <span className="cyber-badge border-cyber-muted-pink text-cyber-muted-pink">
-                  {product.category.toUpperCase()}
+                  {String(product.category_name || product.category || '').toUpperCase()}
                 </span>
               </div>
               <div className="absolute top-4 right-4">
@@ -89,10 +97,10 @@ const ProductDetail = () => {
           <div className="cyber-card mb-6">
             <h3 className="text-2xl font-orbitron font-bold mb-4 text-cyber-muted-blue">FEATURES</h3>
             <div className="grid sm:grid-cols-2 gap-3">
-              {product.features.map((feature, index) => (
+              {(Array.isArray(product.features) ? product.features : []).map((feature, index) => (
                 <div key={index} className="flex items-start">
                   <Zap className="h-4 w-4 text-cyber-muted-taupe mr-2 mt-1 flex-shrink-0" />
-                  <span className="text-gray-300">{feature}</span>
+                  <span className="text-gray-300">{String(feature || '')}</span>
                 </div>
               ))}
             </div>
@@ -100,14 +108,103 @@ const ProductDetail = () => {
 
           {/* Specifications */}
           <div className="cyber-card">
-            <h3 className="text-2xl font-orbitron font-bold mb-4 text-cyber-muted-blue">SPECIFICATIONS</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">SPECIFICATIONS</h3>
+              {/* Admin: quick edit link (visible when logged-in admin) */}
+              {/* non-admins see read-only */}
+            </div>
             <div className="space-y-3">
-              {Object.entries(product.specifications).map(([key, value]) => (
-                <div key={key} className="flex justify-between items-center py-2 border-b border-cyber-gray/30">
-                  <span className="text-gray-400 font-mono">{key}:</span>
-                  <span className="font-orbitron font-bold text-cyber-muted-green">{value}</span>
-                </div>
-              ))}
+              {Object.entries(product.specifications || {}).length === 0 ? (
+                <div className="text-sm text-gray-400">No specifications provided.</div>
+              ) : (
+                Object.entries(product.specifications || {}).map(([key, value]) => (
+                  <div key={key} className="flex justify-between items-center py-2 border-b border-cyber-gray/30">
+                    <span className="text-gray-400 font-mono">{key}:</span>
+                    <span className="font-orbitron font-bold text-cyber-muted-green">{value}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Reviews */}
+          <div className="cyber-card mt-6">
+            <h3 className="text-2xl font-orbitron font-bold mb-4 text-cyber-muted-pink">REVIEWS</h3>
+            <div className="space-y-4">
+              {reviews.length === 0 ? (
+                <div className="text-sm text-gray-400">No reviews yet — be the first to review.</div>
+              ) : (
+                reviews.map((r) => (
+                  <div key={r.id} className="p-3 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-cyber-gray/20 rounded-full mr-3 flex items-center justify-center text-sm">{(r.username||'U').charAt(0).toUpperCase()}</div>
+                        <div>
+                          <div className="font-orbitron font-bold">{r.username || 'Anonymous'}</div>
+                          <div className="text-xs text-gray-400">{new Date(r.created_at).toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <div className="text-sm font-mono">{r.rating} / 5</div>
+                    </div>
+                    <div className="text-gray-300">{r.comment}</div>
+                  </div>
+                ))
+              )}
+
+              {/* Review form (requires authentication) */}
+              <div className="mt-4">
+                <h4 className="text-lg font-orbitron font-bold mb-3">Leave a review</h4>
+
+                {!isAuthenticated ? (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="text-sm text-gray-400">You must be logged in to submit a review.</div>
+                    <div className="flex gap-2">
+                      <Link to={`/login?next=/products/${id}`} className="px-4 py-2 border border-cyber-muted-blue text-cyber-muted-blue rounded-lg">Log in</Link>
+                      <Link to="/register" className="px-4 py-2 bg-cyber-muted-pink text-cyber-black rounded-lg">Create account</Link>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid md:grid-cols-6 gap-3">
+                      <select
+                        value={reviewForm.rating}
+                        onChange={(e) => setReviewForm(prev => ({ ...prev, rating: Number(e.target.value) }))}
+                        className="cyber-input md:col-span-1"
+                        aria-label="Rating"
+                      >
+                        {[5,4,3,2,1].map(v => <option key={v} value={v}>{v} ★</option>)}
+                      </select>
+                      <textarea
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                        className="cyber-input md:col-span-5"
+                        placeholder="Share your experience..."
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-end">
+                      <button onClick={async () => {
+                        try {
+                          setSubmittingReview(true);
+                          const api = (await import('../services/api')).productAPI;
+                          await api.addReview(id, reviewForm);
+                          setReviewForm({ rating: 5, comment: '' });
+                          await fetchReviews(1);
+                          await fetchProduct();
+                          // non-blocking success toast
+                          window.__CYBER_TOAST && window.__CYBER_TOAST.success('Review submitted — thank you!');
+                        } catch (err) {
+                          console.error(err);
+                          window.__CYBER_TOAST && window.__CYBER_TOAST.error(err.response?.data?.message || 'Failed to submit review');
+                        } finally {
+                          setSubmittingReview(false);
+                        }
+                      }} disabled={submittingReview} className="cyber-button">{submittingReview ? 'SUBMITTING…' : 'SUBMIT REVIEW'}</button>
+                    </div>
+                  </>
+                )}
+
+              </div>
+
             </div>
           </div>
         </div>
@@ -263,7 +360,7 @@ const ProductDetail = () => {
                     {related.name}
                   </div>
                   <div className="text-cyber-muted-green font-mono">{related.price}₡</div>
-                  <div className="text-xs text-gray-400 mt-1">{related.category.toUpperCase()}</div>
+                  <div className="text-xs text-gray-400 mt-1">{String(related.category || related.category_name || '').toUpperCase()}</div>
                 </Link>
               ))}
             </div>

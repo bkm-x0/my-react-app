@@ -100,12 +100,71 @@ const getProductById = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // include up-to-date review stats
+    const Review = require('../models/Review');
+    const stats = await Review.getStatsForProduct(product.id);
+    product.reviews = Number(stats.count) || 0;
+    product.rating = Number(stats.avgRating || product.rating || 0).toFixed(2) * 1;
+
     res.json(product);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// GET /api/products/:id/reviews
+const getProductReviews = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page = Number(req.query.page || 1);
+    const limit = Math.min(Number(req.query.limit || 10), 50);
+    const offset = (page - 1) * limit;
+
+    const Review = require('../models/Review');
+    const reviews = await Review.findByProduct(id, { limit, offset });
+
+    res.json({ reviews, page, limit });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// POST /api/products/:id/reviews
+const addProductReview = async (req, res) => {
+  try {
+    const userId = req.user?.id || null;
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+
+    console.log(`\n[REVIEWS] addProductReview called — productId=${id} userId=${userId} rating=${rating}`);
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // Verify product exists to avoid FK errors and provide a clear response
+    const existing = await Product.findById(id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const Review = require('../models/Review');
+    const created = await Review.create({ productId: id, userId, rating: Math.round(rating), comment: comment || '' });
+
+    // recompute and persist product rating (best-effort)
+    const stats = await Review.getStatsForProduct(id);
+    await Product.update(id, { rating: Number(stats.avgRating).toFixed(2) });
+
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('\n[REVIEWS] addProductReview ERROR:', error.message);
+    console.error(error.stack);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 // @desc    Create product
 // @route   POST /api/products
@@ -463,5 +522,7 @@ module.exports = {
   deleteProduct,
   getFeaturedProducts,
   getProductsByCategory,
-  getCategories
+  getCategories,
+  getProductReviews,
+  addProductReview
 };

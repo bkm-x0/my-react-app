@@ -248,7 +248,7 @@ const AdminDashboard = () => {
                   {salesData.map((category, index) => (
                     <div key={category._id} className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
-                        <div className="font-orbitron font-bold">{category._id.toUpperCase()}</div>
+                        <div className="font-orbitron font-bold">{String(category._id || '').toUpperCase()}</div>
                         <div className="text-cyber-muted-green font-bold">${category.totalRevenue.toLocaleString()}</div>
                       </div>
                       <div className="h-2 bg-cyber-gray rounded-full overflow-hidden">
@@ -304,7 +304,7 @@ const AdminDashboard = () => {
                               order.orderStatus === 'processing' ? 'bg-cyber-muted-taupe/20 text-cyber-muted-taupe' :
                               'bg-cyber-muted-blue/20 text-cyber-muted-blue'
                             }`}>
-                              {order.orderStatus?.toUpperCase()}
+                              {String(order.orderStatus || '').toUpperCase()}
                             </span>
                           </td>
                         </tr>
@@ -895,7 +895,7 @@ const UsersManagement = () => {
                           user.role === 'admin' ? 'bg-cyber-muted-pink/20 text-cyber-muted-pink' :
                           'bg-cyber-muted-green/20 text-cyber-muted-green'
                         }`}>
-                          {user.role?.toUpperCase()}
+                          {String(user.role || '').toUpperCase()}
                         </span>
                       )}
                     </td>

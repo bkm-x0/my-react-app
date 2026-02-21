@@ -90,6 +90,7 @@ class Database {
           stock INT NOT NULL DEFAULT 0,
           sku VARCHAR(50) UNIQUE NOT NULL,
           features JSON,
+          specifications JSON,
           image VARCHAR(255) DEFAULT NULL,
           rating DECIMAL(3, 2) DEFAULT 0.00,
           is_featured BOOLEAN DEFAULT FALSE,

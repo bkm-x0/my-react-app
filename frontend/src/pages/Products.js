@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, Star, ShoppingCart, Eye, Search } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { productAPI } from '../services/api';
@@ -15,12 +16,46 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sort, setSort] = useState('newest');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Sync component state from URL query params so direct links work (e.g. ?page=2&view=list)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const p = parseInt(params.get('page') || '1', 10);
+      if (!Number.isNaN(p) && p > 0 && p !== page) setPage(p);
+
+      const v = params.get('view') || 'grid';
+      if (v && v !== viewMode) setViewMode(v);
+
+      const cat = params.get('category');
+      if (cat && cat !== selectedCategory) setSelectedCategory(cat);
+
+      const s = params.get('search') || '';
+      if (s !== searchTerm) setSearchTerm(s);
+
+      const so = params.get('sort') || 'newest';
+      if (so !== sort) setSort(so);
+    } catch (err) {
+      // defensive: don't break the page if malformed query string
+      console.warn('Could not parse URL query params for Products page', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
+  const pushViewToUrl = (view) => {
+    const params = new URLSearchParams(location.search);
+    params.set('view', view);
+    if (!params.get('page')) params.set('page', String(page || 1));
+    navigate(`/products?${params.toString()}`);
+  };
 
   const fetchCategories = useCallback(async () => {
     try {
       const res = await productAPI.getCategories();
       const remote = Array.isArray(res.data) ? res.data : res.data.categories || [];
-      setCategories((prev) => [prev[0], ...remote.map(c => ({ id: c.id, name: c.name.toUpperCase(), slug: c.slug, color: c.color || 'blue' }))]);
+      setCategories((prev) => [prev[0], ...remote.map(c => ({ id: c.id, name: String(c.name || '').toUpperCase(), slug: c.slug, color: c.color || 'blue' }))]);
     } catch (err) {
       // keep defaults on error
       console.error('Could not load categories', err);
@@ -99,13 +134,13 @@ const Products = () => {
 
           <div className="flex border border-cyber-muted-purple rounded-lg overflow-hidden">
             <button 
-              onClick={() => setViewMode('grid')}
+              onClick={() => { setViewMode('grid'); pushViewToUrl('grid'); }}
               className={`p-2 ${viewMode === 'grid' ? 'bg-cyber-muted-purple text-cyber-black' : 'text-cyber-muted-purple'}`}
             >
               <Grid className="h-5 w-5" />
             </button>
             <button 
-              onClick={() => setViewMode('list')}
+              onClick={() => { setViewMode('list'); pushViewToUrl('list'); }}
               className={`p-2 ${viewMode === 'list' ? 'bg-cyber-muted-purple text-cyber-black' : 'text-cyber-muted-purple'}`}
             >
               <List className="h-5 w-5" />

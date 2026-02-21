@@ -12,6 +12,12 @@ import Profile from './pages/Profile';
 import AdminLogin from './pages/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AddProduct from './pages/Admin/AddProduct';
+import Support from './pages/Support';
+import TrackOrder from './pages/TrackOrder';
+import NewArrivals from './pages/NewArrivals';
+import Trending from './pages/Trending';
+import Sale from './pages/Sale';
+import PreOrder from './pages/PreOrder';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -103,6 +109,60 @@ function App() {
           <div className="min-h-screen bg-cyber-black scanlines">
             <AdminLogin />
           </div>
+        } />
+
+        <Route path="/support" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <Support />
+            </div>
+          </>
+        } />
+
+        <Route path="/track-order" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <TrackOrder />
+            </div>
+          </>
+        } />
+
+        <Route path="/new-arrivals" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <NewArrivals />
+            </div>
+          </>
+        } />
+
+        <Route path="/trending" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <Trending />
+            </div>
+          </>
+        } />
+
+        <Route path="/sale" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <Sale />
+            </div>
+          </>
+        } />
+
+        <Route path="/pre-order" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-cyber-black scanlines">
+              <PreOrder />
+            </div>
+          </>
         } />
         
         <Route path="/admin/dashboard" element={

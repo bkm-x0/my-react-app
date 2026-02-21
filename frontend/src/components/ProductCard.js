@@ -19,8 +19,8 @@ const ProductCard = ({ product, view = 'grid' }) => {
           <div className="md:w-48 h-48 bg-cyber-dark border border-cyber-muted-blue/50 rounded-lg overflow-hidden">
             <div className="relative h-full w-full">
               <div className="absolute top-3 left-3">
-                <span className={`cyber-badge border-cyber-neon-${getCategoryColor(product.category)} text-cyber-neon-${getCategoryColor(product.category)}`}>
-                  {product.category.toUpperCase()}
+                <span className={`cyber-badge border-cyber-neon-${getCategoryColor(category)} text-cyber-neon-${getCategoryColor(category)}`}>
+                  {String(category).toUpperCase()}
                 </span>
               </div>
             </div>
@@ -42,12 +42,12 @@ const ProductCard = ({ product, view = 'grid' }) => {
             
             {/* Features */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {product.features.map((feature, index) => (
+              {features.slice(0, 3).map((feature, index) => (
                 <span 
                   key={index}
                   className="px-3 py-1 bg-cyber-dark border border-cyber-muted-purple text-cyber-muted-purple text-sm font-mono rounded"
                 >
-                  {feature}
+                  {typeof feature === 'string' ? feature : JSON.stringify(feature)}
                 </span>
               ))}
             </div>
@@ -103,8 +103,8 @@ const ProductCard = ({ product, view = 'grid' }) => {
       <div className="relative h-48 mb-4 bg-cyber-dark border border-cyber-muted-blue/30 rounded-lg overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-cyber-black/90"></div>
         <div className="absolute top-3 left-3">
-          <span className={`cyber-badge border-cyber-neon-${getCategoryColor(product.category)} text-cyber-neon-${getCategoryColor(product.category)}`}>
-            {product.category.toUpperCase()}
+          <span className={`cyber-badge border-cyber-neon-${getCategoryColor(category)} text-cyber-neon-${getCategoryColor(category)}`}>
+            {String(category).toUpperCase()}
           </span>
         </div>
         <div className="absolute top-3 right-3">
@@ -150,12 +150,12 @@ const ProductCard = ({ product, view = 'grid' }) => {
       
       {/* Features */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {product.features.slice(0, 2).map((feature, index) => (
+        {features.slice(0, 2).map((feature, index) => (
           <span 
             key={index}
             className="px-2 py-1 bg-cyber-dark border border-cyber-muted-purple text-cyber-muted-purple text-xs font-mono rounded"
           >
-            {feature}
+            {typeof feature === 'string' ? feature : JSON.stringify(feature)}
           </span>
         ))}
       </div>
@@ -176,19 +176,6 @@ const ProductCard = ({ product, view = 'grid' }) => {
       </div>
     </div>
   );
-};
-
-// Helper function to get category color
-const getCategoryColor = (category) => {
-  const colorMap = {
-    biotech: 'pink',
-    hardware: 'green',
-    visuals: 'purple',
-    augmentations: 'yellow',
-    software: 'blue',
-    accessories: 'pink',
-  };
-  return colorMap[category] || 'blue';
 };
 
 export default ProductCard;
