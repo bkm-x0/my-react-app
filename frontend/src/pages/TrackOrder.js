@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Package, Truck, MapPin, Clock, DollarSign, Check } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import useAuthStore from './store/authStore';
 
 const TrackOrder = () => {
@@ -24,9 +24,7 @@ const TrackOrder = () => {
     try {
       // Try to fetch the order (assuming order number format is just the ID)
       const orderId = searchTerm.replace(/\D/g, '');
-      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const response = await api.get(`/orders/${orderId}`);
       setOrder(response.data);
     } catch (err) {
       setError('Order not found. Please check the order number.');
@@ -44,9 +42,7 @@ const TrackOrder = () => {
 
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/orders/myorders', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/orders/myorders');
       setMyOrders(Array.isArray(response.data) ? response.data : response.data.orders || []);
       setShowMyOrders(true);
     } catch (err) {

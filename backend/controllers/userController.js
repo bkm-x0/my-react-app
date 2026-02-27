@@ -14,7 +14,9 @@ const getUsers = async (req, res) => {
       search
     } = req.query;
 
-    const users = await User.findAll(Number(limit), (Number(page) - 1) * Number(limit));
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const users = await User.findAll(limitNum, (pageNum - 1) * limitNum);
     
     // Filter by role or status if needed
     let filteredUsers = users;
@@ -40,8 +42,8 @@ const getUsers = async (req, res) => {
 
     res.json({
       users: filteredUsers,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
       total
     });
   } catch (error) {

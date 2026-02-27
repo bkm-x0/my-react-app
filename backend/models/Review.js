@@ -14,14 +14,18 @@ class Review {
   }
 
   static async findByProduct(productId, { limit = 20, offset = 0 } = {}) {
-    const [rows] = await pool.execute(`
+    // Ensure limit and offset are valid integers
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 20, 100));
+    const safeOffset = Math.max(0, parseInt(offset) || 0);
+    
+    const [rows] = await pool.query(`
       SELECT r.id, r.product_id, r.user_id, r.rating, r.comment, r.created_at, u.username
       FROM reviews r
       LEFT JOIN users u ON r.user_id = u.id
       WHERE r.product_id = ?
       ORDER BY r.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [productId, Number(limit), Number(offset)]);
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
+    `, [productId]);
 
     return rows;
   }

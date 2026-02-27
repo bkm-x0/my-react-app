@@ -150,7 +150,7 @@ const Login = () => {
 // في مكون Login.js، أضف هذه الوظيفة قبل handleSubmit
 const testBackendConnection = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/health');
+    const response = await fetch(`http://${window.location.hostname}:5000/api/health`);
     if (response.ok) {
       const data = await response.json();
       console.log('Backend connection OK:', data);
@@ -182,7 +182,7 @@ const handleSubmit = async (e) => {
   const isBackendConnected = await testBackendConnection();
   
   if (!isBackendConnected) {
-    setError('Cannot connect to backend server. Please make sure it is running on http://localhost:5000');
+    setError('Cannot connect to backend server. Please check your connection.');
     setLoading(false);
     return;
   }

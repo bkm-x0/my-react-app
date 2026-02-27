@@ -11,16 +11,17 @@ class Database {
       port: process.env.DB_PORT || 3306,
       database: process.env.DB_NAME || 'cyberstore',
       user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
+      password: process.env.DB_PASSWORD || '11224455',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+
       enableKeepAlive: true,
       keepAliveInitialDelay: 0
     });
   }
 
-  async connect() {
+  async  connect() {
     try {
       const connection = await this.pool.getConnection();
       console.log(`✅ MySQL Connected`.cyan.underline);

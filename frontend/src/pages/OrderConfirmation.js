@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { CheckCircle, Download, Mail, MapPin, Package, Clock, Home, FileText } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import useAuthStore from './store/authStore';
 
 const OrderConfirmation = () => {
@@ -22,9 +22,7 @@ const OrderConfirmation = () => {
   const fetchOrder = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/orders/${orderId}`);
       setOrder(response.data);
     } catch (err) {
       setError('Failed to load order details');
@@ -37,8 +35,7 @@ const OrderConfirmation = () => {
   const handleDownloadInvoice = async () => {
     setInvoiceLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}/invoice`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob'
       });
       
@@ -60,9 +57,7 @@ const OrderConfirmation = () => {
 
   const handleSendEmail = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/orders/${orderId}/send-invoice`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(`/orders/${orderId}/send-invoice`);
       alert('Invoice sent to your email!');
     } catch (err) {
       setError('Failed to send invoice');
@@ -261,6 +256,29 @@ const OrderConfirmation = () => {
                   <p className="text-gray-400">{shippingInfo.email}</p>
                   <p className="text-gray-400">{shippingInfo.phone}</p>
                 </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="cyber-card mb-8">
+                <h2 className="text-xl font-orbitron font-bold mb-4 flex items-center text-cyber-muted-blue">
+                  💳 PAYMENT METHOD
+                </h2>
+                
+                <div className={`p-4 rounded-lg text-sm font-orbitron font-bold ${
+                  shippingInfo.paymentMethod === 'cod'
+                    ? 'bg-cyber-muted-pink/10 border-2 border-cyber-muted-pink text-cyber-muted-pink'
+                    : 'bg-cyber-muted-blue/10 border-2 border-cyber-muted-blue text-cyber-muted-blue'
+                }`}>
+                  {shippingInfo.paymentMethod === 'credit_card' && 'CREDIT CARD'}
+                  {shippingInfo.paymentMethod === 'crypto' && 'CRYPTOCURRENCY'}
+                  {shippingInfo.paymentMethod === 'cod' && 'CASH ON DELIVERY'}
+                </div>
+                
+                {shippingInfo.paymentMethod === 'cod' && (
+                  <div className="mt-4 p-3 bg-cyber-muted-pink/10 border border-cyber-muted-pink/30 rounded text-sm text-gray-300">
+                    💵 Payment will be collected upon delivery. Please have the exact amount ready.
+                  </div>
+                )}
               </div>
 
               {/* Timeline */}

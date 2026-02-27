@@ -34,80 +34,268 @@ const seedDatabase = async () => {
     await db.query(`
       INSERT INTO categories (name, slug, description, icon, color) 
       VALUES 
-        ('Neural Tech', 'neural-tech', 'Brain-computer interfaces and neural enhancement technology', 'Cpu', '#6db3c8'),
-        ('Cybernetic Limbs', 'cybernetic-limbs', 'Advanced prosthetics and body augmentations', 'Zap', '#c9988b'),
-        ('Quantum Hardware', 'quantum-hardware', 'Next-generation quantum computing technology', 'Shield', '#7a9d8e'),
-        ('Holographic Tech', 'holographic-tech', 'Immersive display and holographic systems', 'Sparkles', '#6b5b8f')
+        ('Desktops', 'desktops', 'Complete desktop computer systems', 'fas-desktop', '#4a90e2'),
+        ('Laptops', 'laptops', 'Portable computers for all needs', 'fa-laptop', '#50c878'),
+        ('Gaming Systems', 'gaming-systems', 'High-performance gaming computers', 'fa-gamepad', '#9b59b6'),
+        ('Processors', 'processors', 'CPUs from Intel and AMD', 'fa-microchip', '#e67e22'),
+        ('Graphics Cards', 'graphics-cards', 'GPUs for gaming and professional work', 'fa-tachometer-alt', '#e74c3c'),
+        ('Memory', 'memory-ram', 'RAM modules for desktops and laptops', 'fa-memory', '#3498db'),
+        ('Storage', 'storage', 'SSDs, HDDs, and external storage', 'fa-hdd', '#95a5a6'),
+        ('Monitors', 'monitors', 'Displays for work and gaming', 'fa-tv', '#1abc9c'),
+        ('Keyboards', 'keyboards', 'Mechanical, membrane, and gaming keyboards', 'fa-keyboard', '#34495e'),
+        ('Mice', 'mice', 'Wired and wireless pointing devices', 'fa-mouse', '#7f8c8d'),
+        ('Audio', 'audio', 'Headsets, speakers, and microphones', 'fa-headphones', '#f39c12'),
+        ('Networking', 'networking', 'Routers, switches, and adapters', 'fa-network-wired', '#16a085')
     `);
     
     // Get category IDs
     const categories = await db.query('SELECT id, name FROM categories');
     const categoryMap = {};
     categories.forEach(cat => {
-      categoryMap[cat.name.toLowerCase().split(' ')[0]] = cat.id;
+      categoryMap[cat.name] = cat.id;
     });
     
     // Create products
     console.log('📦 Creating products...');
     const products = [
       {
-        name: 'Neural Interface MK.II',
-        slug: 'neural-interface-mkii',
-        description: 'Advanced brain-computer interface with 256-channel neural sensors',
-        price: 2999,
-        categoryId: categoryMap['neural'],
+        name: 'CyberStation Pro X1',
+        slug: 'cyberstation-pro-x1',
+        description: 'High-end desktop with Intel i9 and RTX 4080',
+        price: 2499,
+        categoryId: categoryMap['Desktops'],
         stock: 15,
-        sku: 'NI-MKII-001',
-        features: ['256-Channel Sensors', 'Quantum Encryption', 'AI Calibration'],
-        rating: 4.8,
-        isFeatured: true
-      },
-      {
-        name: 'Quantum Processor Q9',
-        slug: 'quantum-processor-q9',
-        description: '512 qubit quantum processor with cryo-cooling',
-        price: 8999,
-        categoryId: categoryMap['quantum'],
-        stock: 8,
-        sku: 'QP-Q9-001',
-        features: ['512 Qubits', 'Cryo-Cooled', 'Neural Optimization'],
+        sku: 'DSK-PRO-001',
+        features: ['Intel i9-14900K', '64GB DDR5', '2TB NVMe SSD', 'RTX 4080'],
         rating: 4.9,
         isFeatured: true
       },
       {
-        name: 'Cybernetic Arm v4.0',
-        slug: 'cybernetic-arm-v40',
-        description: 'Prosthetic arm with tactile feedback and super strength',
-        price: 12999,
-        categoryId: categoryMap['cybernetic'],
-        stock: 5,
-        sku: 'CA-V40-001',
-        features: ['Tactile Feedback', 'Super Strength', 'Tool Integration'],
+        name: 'CyberStation Office 500',
+        slug: 'cyberstation-office-500',
+        description: 'Reliable office desktop for daily productivity',
+        price: 799,
+        categoryId: categoryMap['Desktops'],
+        stock: 30,
+        sku: 'DSK-OFF-001',
+        features: ['Intel i5-13400', '16GB DDR4', '512GB SSD'],
+        rating: 4.5,
+        isFeatured: false
+      },
+      {
+        name: 'Laptop Dell XPS 15',
+        slug: 'laptop-dell-xps-15',
+        description: 'Professional laptop with 15-inch OLED display',
+        price: 1999,
+        categoryId: categoryMap['Laptops'],
+        stock: 10,
+        sku: 'LPT-XPS-001',
+        features: ['Intel i7-13700H', '16GB RAM', '512GB SSD', 'OLED Display'],
+        rating: 4.9,
+        isFeatured: true
+      },
+      {
+        name: 'Lenovo ThinkPad E14',
+        slug: 'lenovo-thinkpad-e14',
+        description: 'Business laptop built for reliability',
+        price: 899,
+        categoryId: categoryMap['Laptops'],
+        stock: 22,
+        sku: 'LPT-TPE-001',
+        features: ['AMD Ryzen 5', '8GB RAM', '256GB SSD'],
+        rating: 4.4,
+        isFeatured: false
+      },
+      {
+        name: 'CyberBeast RTX Gaming Rig',
+        slug: 'cyberbeast-rtx-gaming-rig',
+        description: 'Ultimate gaming PC with liquid cooling',
+        price: 3499,
+        categoryId: categoryMap['Gaming Systems'],
+        stock: 8,
+        sku: 'GAM-BST-001',
+        features: ['Intel i9-14900KS', 'RTX 4090', '128GB DDR5', 'Custom Loop Cooling'],
         rating: 5.0,
         isFeatured: true
       },
       {
-        name: 'Holo-Display Pro',
-        slug: 'holo-display-pro',
-        description: '4K holographic display with gesture control',
-        price: 4599,
-        categoryId: categoryMap['holographic'],
+        name: 'AMD Ryzen 9 7950X',
+        slug: 'amd-ryzen-9-7950x',
+        description: '16-core 32-thread desktop processor',
+        price: 599,
+        categoryId: categoryMap['Processors'],
         stock: 25,
-        sku: 'HD-PRO-001',
-        features: ['4K Resolution', 'Gesture Control', '360° Viewing'],
+        sku: 'CPU-R9-7950',
+        features: ['16 Cores', '32 Threads', '5.7GHz Boost', 'AM5 Socket'],
+        rating: 4.9,
+        isFeatured: true
+      },
+      {
+        name: 'Intel Core i7-14700K',
+        slug: 'intel-core-i7-14700k',
+        description: '20-core hybrid desktop processor',
+        price: 419,
+        categoryId: categoryMap['Processors'],
+        stock: 35,
+        sku: 'CPU-I7-14700',
+        features: ['20 Cores', '28 Threads', '5.6GHz Boost', 'LGA 1700'],
+        rating: 4.7,
+        isFeatured: false
+      },
+      {
+        name: 'RTX 4090 Graphics Card',
+        slug: 'rtx-4090-graphics-card',
+        description: 'Flagship NVIDIA GPU for extreme performance',
+        price: 1599,
+        categoryId: categoryMap['Graphics Cards'],
+        stock: 6,
+        sku: 'GPU-4090-001',
+        features: ['24GB GDDR6X', 'Ray Tracing', 'DLSS 3', '16384 CUDA Cores'],
+        rating: 5.0,
+        isFeatured: true
+      },
+      {
+        name: 'RX 7900 XTX',
+        slug: 'rx-7900-xtx',
+        description: 'AMD flagship GPU with 24GB VRAM',
+        price: 999,
+        categoryId: categoryMap['Graphics Cards'],
+        stock: 12,
+        sku: 'GPU-7900XTX-001',
+        features: ['24GB GDDR6', 'RDNA 3', 'AV1 Encode', '96 Compute Units'],
         rating: 4.7,
         isFeatured: true
       },
       {
-        name: 'Neural OS v2.1',
-        slug: 'neural-os-v21',
-        description: 'Operating system for neural interfaces',
-        price: 899,
-        categoryId: categoryMap['neural'],
-        stock: 100,
-        sku: 'NOS-V21-001',
-        features: ['Neural Support', 'AI Assistant', 'Security Suite'],
-        rating: 4.5,
+        name: 'Corsair Vengeance DDR5 32GB',
+        slug: 'corsair-vengeance-ddr5-32gb',
+        description: 'High-speed DDR5 memory kit (2x16GB)',
+        price: 129,
+        categoryId: categoryMap['Memory'],
+        stock: 50,
+        sku: 'RAM-CV5-32',
+        features: ['32GB (2x16GB)', 'DDR5-6000', 'CL30', 'Intel XMP 3.0'],
+        rating: 4.8,
+        isFeatured: true
+      },
+      {
+        name: 'Samsung 990 Pro 2TB',
+        slug: 'samsung-990-pro-2tb',
+        description: 'Ultra-fast PCIe 4.0 NVMe SSD',
+        price: 179,
+        categoryId: categoryMap['Storage'],
+        stock: 40,
+        sku: 'SSD-S990-2TB',
+        features: ['2TB', '7450 MB/s Read', 'PCIe 4.0', 'V-NAND'],
+        rating: 4.9,
+        isFeatured: true
+      },
+      {
+        name: 'WD Black SN850X 1TB',
+        slug: 'wd-black-sn850x-1tb',
+        description: 'Gaming NVMe SSD with heatsink',
+        price: 89,
+        categoryId: categoryMap['Storage'],
+        stock: 60,
+        sku: 'SSD-WDB-1TB',
+        features: ['1TB', '7300 MB/s Read', 'Heatsink Included', 'Game Mode 2.0'],
+        rating: 4.7,
+        isFeatured: false
+      },
+      {
+        name: 'LG UltraGear 27" 4K 144Hz',
+        slug: 'lg-ultragear-27-4k-144hz',
+        description: 'Premium 4K gaming monitor with Nano IPS',
+        price: 799,
+        categoryId: categoryMap['Monitors'],
+        stock: 14,
+        sku: 'MON-LG27-4K',
+        features: ['27" 4K', '144Hz', 'Nano IPS', 'G-Sync Compatible'],
+        rating: 4.8,
+        isFeatured: true
+      },
+      {
+        name: 'Samsung Odyssey G9 49"',
+        slug: 'samsung-odyssey-g9-49',
+        description: 'Super ultrawide curved gaming monitor',
+        price: 1299,
+        categoryId: categoryMap['Monitors'],
+        stock: 7,
+        sku: 'MON-SOG9-49',
+        features: ['49" DQHD', '240Hz', '1000R Curve', 'Quantum Mini-LED'],
+        rating: 4.6,
+        isFeatured: true
+      },
+      {
+        name: 'Razer Huntsman V3 Pro',
+        slug: 'razer-huntsman-v3-pro',
+        description: 'Analog optical gaming keyboard',
+        price: 249,
+        categoryId: categoryMap['Keyboards'],
+        stock: 20,
+        sku: 'KBD-RHV3-001',
+        features: ['Analog Optical Switches', 'Per-Key RGB', 'Wrist Rest', 'Magnetic'],
+        rating: 4.8,
+        isFeatured: true
+      },
+      {
+        name: 'Logitech MX Keys S',
+        slug: 'logitech-mx-keys-s',
+        description: 'Premium wireless productivity keyboard',
+        price: 109,
+        categoryId: categoryMap['Keyboards'],
+        stock: 30,
+        sku: 'KBD-MXK-001',
+        features: ['Wireless', 'Backlit', 'Multi-Device', 'USB-C'],
+        rating: 4.7,
+        isFeatured: false
+      },
+      {
+        name: 'Razer DeathAdder V3 Pro',
+        slug: 'razer-deathadder-v3-pro',
+        description: 'Ultra-lightweight wireless gaming mouse',
+        price: 149,
+        categoryId: categoryMap['Mice'],
+        stock: 25,
+        sku: 'MOU-RDA3-001',
+        features: ['63g Weight', '30K DPI', 'Wireless', '90hr Battery'],
+        rating: 4.9,
+        isFeatured: true
+      },
+      {
+        name: 'SteelSeries Arctis Nova Pro',
+        slug: 'steelseries-arctis-nova-pro',
+        description: 'Hi-Res wireless gaming headset with ANC',
+        price: 349,
+        categoryId: categoryMap['Audio'],
+        stock: 18,
+        sku: 'AUD-ANP-001',
+        features: ['Hi-Res Audio', 'Active Noise Cancelling', 'Dual Wireless', 'Hot-Swap Battery'],
+        rating: 4.8,
+        isFeatured: true
+      },
+      {
+        name: 'Bose SoundLink Revolve+',
+        slug: 'bose-soundlink-revolve-plus',
+        description: '360-degree portable Bluetooth speaker',
+        price: 329,
+        categoryId: categoryMap['Audio'],
+        stock: 20,
+        sku: 'AUD-BSR-001',
+        features: ['360° Sound', 'IP55 Waterproof', '17hr Battery', 'Bluetooth 5.3'],
+        rating: 4.7,
+        isFeatured: false
+      },
+      {
+        name: 'ASUS ROG Rapture GT-AX6000',
+        slug: 'asus-rog-rapture-gt-ax6000',
+        description: 'Dual-band WiFi 6 gaming router',
+        price: 349,
+        categoryId: categoryMap['Networking'],
+        stock: 16,
+        sku: 'NET-ROG-001',
+        features: ['WiFi 6', '6000 Mbps', 'Game Acceleration', 'AiMesh'],
+        rating: 4.6,
         isFeatured: true
       }
     ];

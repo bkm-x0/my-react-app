@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CreditCard, MapPin, Phone, Mail, Lock, ArrowLeft, Check } from 'lucide-react';
 import useAuthStore from './store/authStore';
-import axios from 'axios';
+import useCartStore from './store/cartStore';
+import api from '../services/api';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { user, token } = useAuthStore();
+  const cart = useCartStore((state) => state.cart);
+  const clearCart = useCartStore((state) => state.clearCart);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Mock cart data - in real app would come from cart context
-  const cartItems = [
+  // Use cart from store, fallback to mock data
+  const cartItems = cart.length > 0 ? cart : [
     {
       id: 1,
       name: 'Neural Interface MK.II',
@@ -68,6 +71,11 @@ const Checkout = () => {
   };
 
   const validateStep2 = () => {
+    if (formData.paymentMethod === 'cod') {
+      // COD doesn't require card details
+      return true;
+    }
+    
     if (!formData.cardName || !formData.cardNumber || !formData.expiryDate || !formData.cvv) {
       setError('Please fill in all payment details');
       return false;
@@ -80,31 +88,43 @@ const Checkout = () => {
   };
 
   const handleSubmitOrder = async () => {
+    if (!validateStep1()) {
+      setStep(1);
+      return;
+    }
     if (!validateStep2()) return;
 
     setLoading(true);
     try {
       // Create order via API
       const orderPayload = {
+        customer_name: `${formData.firstName} ${formData.lastName}`,
         items: cartItems.map(item => ({
           productId: item.id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          product_name: item.name
         })),
         totalAmount: total,
         shippingAddress: `${formData.address}, ${formData.city}, ${formData.zipCode}, ${formData.country}`,
-        paymentMethod: formData.paymentMethod
+        paymentMethod: formData.paymentMethod,
+        userEmail: formData.email,
+        userPhone: formData.phone
       };
 
-      const response = await axios.post('http://localhost:5000/api/orders', orderPayload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.post('/orders', orderPayload);
+
+      // Clear cart after successful order
+      clearCart();
 
       // Navigate to order confirmation
       navigate(`/order-confirmation/${response.data.id}`, {
         state: {
           order: response.data,
-          shippingInfo: formData
+          shippingInfo: {
+            ...formData,
+            paymentMethod: formData.paymentMethod
+          }
         }
       });
     } catch (err) {
@@ -302,17 +322,20 @@ const Checkout = () => {
 
                   <div className="mb-6">
                     <label className="block text-sm font-orbitron mb-2">PAYMENT METHOD</label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       {[
                         { id: 'credit_card', label: 'CREDIT CARD' },
-                        { id: 'crypto', label: 'CRYPTOCURRENCY' }
+                        { id: 'crypto', label: 'CRYPTOCURRENCY' },
+                        { id: 'cod', label: 'CASH ON DELIVERY' }
                       ].map(method => (
                         <button
                           key={method.id}
                           onClick={() => setFormData(prev => ({ ...prev, paymentMethod: method.id }))}
                           className={`p-4 border-2 rounded-lg font-orbitron font-bold transition-all ${
                             formData.paymentMethod === method.id
-                              ? 'border-cyber-muted-blue bg-cyber-muted-blue/10'
+                              ? method.id === 'cod' 
+                                ? 'border-cyber-muted-pink bg-cyber-muted-pink/10'
+                                : 'border-cyber-muted-blue bg-cyber-muted-blue/10'
                               : 'border-cyber-gray hover:border-cyber-muted-purple'
                           }`}
                         >
@@ -417,11 +440,13 @@ const Checkout = () => {
                     <h3 className="font-orbitron font-bold text-cyber-muted-blue mb-4">PAYMENT METHOD</h3>
                     <div className="p-4 bg-cyber-dark/50 border border-cyber-gray/30 rounded">
                       <p className="text-gray-300">
-                        {formData.paymentMethod === 'credit_card' ? 'Credit Card' : 'Cryptocurrency'}
+                        {formData.paymentMethod === 'credit_card' && 'Credit Card'}
+                        {formData.paymentMethod === 'crypto' && 'Cryptocurrency'}
+                        {formData.paymentMethod === 'cod' && 'Cash on Delivery'}
                       </p>
-                      {formData.paymentMethod === 'credit_card' && (
-                        <p className="text-gray-400 text-sm font-mono">
-                          •••• •••• •••• {formData.cardNumber.slice(-4)}
+                      {formData.paymentMethod === 'cod' && (
+                        <p className="text-sm text-gray-400 mt-3 p-3 bg-cyber-muted-pink/10 border border-cyber-muted-pink/30 rounded">
+                          💵 Payment will be collected upon delivery. No payment information required now.
                         </p>
                       )}
                     </div>
@@ -446,9 +471,13 @@ const Checkout = () => {
                     <button
                       onClick={handleSubmitOrder}
                       disabled={loading}
-                      className="flex-1 cyber-button py-3 text-lg disabled:opacity-50"
+                      className={`flex-1 font-orbitron font-bold py-3 text-lg transition-colors rounded-lg disabled:opacity-50 ${
+                        formData.paymentMethod === 'cod'
+                          ? 'bg-cyber-muted-pink text-cyber-black hover:bg-cyber-muted-pink/80'
+                          : 'cyber-button'
+                      }`}
                     >
-                      {loading ? 'PROCESSING...' : 'PLACE ORDER'}
+                      {loading ? 'PROCESSING...' : formData.paymentMethod === 'cod' ? 'CONFIRM ORDER' : 'PLACE ORDER'}
                     </button>
                   </div>
                 </div>

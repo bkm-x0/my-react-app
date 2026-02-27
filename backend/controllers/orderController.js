@@ -120,9 +120,12 @@ const getOrders = async (req, res) => {
       status
     } = req.query;
 
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    
     const options = {
-      limit: Number(limit),
-      offset: (Number(page) - 1) * Number(limit)
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum
     };
 
     if (status && status !== 'all') {
@@ -137,8 +140,8 @@ const getOrders = async (req, res) => {
 
     res.json({
       orders,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
       total
     });
   } catch (error) {

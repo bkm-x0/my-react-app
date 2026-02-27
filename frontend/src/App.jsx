@@ -21,6 +21,8 @@ import Trending from './pages/Trending';
 import Sale from './pages/Sale';
 import PreOrder from './pages/PreOrder';
 import Categories from './pages/Categories';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -52,7 +54,7 @@ function App() {
         <Route path="/" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Home />
             </div>
           </>
@@ -61,7 +63,7 @@ function App() {
         <Route path="/products" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Products />
             </div>
           </>
@@ -70,8 +72,26 @@ function App() {
         <Route path="/categories" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Categories />
+            </div>
+          </>
+        } />
+        
+        <Route path="/about" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-aliexpress-bgcolor">
+              <About />
+            </div>
+          </>
+        } />
+        
+        <Route path="/contact" element={
+          <>
+            <CyberNavbar />
+            <div className="min-h-screen bg-aliexpress-bgcolor">
+              <Contact />
             </div>
           </>
         } />
@@ -79,7 +99,7 @@ function App() {
         <Route path="/products/:id" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <ProductDetail />
             </div>
           </>
@@ -88,7 +108,7 @@ function App() {
         <Route path="/cart" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Cart />
             </div>
           </>
@@ -97,7 +117,7 @@ function App() {
         <Route path="/checkout" element={
           <ProtectedRoute>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Checkout />
             </div>
           </ProtectedRoute>
@@ -106,20 +126,20 @@ function App() {
         <Route path="/order-confirmation/:orderId" element={
           <ProtectedRoute>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <OrderConfirmation />
             </div>
           </ProtectedRoute>
         } />
         
         <Route path="/login" element={
-          <div className="min-h-screen bg-cyber-black scanlines">
+          <div className="min-h-screen bg-aliexpress-bgcolor">
             <Login />
           </div>
         } />
         
         <Route path="/register" element={
-          <div className="min-h-screen bg-cyber-black scanlines">
+          <div className="min-h-screen bg-aliexpress-bgcolor">
             <Register />
           </div>
         } />
@@ -128,7 +148,7 @@ function App() {
         <Route path="/profile" element={
           <ProtectedRoute>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Profile />
             </div>
           </ProtectedRoute>
@@ -136,7 +156,7 @@ function App() {
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={
-          <div className="min-h-screen bg-cyber-black scanlines">
+          <div className="min-h-screen bg-aliexpress-bgcolor">
             <AdminLogin />
           </div>
         } />
@@ -144,7 +164,7 @@ function App() {
         <Route path="/support" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Support />
             </div>
           </>
@@ -153,7 +173,7 @@ function App() {
         <Route path="/track-order" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <TrackOrder />
             </div>
           </>
@@ -162,7 +182,7 @@ function App() {
         <Route path="/new-arrivals" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <NewArrivals />
             </div>
           </>
@@ -171,7 +191,7 @@ function App() {
         <Route path="/trending" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Trending />
             </div>
           </>
@@ -180,7 +200,7 @@ function App() {
         <Route path="/sale" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <Sale />
             </div>
           </>
@@ -189,7 +209,7 @@ function App() {
         <Route path="/pre-order" element={
           <>
             <CyberNavbar />
-            <div className="min-h-screen bg-cyber-black scanlines">
+            <div className="min-h-screen bg-aliexpress-bgcolor">
               <PreOrder />
             </div>
           </>

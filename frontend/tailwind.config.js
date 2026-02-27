@@ -4,51 +4,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cyber: {
-          black: "#0f0f0f",
-          dark: "#1a1a1e",
-          gray: "#23232b",
-          muted: {
-            purple: "#6b5b8f",
-            blue: "#5b8fa3",
-            pink: "#c9988b",
-            green: "#7a9d8e",
-            cyan: "#6db3c8",
-            sage: "#8fa99d",
-            taupe: "#9d8b7a"
-          }
+        aliexpress: {
+          red: "#FF9100",       // primary CTA (neon orange)
+          darkred: "#E57A00",   // darker orange for hover
+          black: "#121212",     // dark background
+          white: "#E0E0E0",     // light text
+          darkgray: "#1E1E1E",  // cards/sections
+          medgray: "#808080",   // secondary text
+          lightgray: "#B0B0B0", // subtle text
+          bgcolor: "#121212",   // page background
+          border: "#2A2A2A",    // borders
+          accent: "#FF3860"     // secondary accent (neon pink)
         }
       },
       fontFamily: {
-        'orbitron': ['Orbitron', 'sans-serif'],
-        'rajdhani': ['Rajdhani', 'sans-serif'],
-        'mono': ['Share Tech Mono', 'monospace']
+        'sans': ['Segoe UI', 'Roboto', 'sans-serif'],
+        'display': ['Poppins', 'sans-serif']
       },
       animation: {
-        'glitch': 'glitch 1s linear infinite',
-        'pulse-neon': 'pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'scanline': 'scanline 10s linear infinite',
-        'flicker': 'flicker 0.15s infinite'
+        'bounce': 'bounce 1s infinite',
+        'fade-in': 'fadeIn 0.5s ease-in'
       },
       keyframes: {
-        glitch: {
-          '0%, 100%': { transform: 'translate(0)' },
-          '20%': { transform: 'translate(-2px, 2px)' },
-          '40%': { transform: 'translate(-2px, -2px)' },
-          '60%': { transform: 'translate(2px, 2px)' },
-          '80%': { transform: 'translate(2px, -2px)' }
-        },
-        'pulse-neon': {
-          '0%, 100%': { opacity: 1 },
-          '50%': { opacity: 0.5 }
-        },
-        scanline: {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100vh)' }
-        },
-        flicker: {
-          '0%, 100%': { opacity: 1 },
-          '50%': { opacity: 0.7 }
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
         }
       }
     }

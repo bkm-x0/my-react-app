@@ -1,40 +1,19 @@
-import React from 'react';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import useCartStore from './store/cartStore';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const cartItems = [
-    {
-      id: 1,
-      name: 'Neural Interface MK.II',
-      price: 2999,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=150',
-      sku: 'NI-MKII-256-QS',
-      category: 'BIOTECH'
-    },
-    {
-      id: 2,
-      name: 'Quantum Processor Q9',
-      price: 4599,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=150',
-      sku: 'QP-Q9-512',
-      category: 'HARDWARE'
-    },
-    {
-      id: 3,
-      name: 'Data Jack Pro',
-      price: 499,
-      quantity: 2,
-      image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=150',
-      sku: 'DJ-PRO-100G',
-      category: 'ACCESSORIES'
-    },
-  ];
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const [addedProducts, setAddedProducts] = useState({});
+  const [paymentMethod, setPaymentMethod] = useState('prepaid');
+  const cart = useCartStore((state) => state.cart);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const addToCart = useCartStore((state) => state.addToCart);
+  
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = subtotal > 1000 ? 0 : 99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
@@ -60,7 +39,7 @@ const Cart = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <ShoppingBag className="h-6 w-6 text-cyber-muted-blue mr-3" />
-                  <h2 className="text-2xl font-orbitron font-bold">CART ITEMS ({cartItems.length})</h2>
+                  <h2 className="text-2xl font-orbitron font-bold">CART ITEMS ({cart.length})</h2>
                 </div>
                 <Link 
                   to="/products"
@@ -72,7 +51,19 @@ const Cart = () => {
               </div>
 
               <div className="space-y-4">
-                {cartItems.map((item) => (
+                {cart.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingBag className="h-16 w-16 text-cyber-gray mx-auto mb-4" />
+                    <h3 className="text-xl font-orbitron text-gray-300 mb-4">YOUR CART IS EMPTY</h3>
+                    <Link 
+                      to="/products"
+                      className="inline-block px-6 py-3 bg-cyber-muted-pink text-cyber-black font-orbitron font-bold hover:bg-cyber-muted-blue transition-colors"
+                    >
+                      START SHOPPING
+                    </Link>
+                  </div>
+                ) : (
+                  cart.map((item) => (
                   <div key={item.id} className="flex items-center p-4 bg-cyber-dark border border-cyber-gray/50 rounded-lg">
                     {/* Product Image */}
                     <div className="w-24 h-24 bg-cyber-gray rounded-lg mr-4 flex-shrink-0">
@@ -101,16 +92,23 @@ const Cart = () => {
                       {/* Quantity Controls */}
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center">
-                          <button className="p-1 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black">
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="p-1 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black transition-colors"
+                          >
                             <Minus className="h-4 w-4" />
                           </button>
                           <input
                             type="number"
                             value={item.quantity}
+                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
                             className="w-16 text-center cyber-input border-x-0 rounded-none"
-                            readOnly
+                            min="1"
                           />
-                          <button className="p-1 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black">
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="p-1 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black transition-colors"
+                          >
                             <Plus className="h-4 w-4" />
                           </button>
                         </div>
@@ -119,14 +117,17 @@ const Cart = () => {
                           <div className="text-lg font-orbitron font-bold">
                             TOTAL: <span className="text-cyber-muted-green">{(item.price * item.quantity).toLocaleString()}₡</span>
                           </div>
-                          <button className="p-2 border border-cyber-muted-pink text-cyber-muted-pink hover:bg-cyber-muted-pink hover:text-cyber-black rounded">
+                          <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="p-2 border border-cyber-muted-pink text-cyber-muted-pink hover:bg-cyber-muted-pink hover:text-cyber-black rounded transition-colors"
+                          >
                             <Trash2 className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
 
@@ -179,26 +180,82 @@ const Cart = () => {
                 </div>
               </div>
 
+              {/* Payment Method Selection */}
+              <div className="border-t border-cyber-gray/50 pt-6 mb-6">
+                <h3 className="font-orbitron font-bold mb-4 text-cyber-muted-blue">PAYMENT METHOD</h3>
+                <div className="space-y-3">
+                  {/* Prepaid */}
+                  <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
+                    style={{
+                      borderColor: paymentMethod === 'prepaid' ? '#6db3c8' : '#4a4a5e',
+                      backgroundColor: paymentMethod === 'prepaid' ? 'rgba(109, 179, 200, 0.1)' : 'transparent'
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="prepaid"
+                      checked={paymentMethod === 'prepaid'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-4 h-4 mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-orbitron font-bold text-cyber-muted-blue">PREPAID PAYMENT</div>
+                      <div className="text-sm text-gray-400">Pay Now - Credit Card, Wallet, Bank Transfer, Crypto</div>
+                    </div>
+                  </label>
+                  
+                  {/* Cash on Delivery */}
+                  <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors"
+                    style={{
+                      borderColor: paymentMethod === 'cod' ? '#c9988b' : '#4a4a5e',
+                      backgroundColor: paymentMethod === 'cod' ? 'rgba(201, 152, 139, 0.1)' : 'transparent'
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-4 h-4 mr-3"
+                    />
+                    <div className="flex-1">
+                      <div className="font-orbitron font-bold text-cyber-muted-pink">CASH ON DELIVERY</div>
+                      <div className="text-sm text-gray-400">Pay Upon Receipt - No Advance Payment Required</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               {/* Checkout Button */}
               <button 
                 onClick={() => navigate('/checkout')}
                 className="w-full cyber-button py-4 text-lg mb-6">
                 <CreditCard className="inline mr-2 h-5 w-5" />
-                PROCEED TO CHECKOUT
+                {paymentMethod === 'prepaid' ? 'PROCEED TO PAYMENT' : 'CONFIRM ORDER'}
               </button>
 
               {/* Payment Methods */}
               <div className="border-t border-cyber-gray/50 pt-6">
-                <h3 className="font-orbitron font-bold mb-4 text-cyber-muted-blue">ACCEPTED PAYMENT</h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {['CRYPTO', 'CREDITS', 'NEURAL', 'BIOMETRIC'].map((method) => (
+                <h3 className="font-orbitron font-bold mb-4 text-cyber-muted-blue">AVAILABLE PAYMENT GATEWAYS</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {paymentMethod === 'prepaid' ? (
+                    ['CREDIT CARD', 'CRYPTO', 'E-WALLET', 'BANK'].map((method) => (
+                      <div 
+                        key={method}
+                        className="p-3 border border-cyber-muted-blue/50 text-center text-xs font-mono bg-cyber-dark/50 rounded hover:bg-cyber-muted-blue/10 transition-colors cursor-pointer"
+                      >
+                        {method}
+                      </div>
+                    ))
+                  ) : (
                     <div 
-                      key={method}
-                      className="p-2 border border-cyber-muted-purple/30 text-center text-xs font-mono"
+                      className="col-span-2 p-4 border border-cyber-muted-pink/50 text-center font-mono bg-cyber-dark/50 rounded"
                     >
-                      {method}
+                      💵 Pay Cash at Delivery
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -209,8 +266,9 @@ const Cart = () => {
                     <div className="w-3 h-3 bg-cyber-muted-green rounded-full animate-pulse-neon"></div>
                   </div>
                   <p className="ml-3 text-sm text-gray-300">
-                    All transactions are secured with quantum encryption. 
-                    Your neural data is never stored or shared.
+                    {paymentMethod === 'prepaid' 
+                      ? '✓ Secure Payment - All transactions are encrypted and protected.'
+                      : '✓ Cash on Delivery - Pay when you receive your order. No payment required now.'}
                   </p>
                 </div>
               </div>
@@ -226,20 +284,54 @@ const Cart = () => {
           </h2>
           
           <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="cyber-card">
-                <div className="flex items-center">
-                  <div className="w-20 h-20 bg-cyber-dark rounded-lg mr-4 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-orbitron font-bold text-lg mb-1">Neural OS v2.1</h4>
-                    <div className="text-cyber-muted-green font-mono mb-2">899₡</div>
-                    <button className="text-sm cyber-button py-1 px-3">
-                      ADD TO CART
-                    </button>
+            {[
+              { id: 101, name: 'Neural OS v2.1', price: 899, category: 'SOFTWARE' },
+              { id: 102, name: 'Quantum Shield Pro', price: 1299, category: 'SECURITY' },
+              { id: 103, name: 'Data Jack Module', price: 599, category: 'ACCESSORIES' }
+            ].map((product) => {
+              const isAdded = addedProducts[product.id];
+              
+              const handleAddRecommended = () => {
+                addToCart(product);
+                setAddedProducts((prev) => ({ ...prev, [product.id]: true }));
+                setTimeout(() => {
+                  setAddedProducts((prev) => ({ ...prev, [product.id]: false }));
+                }, 2000);
+              };
+              
+              return (
+                <div key={product.id} className="cyber-card">
+                  <div className="flex items-start gap-4">
+                    <div className="w-20 h-20 bg-cyber-dark border border-cyber-muted-blue/30 rounded-lg flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <h4 className="font-orbitron font-bold text-lg mb-1 text-cyber-muted-blue">{product.name}</h4>
+                      <div className="text-xs font-mono text-gray-400 mb-2">{product.category}</div>
+                      <div className="text-cyber-muted-green font-mono font-bold mb-3">{product.price}₡</div>
+                      <button 
+                        onClick={handleAddRecommended}
+                        className={`w-full text-sm font-orbitron font-bold py-2 px-3 transition-colors ${
+                          isAdded
+                            ? 'bg-cyber-muted-green text-cyber-black'
+                            : 'bg-cyber-muted-pink/20 border border-cyber-muted-pink text-cyber-muted-pink hover:bg-cyber-muted-pink hover:text-cyber-black'
+                        }`}
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="inline h-4 w-4 mr-1" />
+                            ADDED
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="inline h-4 w-4 mr-1" />
+                            ADD TO CART
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

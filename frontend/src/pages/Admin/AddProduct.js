@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Save, X, Upload, Plus, Trash2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
+const API_BASE = `http://${window.location.hostname}:5000/api`;
+
 const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -85,7 +87,7 @@ const AddProduct = () => {
       console.log('Sending product data:', productData);
 
       const response = await axios.post(
-        'http://localhost:5000/api/products', 
+        `${API_BASE}/products`, 
         productData,
         {
           headers: {
@@ -114,7 +116,7 @@ const AddProduct = () => {
       } else if (error.code === 'ECONNABORTED') {
         errorMessage = 'Request timeout - Backend is not responding';
       } else if (error.message.includes('Network')) {
-        errorMessage = 'Network error - Make sure backend is running on http://localhost:5000';
+        errorMessage = 'Network error - Make sure backend server is running';
       } else {
         errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Unknown error';
       }

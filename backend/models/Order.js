@@ -82,6 +82,10 @@ class Order {
   static async findByUserId(userId, options = {}) {
     const { limit = 50, offset = 0, status } = options;
     
+    // Ensure limit and offset are valid integers
+    const safeLimit = parseInt(limit) || 50;
+    const safeOffset = parseInt(offset) || 0;
+    
     let sql = `
       SELECT 
         o.*,
@@ -100,7 +104,7 @@ class Order {
     }
     
     sql += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(safeLimit, safeOffset);
     
     const [orders] = await pool.execute(sql, params);
     
@@ -141,6 +145,10 @@ class Order {
       endDate
     } = options;
     
+    // Ensure limit and offset are valid integers
+    const safeLimit = parseInt(limit) || 100;
+    const safeOffset = parseInt(offset) || 0;
+    
     let sql = `
       SELECT 
         o.*,
@@ -169,7 +177,7 @@ class Order {
     }
     
     sql += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(safeLimit, safeOffset);
     
     const [orders] = await pool.execute(sql, params);
     

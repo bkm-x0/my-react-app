@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Filter, Grid, List, Star, ShoppingCart, Eye, Search } from 'lucide-react';
+import { Filter, Grid, List, Search, AlertCircle } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { productAPI } from '../services/api';
 
@@ -16,6 +16,9 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sort, setSort] = useState('newest');
+  const [priceRange, setPriceRange] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [stockFilter, setStockFilter] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -37,6 +40,15 @@ const Products = () => {
 
       const so = params.get('sort') || 'newest';
       if (so !== sort) setSort(so);
+
+      const pr = params.get('price') || '';
+      if (pr !== priceRange) setPriceRange(pr);
+
+      const rt = params.get('rating') || '';
+      if (rt !== minRating) setMinRating(rt);
+
+      const st = params.get('stock') || '';
+      if (st !== stockFilter) setStockFilter(st);
     } catch (err) {
       // defensive: don't break the page if malformed query string
       console.warn('Could not parse URL query params for Products page', err);
@@ -71,8 +83,25 @@ const Products = () => {
         limit,
         sort,
       };
-      if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory; // send slug or id
+      if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory;
       if (searchTerm) params.search = searchTerm;
+
+      // Price range filter
+      if (priceRange) {
+        switch (priceRange) {
+          case 'under-1000': params.maxPrice = 1000; break;
+          case '1000-5000': params.minPrice = 1000; params.maxPrice = 5000; break;
+          case '5000-10000': params.minPrice = 5000; params.maxPrice = 10000; break;
+          case 'over-10000': params.minPrice = 10000; break;
+          default: break;
+        }
+      }
+
+      // Rating filter
+      if (minRating) params.rating = minRating;
+
+      // Stock filter
+      if (stockFilter) params.stock = stockFilter;
 
       const res = await productAPI.getProducts(params);
       const data = res.data || {};
@@ -84,7 +113,7 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, selectedCategory, searchTerm, sort]);
+  }, [page, limit, selectedCategory, searchTerm, sort, priceRange, minRating, stockFilter]);
 
   // initial load
   useEffect(() => {
@@ -101,140 +130,161 @@ const Products = () => {
   const filteredProducts = products;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-12 text-center">
-        <h1 className="text-5xl font-orbitron font-bold mb-4">
-          <span className="text-cyber-muted-blue">PRODUCT</span>
-          <span className="text-cyber-muted-pink"> DATABASE</span>
-        </h1>
-        <p className="text-gray-300 text-lg font-rajdhani max-w-3xl mx-auto">
-          Access the most advanced cybernetic technology and quantum hardware. Filter by category or use the search to find specific augmentations.
-        </p>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 bg-cyber-gray/50 border border-cyber-muted-blue/30 rounded-lg">
-        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-          <Filter className="h-5 w-5 text-cyber-muted-blue" />
-          <span className="font-orbitron font-bold text-lg">FILTERS</span>
+    <div className="min-h-screen bg-aliexpress-black">
+      <div className="container mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-aliexpress-white">
+            Products <span className="text-aliexpress-red">catalog</span>
+          </h1>
+          <p className="text-aliexpress-medgray text-lg max-w-3xl mx-auto">
+            Browse and filter products easily using search, categories, and sorting options.
+          </p>
         </div>
-        
-        <div className="flex items-center space-x-4 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none mr-4">
-            <input
-              aria-label="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search products..."
-              className="cyber-input w-full pr-10"
-            />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60" />
+
+        {/* Controls */}
+        <div className="mb-10 p-6 bg-aliexpress-darkgray border border-aliexpress-border rounded">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-aliexpress-red rounded">
+                <Filter className="h-5 w-5 text-aliexpress-black" />
+              </div>
+              <span className="font-display font-bold text-lg text-aliexpress-white">
+                Filters
+              </span>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+              <div className="relative flex-1 sm:flex-none w-full sm:w-80">
+                <input
+                  aria-label="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full px-5 py-3 pl-12 bg-aliexpress-black border border-aliexpress-border rounded focus:border-aliexpress-red focus:ring-1 focus:ring-aliexpress-red/30 transition-all outline-none font-medium text-aliexpress-white placeholder:text-aliexpress-medgray"
+                />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-aliexpress-medgray h-5 w-5" />
+              </div>
+
+              <div className="flex border border-aliexpress-border rounded overflow-hidden bg-aliexpress-black">
+                <button 
+                  onClick={() => { setViewMode('grid'); pushViewToUrl('grid'); }}
+                  className={`p-3 transition-all ${viewMode === 'grid' ? 'bg-aliexpress-red text-aliexpress-black' : 'text-aliexpress-white hover:bg-aliexpress-darkgray'}`}
+                >
+                  <Grid className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={() => { setViewMode('list'); pushViewToUrl('list'); }}
+                  className={`p-3 transition-all ${viewMode === 'list' ? 'bg-aliexpress-red text-aliexpress-black' : 'text-aliexpress-white hover:bg-aliexpress-darkgray'}`}
+                >
+                  <List className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="w-full sm:w-52 px-4 py-3 bg-aliexpress-black border border-aliexpress-border rounded focus:border-aliexpress-red transition-all outline-none font-display font-semibold text-aliexpress-white cursor-pointer"
+              >
+                <option value="newest">SORT: NEWEST</option>
+                <option value="price_asc">PRICE: LOW TO HIGH</option>
+                <option value="price_desc">PRICE: HIGH TO LOW</option>
+                <option value="rating">RATING</option>
+                <option value="featured">FEATURED</option>
+              </select>
+            </div>
           </div>
-
-          <div className="flex border border-cyber-muted-purple rounded-lg overflow-hidden">
-            <button 
-              onClick={() => { setViewMode('grid'); pushViewToUrl('grid'); }}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-cyber-muted-purple text-cyber-black' : 'text-cyber-muted-purple'}`}
-            >
-              <Grid className="h-5 w-5" />
-            </button>
-            <button 
-              onClick={() => { setViewMode('list'); pushViewToUrl('list'); }}
-              className={`p-2 ${viewMode === 'list' ? 'bg-cyber-muted-purple text-cyber-black' : 'text-cyber-muted-purple'}`}
-            >
-              <List className="h-5 w-5" />
-            </button>
-          </div>
-          
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="cyber-input w-48"
-          >
-            <option value="newest">SORT: NEWEST</option>
-            <option value="price_asc">PRICE: LOW TO HIGH</option>
-            <option value="price_desc">PRICE: HIGH TO LOW</option>
-            <option value="rating">RATING</option>
-            <option value="featured">FEATURED</option>
-          </select>
         </div>
-      </div>
 
-      {/* Categories */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-orbitron font-bold mb-4 text-cyber-muted-blue">CATEGORIES</h2>
-        <div className="flex flex-wrap gap-3">
-          {categories.map((category) => (
-            <button
-              key={category.slug || category.id}
-              onClick={() => setSelectedCategory(category.slug || category.id)}
-              className={`px-4 py-2 border font-orbitron font-bold transition-all ${
-                selectedCategory === (category.slug || category.id)
-                  ? `bg-cyber-neon-${category.color} text-cyber-black border-cyber-neon-${category.color}`
-                  : `border-cyber-neon-${category.color} text-cyber-neon-${category.color} hover:bg-cyber-neon-${category.color} hover:text-cyber-black`
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div className="text-center py-20">جارٍ التحميل...</div>
-      ) : error ? (
-        <div className="text-center text-red-400 py-20">{error}</div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} view="grid" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} view="list" />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="mt-12 flex justify-center">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-4 py-2 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black transition-colors font-orbitron"
-            disabled={page === 1}
-          >
-            PREV
-          </button>
-
-          {Array.from({ length: pages }).map((_, idx) => {
-            const num = idx + 1;
-            return (
+        {/* Categories */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-display font-bold mb-4 text-aliexpress-white">
+            Browse <span className="text-aliexpress-red">categories</span>
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {categories.map((category) => (
               <button
-                key={num}
-                onClick={() => setPage(num)}
-                className={`px-4 py-2 border font-orbitron font-bold ${
-                  num === page
-                    ? 'bg-cyber-muted-blue text-cyber-black border-cyber-muted-blue'
-                    : 'border-cyber-muted-purple text-cyber-muted-purple hover:bg-cyber-muted-purple hover:text-cyber-black'
+                key={category.slug || category.id}
+                onClick={() => setSelectedCategory(category.slug || category.id)}
+                className={`px-5 py-2.5 rounded font-display font-semibold text-sm transition-all ${
+                  selectedCategory === (category.slug || category.id)
+                    ? 'bg-aliexpress-red text-aliexpress-black'
+                    : 'bg-aliexpress-darkgray border border-aliexpress-border text-aliexpress-white hover:border-aliexpress-red hover:text-aliexpress-red'
                 }`}
               >
-                {num}
+                {category.name}
               </button>
-            );
-          })}
+            ))}
+          </div>
+        </div>
 
-          <button
-            onClick={() => setPage((p) => Math.min(pages, p + 1))}
-            className="px-4 py-2 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black transition-colors font-orbitron"
-            disabled={page === pages}
-          >
-            NEXT
-          </button>
+        {/* Products Display */}
+        {loading ? (
+          <div className="text-center py-20 text-aliexpress-medgray font-display">Loading products...</div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="inline-flex flex-col items-center gap-4 p-8 bg-aliexpress-darkgray border border-aliexpress-red/50 rounded">
+              <AlertCircle className="h-12 w-12 text-aliexpress-red" />
+              <p className="text-lg font-semibold text-aliexpress-red">{error}</p>
+            </div>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-20 text-aliexpress-medgray font-display">No products found.</div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} view="grid" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4 mb-12">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} view="list" />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-4 py-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray transition-colors font-display text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={page === 1}
+            >
+              PREV
+            </button>
+
+            {Array.from({ length: pages }).map((_, idx) => {
+              const num = idx + 1;
+              if (num === 1 || num === pages || Math.abs(num - page) <= 1) {
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setPage(num)}
+                    className={`min-w-[40px] px-3 py-2 border font-display font-bold text-sm transition-all ${
+                      num === page
+                        ? 'bg-aliexpress-red text-aliexpress-black border-aliexpress-red'
+                        : 'border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                );
+              } else if (num === page - 2 || num === page + 2) {
+                return <span key={num} className="px-2 text-aliexpress-medgray">...</span>;
+              }
+              return null;
+            })}
+
+            <button
+              onClick={() => setPage((p) => Math.min(pages, p + 1))}
+              className="px-4 py-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray transition-colors font-display text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={page === pages}
+            >
+              NEXT
+            </button>
+          </div>
         </div>
       </div>
     </div>

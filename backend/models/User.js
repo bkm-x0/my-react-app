@@ -93,12 +93,16 @@ class User {
   }
 
   static async findAll(limit = 100, offset = 0) {
+    // Ensure limit and offset are valid integers
+    const safeLimit = parseInt(limit) || 100;
+    const safeOffset = parseInt(offset) || 0;
+    
     const [users] = await pool.execute(`
       SELECT id, username, email, role, balance, is_active, created_at
       FROM users 
       ORDER BY created_at DESC 
       LIMIT ? OFFSET ?
-    `, [limit, offset]);
+    `, [safeLimit, safeOffset]);
     
     return users;
   }

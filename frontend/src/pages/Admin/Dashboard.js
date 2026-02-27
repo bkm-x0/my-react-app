@@ -10,6 +10,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import axios from 'axios';
 
+const API_BASE = `http://${window.location.hostname}:5000/api`;
+const API_HOST = `http://${window.location.hostname}:5000`;
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({
@@ -50,7 +53,64 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Mock data for now - replace with actual API calls
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      // Fetch real orders
+      const ordersResponse = await axios.get(`${API_BASE}/orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const allOrders = Array.isArray(ordersResponse.data) ? ordersResponse.data : ordersResponse.data.orders || [];
+      
+      // Fetch real products
+      const productsResponse = await axios.get(`${API_BASE}/products`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const allProducts = Array.isArray(productsResponse.data) ? productsResponse.data : productsResponse.data.products || [];
+      
+      // Calculate stats
+      const totalOrders = allOrders.length;
+      const totalRevenue = allOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      const totalProducts = allProducts.length;
+      const lowStockProducts = allProducts.filter(p => p.stock < 10);
+      
+      setStats({
+        totalRevenue: totalRevenue,
+        totalOrders: totalOrders,
+        totalProducts: totalProducts,
+        totalUsers: 1234,
+        todaysRevenue: totalRevenue * 0.3, // Mock: 30% of total
+        todaysOrders: Math.floor(totalOrders * 0.2), // Mock: 20% of total
+        revenueGrowth: 15.7
+      });
+      
+      // Recent orders - last 5
+      setRecentOrders(allOrders.slice(0, 5).map(order => ({
+        _id: order.id,
+        orderNumber: `ORD-${order.id}`,
+        user: { username: order.customer_name || 'User' },
+        totalPrice: order.total_amount,
+        orderStatus: order.status
+      })));
+      
+      // Low stock products
+      setLowStockProducts(lowStockProducts.map(p => ({
+        _id: p.id,
+        name: p.name,
+        sku: p.sku,
+        stock: p.stock
+      })));
+      
+      // Top products
+      setTopProducts(allProducts.slice(0, 5).map(p => ({
+        _id: p.id,
+        name: p.name,
+        price: p.price,
+        stock: p.stock,
+        rating: p.rating || 4.5
+      })));
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // Use fallback mock data if API fails
       setStats({
         totalRevenue: 54231,
         totalOrders: 789,
@@ -60,35 +120,6 @@ const AdminDashboard = () => {
         todaysOrders: 23,
         revenueGrowth: 15.7
       });
-      
-      setRecentOrders([
-        { _id: 1, orderNumber: 'ORD-001', user: { username: 'User1' }, totalPrice: 299, orderStatus: 'delivered' },
-        { _id: 2, orderNumber: 'ORD-002', user: { username: 'User2' }, totalPrice: 599, orderStatus: 'processing' },
-        { _id: 3, orderNumber: 'ORD-003', user: { username: 'User3' }, totalPrice: 1299, orderStatus: 'shipped' },
-      ]);
-      
-      setLowStockProducts([
-        { _id: 1, name: 'Neural Interface', sku: 'NI-001', stock: 3 },
-        { _id: 2, name: 'Quantum Processor', sku: 'QP-001', stock: 7 },
-        { _id: 3, name: 'Cybernetic Arm', sku: 'CA-001', stock: 2 },
-      ]);
-      
-      setSalesData([
-        { _id: 'neural', totalRevenue: 15000 },
-        { _id: 'quantum', totalRevenue: 12000 },
-        { _id: 'cybernetic', totalRevenue: 8000 },
-        { _id: 'holographic', totalRevenue: 5000 },
-      ]);
-      
-      setTopProducts([
-        { _id: 1, name: 'Neural Interface MK.II', price: 2999, stock: 15, rating: 4.8 },
-        { _id: 2, name: 'Quantum Processor X9', price: 8999, stock: 8, rating: 4.9 },
-        { _id: 3, name: 'Cybernetic Arm v4.0', price: 12999, stock: 5, rating: 5.0 },
-        { _id: 4, name: 'Holo-Display Pro', price: 4599, stock: 25, rating: 4.7 },
-        { _id: 5, name: 'Data Jack Pro', price: 499, stock: 50, rating: 4.3 },
-      ]);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -388,6 +419,10 @@ const AdminDashboard = () => {
           <OrdersManagement />
         )}
 
+        {activeTab === 'orders' && (
+          <OrdersManagement />
+        )}
+
         {activeTab === 'users' && (
           <UsersManagement />
         )}
@@ -447,7 +482,7 @@ const ProductsManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/products', {
+      const response = await axios.get(`${API_BASE}/products`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const productsData = Array.isArray(response.data) ? response.data : response.data.products || [];
@@ -503,7 +538,7 @@ const ProductsManagement = () => {
         payload.image = formData.image;
       }
 
-      const response = await axios.post('http://localhost:5000/api/products', payload, {
+      const response = await axios.post(`${API_BASE}/products`, payload, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -525,7 +560,7 @@ const ProductsManagement = () => {
     if (window.confirm('Confirm deletion?')) {
       try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/products/${id}`, {
+        await axios.delete(`${API_BASE}/products/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setProducts(products.filter(p => p.id !== id));
@@ -549,7 +584,7 @@ const ProductsManagement = () => {
       image: null
     });
     if (product.image) {
-      setImagePreview(`http://localhost:5000${product.image}`);
+      setImagePreview(`${API_HOST}${product.image}`);
     }
     setShowAddForm(true);
   };
@@ -577,7 +612,7 @@ const ProductsManagement = () => {
         payload.image = formData.image;
       }
 
-      const response = await axios.put(`http://localhost:5000/api/products/${editingId}`, payload, {
+      const response = await axios.put(`${API_BASE}/products/${editingId}`, payload, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -721,7 +756,7 @@ const ProductsManagement = () => {
                   <tr key={product.id} className="border-b border-cyber-gray/10 hover:bg-cyber-dark/50">
                     <td className="py-3 px-4">
                       {product.image ? (
-                        <img src={`http://localhost:5000${product.image}`} alt={product.name} className="h-12 w-12 object-cover rounded" />
+                        <img src={`${API_HOST}${product.image}`} alt={product.name} className="h-12 w-12 object-cover rounded" />
                       ) : (
                         <div className="h-12 w-12 bg-cyber-gray/30 rounded flex items-center justify-center text-xs text-gray-500">No Image</div>
                       )}
@@ -798,7 +833,7 @@ const UsersManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/auth/users', {
+      const response = await axios.get(`${API_BASE}/auth/users`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const usersData = Array.isArray(response.data) ? response.data : response.data.users || [];
@@ -816,7 +851,7 @@ const UsersManagement = () => {
   const handleChangeRole = async (userId, newRole) => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await axios.put(`http://localhost:5000/api/users/${userId}`, {
+      const response = await axios.put(`${API_BASE}/users/${userId}`, {
         role: newRole
       }, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -833,7 +868,7 @@ const UsersManagement = () => {
     if (window.confirm('Confirm deletion?')) {
       try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        await axios.delete(`http://localhost:5000/api/users/${id}`, {
+        await axios.delete(`${API_BASE}/users/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setUsers(users.filter(u => u.id !== id));
@@ -963,181 +998,6 @@ const UsersManagement = () => {
   );
 };
 
-const OrdersManagement = () => {
-  const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [editingOrderId, setEditingOrderId] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState('pending');
-
-  useEffect(() => {
-    fetchOrders();
-  }, [statusFilter]);
-
-  useEffect(() => {
-    if (searchTerm) {
-      setFilteredOrders(orders.filter(o => 
-        String(o.id).includes(searchTerm) ||
-        (o.user_username && o.user_username.toLowerCase().includes(searchTerm.toLowerCase()))
-      ));
-    } else {
-      setFilteredOrders(orders);
-    }
-  }, [searchTerm, orders]);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const params = statusFilter !== 'all' ? { status: statusFilter } : {};
-      const response = await axios.get('http://localhost:5000/api/orders', {
-        params,
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      const ordersData = Array.isArray(response.data) ? response.data : response.data.orders || [];
-      setOrders(ordersData);
-      setFilteredOrders(ordersData);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateStatus = async (orderId, newStatus) => {
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, {
-        status: newStatus
-      }, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setOrders(orders.map(o => o.id === orderId ? {...o, status: newStatus} : o));
-      setEditingOrderId(null);
-      alert('Order status updated successfully');
-    } catch (error) {
-      console.error('Error updating order:', error);
-      alert('Error updating order status');
-    }
-  };
-
-  return (
-    <div className="cyber-card">
-      <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue mb-6">ORDERS MANAGEMENT</h2>
-
-      <div className="mb-6 grid grid-cols-2 gap-4">
-        <input
-          type="text"
-          placeholder="Search by Order ID or Customer..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="cyber-input"
-        />
-        <select 
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="cyber-input"
-        >
-          <option value="all">ALL STATUSES</option>
-          <option value="pending">PENDING</option>
-          <option value="processing">PROCESSING</option>
-          <option value="shipped">SHIPPED</option>
-          <option value="delivered">DELIVERED</option>
-          <option value="cancelled">CANCELLED</option>
-        </select>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-cyber-muted-blue/30">
-              <th className="text-left py-3 px-4 font-orbitron">ORDER ID</th>
-              <th className="text-left py-3 px-4 font-orbitron">CUSTOMER</th>
-              <th className="text-left py-3 px-4 font-orbitron">TOTAL</th>
-              <th className="text-left py-3 px-4 font-orbitron">STATUS</th>
-              <th className="text-left py-3 px-4 font-orbitron">DATE</th>
-              <th className="text-left py-3 px-4 font-orbitron">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map(order => (
-                <tr key={order.id} className="border-b border-cyber-gray/10 hover:bg-cyber-dark/50">
-                  <td className="py-3 px-4 font-mono">#ORD-{order.id}</td>
-                  <td className="py-3 px-4">{order.user_username || 'N/A'}</td>
-                  <td className="py-3 px-4 text-cyber-muted-green font-bold">{(order.total_amount || 0).toLocaleString()}₡</td>
-                  <td className="py-3 px-4">
-                    {editingOrderId === order.id ? (
-                      <select 
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="cyber-input text-xs py-1"
-                      >
-                        <option value="pending">PENDING</option>
-                        <option value="processing">PROCESSING</option>
-                        <option value="shipped">SHIPPED</option>
-                        <option value="delivered">DELIVERED</option>
-                        <option value="cancelled">CANCELLED</option>
-                      </select>
-                    ) : (
-                      <span className={`px-2 py-1 rounded text-xs font-orbitron ${
-                        order.status === 'delivered' ? 'bg-cyber-muted-green/20 text-cyber-muted-green' :
-                        order.status === 'shipped' ? 'bg-cyber-muted-blue/20 text-cyber-muted-blue' :
-                        order.status === 'processing' ? 'bg-cyber-muted-taupe/20 text-cyber-muted-taupe' :
-                        order.status === 'cancelled' ? 'bg-cyber-muted-pink/20 text-cyber-muted-pink' :
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                        {String(order.status || 'pending').toUpperCase()}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-gray-400 text-xs">{new Date(order.created_at).toLocaleDateString()}</td>
-                  <td className="py-3 px-4">
-                    {editingOrderId === order.id ? (
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleUpdateStatus(order.id, selectedStatus)}
-                          className="text-cyber-muted-green text-xs hover:underline"
-                        >
-                          SAVE
-                        </button>
-                        <button 
-                          onClick={() => setEditingOrderId(null)}
-                          className="text-gray-400 text-xs hover:underline"
-                        >
-                          CANCEL
-                        </button>
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setEditingOrderId(order.id);
-                          setSelectedStatus(order.status);
-                        }}
-                        className="text-cyber-muted-blue hover:text-cyber-muted-pink transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="py-8 px-4 text-center text-gray-400">
-                  {loading ? 'Loading orders...' : 'No orders found'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
 const AnalyticsDashboard = () => {
   const [analytics, setAnalytics] = useState({
     totalRevenue: 0,
@@ -1257,7 +1117,7 @@ const InventoryManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/products', {
+      const response = await axios.get(`${API_BASE}/products`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const productsData = Array.isArray(response.data) ? response.data : response.data.products || [];
@@ -1339,6 +1199,217 @@ const InventoryManagement = () => {
           ))}
         </div>
       </div>
+    </div>
+  );
+};
+
+// Orders Management Component
+const OrdersManagement = () => {
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    filterOrders();
+  }, [searchTerm, selectedStatus, orders]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE}/orders`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const ordersData = Array.isArray(response.data) ? response.data : response.data.orders || [];
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterOrders = () => {
+    let filtered = orders;
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(order => order.status === selectedStatus);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(order =>
+        order.id?.toString().includes(searchTerm) ||
+        order.order_id?.toString().includes(searchTerm) ||
+        order.user?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredOrders(filtered);
+  };
+
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    setUpdatingOrderId(orderId);
+    try {
+      await axios.put(`${API_BASE}/orders/${orderId}/status`, 
+        { status: newStatus },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+      alert('Order status updated successfully!');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      alert('Failed to update order status');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const statusColors = {
+    pending: 'border-yellow-500 bg-yellow-500/10 text-yellow-400',
+    processing: 'border-blue-500 bg-blue-500/10 text-blue-400',
+    shipped: 'border-purple-500 bg-purple-500/10 text-purple-400',
+    delivered: 'border-green-500 bg-green-500/10 text-green-400',
+    cancelled: 'border-red-500 bg-red-500/10 text-red-400'
+  };
+
+  if (loading) {
+    return (
+      <div className="cyber-card">
+        <p className="text-center text-gray-400 font-orbitron">LOADING ORDERS...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="cyber-card">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue flex items-center">
+          <ShoppingCart className="h-6 w-6 mr-3" />
+          ORDERS MANAGEMENT
+        </h2>
+        <button 
+          onClick={fetchOrders}
+          className="px-4 py-2 bg-cyber-muted-blue text-cyber-black font-orbitron font-bold rounded hover:bg-cyber-muted-blue/80 transition-colors"
+        >
+          REFRESH
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div>
+          <input
+            type="text"
+            placeholder="Search by Order ID or username..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="cyber-input w-full"
+          />
+        </div>
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="cyber-input"
+        >
+          <option value="all">ALL STATUS</option>
+          <option value="pending">PENDING</option>
+          <option value="processing">PROCESSING</option>
+          <option value="shipped">SHIPPED</option>
+          <option value="delivered">DELIVERED</option>
+          <option value="cancelled">CANCELLED</option>
+        </select>
+        <div className="text-right text-gray-400 text-sm font-orbitron">
+          Total Orders: <span className="text-cyber-muted-green font-bold">{filteredOrders.length}</span>
+        </div>
+      </div>
+
+      {/* Orders Table */}
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-8 text-gray-400">
+          <Package className="h-12 w-12 mx-auto mb-4 text-cyber-gray" />
+          <p className="font-orbitron">NO ORDERS FOUND</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredOrders.map((order) => (
+            <div key={order.id} className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">ORDER ID</p>
+                  <p className="font-orbitron font-bold text-cyber-muted-blue">{order.order_id || order.id}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">CUSTOMER</p>
+                  <p className="font-orbitron">{order.customer_name || order.user?.username || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">TOTAL AMOUNT</p>
+                  <p className="font-orbitron font-bold text-cyber-muted-green">{order.total_amount?.toLocaleString()}₡</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">PAYMENT METHOD</p>
+                  <p className="font-mono text-sm">
+                    {order.payment_method === 'cod' ? '💵 COD' : '💳 ' + (order.payment_method || 'Unknown')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">STATUS</p>
+                  <p className={`px-2 py-1 rounded font-orbitron text-xs font-bold border ${statusColors[order.status] || statusColors.pending}`}>
+                    {order.status?.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div className="text-xs text-gray-400 mb-4 p-3 bg-cyber-black/50 rounded">
+                📍 <span className="font-mono">{order.shipping_address || 'No address'}</span>
+              </div>
+
+              {/* Order Items */}
+              <div className="mb-4 text-sm">
+                <p className="text-xs text-gray-400 mb-2">ITEMS:</p>
+                <div className="space-y-1 ml-4">
+                  {order.items && order.items.map((item, idx) => (
+                    <p key={idx} className="text-gray-300">
+                      • {item.product_name || 'Product'} x{item.quantity} = {(item.price * item.quantity).toLocaleString()}₡
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status Update */}
+              <div className="flex flex-wrap gap-2">
+                {['pending', 'processing', 'shipped', 'delivered'].map(status => (
+                  <button
+                    key={status}
+                    onClick={() => handleUpdateStatus(order.id, status)}
+                    disabled={updatingOrderId === order.id || order.status === status}
+                    className={`px-3 py-1 rounded font-orbitron text-xs font-bold transition-colors ${
+                      order.status === status
+                        ? 'bg-cyber-muted-green text-cyber-black'
+                        : 'bg-cyber-gray/30 text-gray-300 hover:bg-cyber-gray/50 disabled:opacity-50'
+                    }`}
+                  >
+                    {status.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -17,14 +17,20 @@ const getProducts = async (req, res) => {
       sort,
       page = 1,
       limit = 12,
-      featured
+      featured,
+      rating,
+      stock
     } = req.query;
 
     // Build options for Product.findAll()
+    // Ensure limit and offset are valid integers (not NaN)
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 12;
+    
     const options = {
       isActive: true,
-      limit: Number(limit),
-      offset: (Number(page) - 1) * Number(limit)
+      limit: limitNum,
+      offset: (pageNum - 1) * limitNum
     };
 
     if (category) {
@@ -42,6 +48,14 @@ const getProducts = async (req, res) => {
 
     if (featured === 'true') {
       options.isFeatured = true;
+    }
+
+    if (rating) {
+      options.minRating = Number(rating);
+    }
+
+    if (stock) {
+      options.stockFilter = stock;
     }
 
     if (search) {
@@ -79,8 +93,8 @@ const getProducts = async (req, res) => {
 
     res.json({
       products,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
       total
     });
   } catch (error) {
@@ -103,8 +117,13 @@ const getProductById = async (req, res) => {
     // include up-to-date review stats
     const Review = require('../models/Review');
     const stats = await Review.getStatsForProduct(product.id);
-    product.reviews = Number(stats.count) || 0;
-    product.rating = Number(stats.avgRating || product.rating || 0).toFixed(2) * 1;
+    product.reviews_count = Number(stats.count) || 0;
+    // Only override the seed/stored rating when real reviews exist
+    if (product.reviews_count > 0) {
+      product.rating = Number(Number(stats.avgRating).toFixed(2));
+    } else {
+      product.rating = Number(Number(product.rating || 0).toFixed(2));
+    }
 
     res.json(product);
   } catch (error) {
@@ -117,8 +136,8 @@ const getProductById = async (req, res) => {
 const getProductReviews = async (req, res) => {
   try {
     const { id } = req.params;
-    const page = Number(req.query.page || 1);
-    const limit = Math.min(Number(req.query.limit || 10), 50);
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
     const offset = (page - 1) * limit;
 
     const Review = require('../models/Review');

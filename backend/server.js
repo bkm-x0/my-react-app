@@ -68,12 +68,14 @@ app.use('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`
-🚀 Server running on port ${PORT}
+🚀 Server running on ${HOST}:${PORT}
 📁 Environment: ${process.env.NODE_ENV || 'development'}
 🗄️  Database: MySQL
 🔗 Health check: http://localhost:${PORT}/api/health
+📱 LAN access:   http://<your-ip>:${PORT}/api
   `.cyan.bold);
 });

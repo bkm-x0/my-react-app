@@ -1,6 +1,8 @@
 // frontend/src/store/authStore.js
 import { create } from 'zustand';
 
+const API_BASE = `http://${window.location.hostname}:5000/api`;
+
 const useAuthStore = create((set, get) => ({
   user: null,
   token: localStorage.getItem('token') || null,
@@ -14,7 +16,7 @@ const useAuthStore = create((set, get) => ({
     try {
       // First test the backend connection
       try {
-        const testResponse = await fetch('http://localhost:5000/api/health', {
+        const testResponse = await fetch(`${API_BASE}/health`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -25,18 +27,19 @@ const useAuthStore = create((set, get) => ({
           throw new Error(`Backend connection failed: ${testResponse.status}`);
         }
       } catch (testError) {
+        const errorMsg = `Cannot connect to server at ${API_BASE}`;
         set({ 
           loading: false, 
           error: { 
-            message: 'Cannot connect to server. Please make sure backend is running on http://localhost:5000',
+            message: errorMsg,
             code: 'SERVER_CONNECTION_ERROR'
           } 
         });
-        return;
+        throw new Error(errorMsg);
       }
       
       // Try actual login
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +50,12 @@ const useAuthStore = create((set, get) => ({
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Login failed');
+        const errorMsg = data.error || data.message || 'Login failed';
+        set({ 
+          loading: false, 
+          error: { message: errorMsg, code: 'LOGIN_ERROR' } 
+        });
+        throw new Error(errorMsg);
       }
       
       // Store token if received
@@ -117,6 +125,9 @@ const useAuthStore = create((set, get) => ({
           } 
         });
       }
+      
+      // Re-throw the error so it can be caught by the component
+      throw error;
     }
   },
   
@@ -124,7 +135,7 @@ const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +203,7 @@ const useAuthStore = create((set, get) => ({
     try {
       set({ loading: true });
       
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch(`${API_BASE}/auth/profile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

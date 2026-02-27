@@ -120,6 +120,10 @@ class Product {
       sortOrder = 'DESC'
     } = options;
     
+    // Ensure limit and offset are valid integers
+    const safeLimit = parseInt(limit) || 100;
+    const safeOffset = parseInt(offset) || 0;
+    
     let sql = `
       SELECT 
         p.*,
@@ -151,14 +155,34 @@ class Product {
       sql += ' AND p.price <= ?';
       params.push(maxPrice);
     }
+
+    if (options.minRating) {
+      sql += ' AND p.rating >= ?';
+      params.push(options.minRating);
+    }
+
+    if (options.stockFilter) {
+      switch (options.stockFilter) {
+        case 'in-stock':
+          sql += ' AND p.stock > 0';
+          break;
+        case 'low-stock':
+          sql += ' AND p.stock > 0 AND p.stock <= 10';
+          break;
+        case 'pre-order':
+          sql += ' AND p.stock = 0';
+          break;
+      }
+    }
     
     // Validate sort column
     const validSortColumns = ['name', 'price', 'rating', 'created_at', 'updated_at'];
     const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : 'created_at';
     const safeSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     
-    sql += ` ORDER BY p.${safeSortBy} ${safeSortOrder} LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    // MySQL prepared statements sometimes mis-handle LIMIT/OFFSET placeholders,
+    // so interpolate validated integers directly.
+    sql += ` ORDER BY p.${safeSortBy} ${safeSortOrder} LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
     // allow simple text search
     if (options.search) {

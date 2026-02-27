@@ -8,7 +8,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, loading } = useAuthStore();
+  const { login, loading, user } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,9 +17,21 @@ const AdminLogin = () => {
 
     try {
       await login(email, password);
+      
+      // Get the updated user from the store after login
+      const currentUser = useAuthStore.getState().user;
+      
+      // Check if user has admin role
+      if (currentUser?.role !== 'admin') {
+        setError('Access denied. Admin privileges required.');
+        // Logout non-admin user
+        useAuthStore.getState().logout();
+        return;
+      }
+      
       navigate('/admin/dashboard');
     } catch (err) {
-      setError('Invalid admin credentials');
+      setError(err.message || 'Invalid admin credentials');
     }
   };
 
