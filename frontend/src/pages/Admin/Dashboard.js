@@ -10,8 +10,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import axios from 'axios';
 
-const API_BASE = `http://${window.location.hostname}:5000/api`;
-const API_HOST = `http://${window.location.hostname}:5000`;
+const API_BASE = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000/api`;
+const API_HOST = process.env.REACT_APP_API_HOST || `http://${window.location.hostname}:5000`;
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');

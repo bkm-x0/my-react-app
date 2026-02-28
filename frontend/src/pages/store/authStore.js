@@ -1,7 +1,7 @@
 // frontend/src/store/authStore.js
 import { create } from 'zustand';
 
-const API_BASE = `http://${window.location.hostname}:5000/api`;
+const API_BASE = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000/api`;
 
 const useAuthStore = create((set, get) => ({
   user: null,

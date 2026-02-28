@@ -150,7 +150,8 @@ const Login = () => {
 // في مكون Login.js، أضف هذه الوظيفة قبل handleSubmit
 const testBackendConnection = async () => {
   try {
-    const response = await fetch(`http://${window.location.hostname}:5000/api/health`);
+    const apiHost = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000/api`;
+    const response = await fetch(`${apiHost}/health`);
     if (response.ok) {
       const data = await response.json();
       console.log('Backend connection OK:', data);
