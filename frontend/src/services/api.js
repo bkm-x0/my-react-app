@@ -28,9 +28,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      // Don't redirect on login, register, or checkout pages - let the component handle the error
+      const noRedirectPaths = ['/login', '/register', '/checkout'];
+      const shouldRedirect = !noRedirectPaths.some(p => currentPath.startsWith(p));
+      
+      console.error('[API] 401 Unauthorized:', error.response?.data?.message || 'Token expired', 'Path:', currentPath);
+      
+      if (shouldRedirect) {
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -61,7 +70,10 @@ export const orderAPI = {
   getOrders: (params) => api.get('/orders', { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
   updateOrder: (id, orderData) => api.put(`/orders/${id}`, orderData),
-  getMyOrders: () => api.get('/orders/myorders')
+  getMyOrders: () => api.get('/orders/myorders'),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+  confirmOrder: (id, adminNotes) => api.put(`/orders/${id}/confirm`, { adminNotes }),
+  rejectOrder: (id, reason) => api.put(`/orders/${id}/reject`, { reason })
 };
 
 export const adminAPI = {

@@ -103,8 +103,7 @@ class Order {
       params.push(status);
     }
     
-    sql += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    params.push(safeLimit, safeOffset);
+    sql += ` ORDER BY o.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
     const [orders] = await pool.execute(sql, params);
     
@@ -134,6 +133,29 @@ class Order {
     `, [status, id]);
     
     return result.affectedRows > 0;
+  }
+
+  static async updateAdminNotes(id, notes) {
+    try {
+      const [result] = await pool.execute(`
+        UPDATE orders 
+        SET admin_notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [notes, id]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      // If admin_notes column doesn't exist, add it
+      if (error.code === 'ER_BAD_FIELD_ERROR') {
+        await pool.execute(`ALTER TABLE orders ADD COLUMN admin_notes TEXT DEFAULT NULL`);
+        const [result] = await pool.execute(`
+          UPDATE orders 
+          SET admin_notes = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `, [notes, id]);
+        return result.affectedRows > 0;
+      }
+      throw error;
+    }
   }
 
   static async findAll(options = {}) {
@@ -176,11 +198,26 @@ class Order {
       params.push(endDate);
     }
     
-    sql += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
-    params.push(safeLimit, safeOffset);
+    sql += ` ORDER BY o.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
-    const [orders] = await pool.execute(sql, params);
+    const [orders] = params.length > 0 
+      ? await pool.execute(sql, params)
+      : await pool.query(sql);
     
+    // Get items for each order
+    for (const order of orders) {
+      const [items] = await pool.execute(`
+        SELECT 
+          oi.*,
+          p.name as product_name,
+          p.slug as product_slug
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = ?
+      `, [order.id]);
+      order.items = items;
+    }
+
     // Get order counts for summary
     const [stats] = await pool.execute(`
       SELECT 

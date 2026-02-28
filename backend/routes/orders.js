@@ -10,7 +10,9 @@ const {
   getOrderStats,
   getInvoice,
   sendInvoice,
-  updateOrderStatus
+  updateOrderStatus,
+  confirmOrder,
+  rejectOrder
 } = require('../controllers/orderController');
 const { protect, admin } = require('../middleware/auth');
 
@@ -27,6 +29,8 @@ router.post('/:id/send-invoice', protect, sendInvoice);
 router.get('/', protect, admin, getOrders);
 router.put('/:id', protect, admin, updateOrder);
 router.put('/:id/status', protect, admin, updateOrderStatus);
+router.put('/:id/confirm', protect, admin, confirmOrder);
+router.put('/:id/reject', protect, admin, rejectOrder);
 router.delete('/:id', protect, admin, deleteOrder);
 router.get('/stats/overview', protect, admin, getOrderStats);
 

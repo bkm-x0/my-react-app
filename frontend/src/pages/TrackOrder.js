@@ -55,18 +55,21 @@ const TrackOrder = () => {
   const getStatusStage = (status) => {
     const stages = {
       pending: 0,
-      processing: 1,
-      shipped: 2,
-      delivered: 3
+      confirmed: 1,
+      processing: 2,
+      shipped: 3,
+      delivered: 4
     };
     return stages[status] || 0;
   };
 
   const statusColors = {
     pending: 'border-yellow-500 bg-yellow-500/10 text-yellow-400',
+    confirmed: 'border-emerald-500 bg-emerald-500/10 text-emerald-400',
     processing: 'border-blue-500 bg-blue-500/10 text-blue-400',
     shipped: 'border-purple-500 bg-purple-500/10 text-purple-400',
-    delivered: 'border-green-500 bg-green-500/10 text-green-400'
+    delivered: 'border-green-500 bg-green-500/10 text-green-400',
+    cancelled: 'border-red-500 bg-red-500/10 text-red-400'
   };
 
   return (
@@ -156,7 +159,9 @@ const TrackOrder = () => {
                         <p className={`text-xs font-orbitron ${
                           o.status === 'delivered' ? 'text-cyber-muted-green' :
                           o.status === 'shipped' ? 'text-cyber-muted-blue' :
+                          o.status === 'confirmed' ? 'text-emerald-400' :
                           o.status === 'processing' ? 'text-cyber-muted-taupe' :
+                          o.status === 'cancelled' ? 'text-red-400' :
                           'text-yellow-400'
                         }`}>
                           {String(o.status || 'pending').toUpperCase()}
@@ -196,7 +201,8 @@ const TrackOrder = () => {
                 
                 <div className="space-y-6">
                   {[
-                    { stage: 'pending', label: 'Order Confirmed', icon: Check },
+                    { stage: 'pending', label: 'Order Placed', icon: Check },
+                    { stage: 'confirmed', label: 'Admin Confirmed', icon: Check },
                     { stage: 'processing', label: 'Processing', icon: Package },
                     { stage: 'shipped', label: 'Shipped', icon: Truck },
                     { stage: 'delivered', label: 'Delivered', icon: MapPin }
@@ -229,7 +235,7 @@ const TrackOrder = () => {
                           </div>
                         </div>
                         
-                        {index < 3 && (
+                        {index < 4 && (
                           <div className="ml-6 h-12 border-l-2 border-cyber-gray/30"></div>
                         )}
                       </div>

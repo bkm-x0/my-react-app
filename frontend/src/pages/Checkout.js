@@ -7,7 +7,7 @@ import api from '../services/api';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const cart = useCartStore((state) => state.cart);
   const clearCart = useCartStore((state) => state.clearCart);
   const [step, setStep] = useState(1);
@@ -88,14 +88,31 @@ const Checkout = () => {
   };
 
   const handleSubmitOrder = async () => {
+    console.log('[CHECKOUT] Submit order clicked');
+    
     if (!validateStep1()) {
+      console.log('[CHECKOUT] Step 1 validation failed');
       setStep(1);
       return;
     }
-    if (!validateStep2()) return;
+    if (!validateStep2()) {
+      console.log('[CHECKOUT] Step 2 validation failed');
+      setStep(2);
+      return;
+    }
 
     setLoading(true);
+    setError('');
     try {
+      // Check if user is logged in
+      const currentToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+      console.log('[CHECKOUT] Token exists:', !!currentToken);
+      if (!currentToken) {
+        setError('يرجى تسجيل الدخول أولاً لتأكيد الطلب');
+        setLoading(false);
+        return;
+      }
+
       // Create order via API
       const orderPayload = {
         customer_name: `${formData.firstName} ${formData.lastName}`,
@@ -112,7 +129,9 @@ const Checkout = () => {
         userPhone: formData.phone
       };
 
+      console.log('[CHECKOUT] Sending order payload:', JSON.stringify(orderPayload));
       const response = await api.post('/orders', orderPayload);
+      console.log('[CHECKOUT] Order created:', response.data);
 
       // Clear cart after successful order
       clearCart();
@@ -128,7 +147,8 @@ const Checkout = () => {
         }
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create order. Please try again.');
+      console.error('[CHECKOUT] Order creation failed:', err.response?.data || err.message);
+      setError(err.response?.data?.message || 'فشل في إنشاء الطلب. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
     }
@@ -456,10 +476,16 @@ const Checkout = () => {
                     <div className="flex items-start">
                       <Lock className="h-5 w-5 text-cyber-muted-green mr-3 flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-gray-300">
-                        Your order is protected by quantum encryption. You will receive an invoice and tracking information via email.
+                        Your order is secure and encrypted. You will receive an invoice and tracking information via email after admin confirmation.
                       </p>
                     </div>
                   </div>
+
+                  {error && (
+                    <div className="mb-4 p-4 border border-red-500/50 bg-red-500/10 rounded-lg">
+                      <p className="text-red-400 text-sm font-orbitron">⚠️ {error}</p>
+                    </div>
+                  )}
 
                   <div className="flex gap-4">
                     <button
@@ -477,7 +503,7 @@ const Checkout = () => {
                           : 'cyber-button'
                       }`}
                     >
-                      {loading ? 'PROCESSING...' : formData.paymentMethod === 'cod' ? 'CONFIRM ORDER' : 'PLACE ORDER'}
+                      {loading ? 'جاري المعالجة...' : formData.paymentMethod === 'cod' ? 'تأكيد الطلب' : 'تأكيد الطلب'}
                     </button>
                   </div>
                 </div>

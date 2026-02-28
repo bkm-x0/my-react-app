@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Cpu, Sparkles, ShoppingCart, Star, TrendingUp, Clock, Award, Users, Globe, Eye, Grid3X3, Monitor, Laptop, Gamepad2, Layers, HardDrive, Tv, Keyboard, Mouse, Headphones, Wifi } from 'lucide-react';
 import api from '../services/api';
 import useAuthStore from './store/authStore';
+import { MatrixRain, ScanningBar, CyberCounter, HudCorners, PulseDot } from '../components/TerminalAnimation';
 
 const Home = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
@@ -68,6 +69,9 @@ const Home = () => {
 
   return (
     <div className="relative overflow-hidden">
+      {/* Matrix Rain Background */}
+      <MatrixRain fullscreen opacity={0.12} />
+
       {/* Hero Section */}
       <div className="relative border-b border-aliexpress-border bg-aliexpress-black">
         <div className="container mx-auto px-4 py-16">
@@ -152,6 +156,9 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Scanning Bar Separator */}
+      <ScanningBar />
+
       {/* Categories Section */}
       <div className="py-16 bg-aliexpress-darkgray">
         <div className="container mx-auto px-4">
@@ -206,6 +213,8 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      <ScanningBar />
 
       {/* Trending Products */}
       <div className="py-16 bg-aliexpress-black border-t border-aliexpress-border">
@@ -277,27 +286,44 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Store Stats */}
+      <ScanningBar />
+
+      {/* Store Stats with HUD */}
       <div className="py-12 bg-aliexpress-darkgray border-t border-aliexpress-border">
         <div className="container mx-auto px-4">
+          {/* Status indicators */}
+          <div className="flex items-center justify-center gap-8 mb-8">
+            <PulseDot color="bg-green-400" label="SERVERS ONLINE" />
+            <PulseDot color="bg-aliexpress-red" label="LIVE ORDERS" />
+            <PulseDot color="bg-blue-400" label="SECURE" />
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
+              const numericValue = parseInt(stat.value.replace(/[^0-9]/g, '')) || 0;
               return (
-                <div key={index} className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-aliexpress-black border-2 border-aliexpress-red flex items-center justify-center mb-3">
-                    <Icon className="h-6 w-6 text-aliexpress-red" />
+                <HudCorners key={index}>
+                  <div className={`flex flex-col items-center text-center p-4 animate-float-up-delay-${index % 4}`}>
+                    <div className="w-12 h-12 rounded-full bg-aliexpress-black border-2 border-aliexpress-red flex items-center justify-center mb-3 hud-flicker">
+                      <Icon className="h-6 w-6 text-aliexpress-red" />
+                    </div>
+                    <div className="text-2xl font-display font-bold text-aliexpress-red mb-1 neon-glow">
+                      {numericValue > 0 ? (
+                        <CyberCounter end={numericValue} suffix={stat.value.replace(/[0-9]/g, '')} />
+                      ) : (
+                        stat.value
+                      )}
+                    </div>
+                    <div className="text-sm text-aliexpress-medgray uppercase tracking-wider">
+                      {stat.label}
+                    </div>
                   </div>
-                  <div className="text-2xl font-display font-bold text-aliexpress-red mb-1">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-aliexpress-medgray uppercase tracking-wider">
-                    {stat.label}
-                  </div>
-                </div>
+                </HudCorners>
               );
             })}
           </div>
+
         </div>
       </div>
 

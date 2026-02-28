@@ -248,4 +248,208 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Terminal Animations ──────────────────────────────────────────── */
+
+/* Blinking cursor */
+.terminal-cursor {
+  animation: cursorBlink 0.8s step-end infinite;
+  color: #FF9100;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Line appear from left */
+.terminal-line-enter {
+  animation: lineSlideIn 0.3s ease-out forwards;
+}
+
+@keyframes lineSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Glitch text effect */
+.glitch-text {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.glitch-text::before {
+  animation: glitchBefore 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  color: #FF3860;
+}
+
+.glitch-text::after {
+  animation: glitchAfter 2s infinite linear alternate-reverse;
+  clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
+  color: #FF9100;
+}
+
+@keyframes glitchBefore {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -1px); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitchAfter {
+  0% { transform: translate(0); }
+  20% { transform: translate(2px, -1px); }
+  40% { transform: translate(-3px, 2px); }
+  60% { transform: translate(1px, -2px); }
+  80% { transform: translate(-2px, 1px); }
+  100% { transform: translate(0); }
+}
+
+/* Scanning bar */
+.scanning-bar-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 145, 0, 0.1);
+}
+
+.scanning-bar {
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #FF9100, transparent);
+  animation: scanMove 2s ease-in-out infinite;
+}
+
+@keyframes scanMove {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* HUD flicker */
+@keyframes hudFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.7; }
+  94% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
+}
+
+.hud-flicker {
+  animation: hudFlicker 4s infinite;
+}
+
+/* Scanlines overlay */
+.scanlines::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  opacity: 0.4;
+}
+
+/* Float up animation for cards */
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float-up {
+  animation: floatUp 0.6s ease-out forwards;
+}
+
+.animate-float-up-delay-1 {
+  animation: floatUp 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-float-up-delay-2 {
+  animation: floatUp 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-float-up-delay-3 {
+  animation: floatUp 0.6s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+/* Neon glow pulse */
+@keyframes neonPulse {
+  0%, 100% {
+    text-shadow: 0 0 5px #FF9100, 0 0 10px #FF9100, 0 0 20px #FF9100;
+  }
+  50% {
+    text-shadow: 0 0 10px #FF9100, 0 0 20px #FF9100, 0 0 40px #FF9100, 0 0 60px #FF9100;
+  }
+}
+
+.neon-glow {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+/* Border trace animation */
+@keyframes borderTrace {
+  0% { background-position: 0% 0%; }
+  25% { background-position: 100% 0%; }
+  50% { background-position: 100% 100%; }
+  75% { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.border-trace {
+  position: relative;
+}
+
+.border-trace::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, #FF9100, #FF3860, #FF9100);
+  background-size: 200% 200%;
+  animation: borderTrace 3s linear infinite;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
+}
+
 

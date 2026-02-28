@@ -9,6 +9,9 @@ const nodemailer = require('nodemailer');
 // @access  Private
 const createOrder = async (req, res) => {
   try {
+    console.log(`[ORDER] New order request from user ${req.user?.id} (${req.user?.username})`);
+    console.log(`[ORDER] Items: ${JSON.stringify(req.body.items?.length || 0)} items, Total: ${req.body.totalAmount}`);
+    
     const {
       items,
       totalAmount,
@@ -39,6 +42,7 @@ const createOrder = async (req, res) => {
       status: 'pending'
     });
 
+    console.log(`[ORDER] ✅ Order #${order.id} created successfully for user ${req.user.id}`);
     res.status(201).json(order);
   } catch (error) {
     console.error(error);
@@ -132,11 +136,13 @@ const getOrders = async (req, res) => {
       options.status = status;
     }
 
-    const orders = await Order.findAll(options);
+    const result = await Order.findAll(options);
+    const orders = result.orders || result;
     
     // Get total count
-    const allOrders = await Order.findAll({ ...options, limit: 999999, offset: 0 });
-    const total = allOrders.length;
+    const allResult = await Order.findAll({ ...options, limit: 999999, offset: 0 });
+    const allOrders = allResult.orders || allResult;
+    const total = Array.isArray(allOrders) ? allOrders.length : 0;
 
     res.json({
       orders,
@@ -183,7 +189,8 @@ const deleteOrder = async (req, res) => {
 // @access  Private/Admin
 const getOrderStats = async (req, res) => {
   try {
-    const orders = await Order.findAll({ limit: 999999, offset: 0 });
+    const result = await Order.findAll({ limit: 999999, offset: 0 });
+    const orders = result.orders || result;
 
     // Today's stats
     const today = new Date();
@@ -372,7 +379,7 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -394,6 +401,84 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+// @desc    Confirm order (Admin)
+// @route   PUT /api/orders/:id/confirm
+// @access  Private/Admin
+const confirmOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.status !== 'pending') {
+      return res.status(400).json({ message: `Cannot confirm order with status '${order.status}'. Only pending orders can be confirmed.` });
+    }
+
+    await Order.updateStatus(req.params.id, 'confirmed');
+
+    // Save admin notes if provided
+    const { adminNotes } = req.body;
+    if (adminNotes) {
+      await Order.updateAdminNotes(req.params.id, adminNotes);
+    }
+
+    const updatedOrder = await Order.findById(req.params.id);
+
+    res.json({
+      message: 'Order confirmed successfully',
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Reject/Cancel order (Admin)
+// @route   PUT /api/orders/:id/reject
+// @access  Private/Admin
+const rejectOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.status !== 'pending') {
+      return res.status(400).json({ message: `Cannot reject order with status '${order.status}'. Only pending orders can be rejected.` });
+    }
+
+    await Order.updateStatus(req.params.id, 'cancelled');
+
+    // Restore product stock
+    if (order.items) {
+      for (const item of order.items) {
+        const { pool } = require('../config/db');
+        await pool.execute(
+          'UPDATE products SET stock = stock + ? WHERE id = ?',
+          [item.quantity, item.product_id]
+        );
+      }
+    }
+
+    const { reason } = req.body;
+    if (reason) {
+      await Order.updateAdminNotes(req.params.id, `Rejected: ${reason}`);
+    }
+
+    const updatedOrder = await Order.findById(req.params.id);
+
+    res.json({
+      message: 'Order rejected and cancelled',
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrderById,
@@ -404,5 +489,7 @@ module.exports = {
   getOrderStats,
   getInvoice,
   sendInvoice,
-  updateOrderStatus
+  updateOrderStatus,
+  confirmOrder,
+  rejectOrder
 };

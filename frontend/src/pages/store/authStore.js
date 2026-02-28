@@ -60,9 +60,10 @@ const useAuthStore = create((set, get) => ({
       
       // Store token if received
       if (data.token) {
+        // Always save to localStorage for persistence
+        localStorage.setItem('token', data.token);
         if (rememberMe) {
-          localStorage.setItem('token', data.token);
-        } else {
+          // Also in sessionStorage for faster access
           sessionStorage.setItem('token', data.token);
         }
         

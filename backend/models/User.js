@@ -97,12 +97,12 @@ class User {
     const safeLimit = parseInt(limit) || 100;
     const safeOffset = parseInt(offset) || 0;
     
-    const [users] = await pool.execute(`
+    const [users] = await pool.query(`
       SELECT id, username, email, role, balance, is_active, created_at
       FROM users 
       ORDER BY created_at DESC 
-      LIMIT ? OFFSET ?
-    `, [safeLimit, safeOffset]);
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
+    `);
     
     return users;
   }

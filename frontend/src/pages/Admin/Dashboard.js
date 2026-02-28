@@ -332,7 +332,9 @@ const AdminDashboard = () => {
                           <td className="py-3 px-4">
                             <span className={`px-2 py-1 text-xs rounded ${
                               order.orderStatus === 'delivered' ? 'bg-cyber-muted-green/20 text-cyber-muted-green' :
+                              order.orderStatus === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400' :
                               order.orderStatus === 'processing' ? 'bg-cyber-muted-taupe/20 text-cyber-muted-taupe' :
+                              order.orderStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
                               'bg-cyber-muted-blue/20 text-cyber-muted-blue'
                             }`}>
                               {String(order.orderStatus || '').toUpperCase()}
@@ -413,10 +415,6 @@ const AdminDashboard = () => {
 
         {activeTab === 'products' && (
           <ProductsManagement />
-        )}
-
-        {activeTab === 'orders' && (
-          <OrdersManagement />
         )}
 
         {activeTab === 'orders' && (
@@ -1211,6 +1209,10 @@ const OrdersManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [rejectingOrderId, setRejectingOrderId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [confirmingOrderId, setConfirmingOrderId] = useState(null);
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
   useEffect(() => {
@@ -1270,7 +1272,51 @@ const OrdersManagement = () => {
       alert('Order status updated successfully!');
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert('Failed to update order status');
+      alert(error.response?.data?.message || 'Failed to update order status');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleConfirmOrder = async (orderId) => {
+    setUpdatingOrderId(orderId);
+    try {
+      await axios.put(`${API_BASE}/orders/${orderId}/confirm`, 
+        { adminNotes: adminNotes },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: 'confirmed' } : order
+      ));
+      setConfirmingOrderId(null);
+      setAdminNotes('');
+      alert('✅ Order confirmed successfully!');
+    } catch (error) {
+      console.error('Error confirming order:', error);
+      alert(error.response?.data?.message || 'Failed to confirm order');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleRejectOrder = async (orderId) => {
+    setUpdatingOrderId(orderId);
+    try {
+      await axios.put(`${API_BASE}/orders/${orderId}/reject`, 
+        { reason: rejectReason },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: 'cancelled' } : order
+      ));
+      setRejectingOrderId(null);
+      setRejectReason('');
+      alert('❌ Order rejected and cancelled');
+    } catch (error) {
+      console.error('Error rejecting order:', error);
+      alert(error.response?.data?.message || 'Failed to reject order');
     } finally {
       setUpdatingOrderId(null);
     }
@@ -1278,6 +1324,7 @@ const OrdersManagement = () => {
 
   const statusColors = {
     pending: 'border-yellow-500 bg-yellow-500/10 text-yellow-400',
+    confirmed: 'border-emerald-500 bg-emerald-500/10 text-emerald-400',
     processing: 'border-blue-500 bg-blue-500/10 text-blue-400',
     shipped: 'border-purple-500 bg-purple-500/10 text-purple-400',
     delivered: 'border-green-500 bg-green-500/10 text-green-400',
@@ -1324,11 +1371,12 @@ const OrdersManagement = () => {
           className="cyber-input"
         >
           <option value="all">ALL STATUS</option>
-          <option value="pending">PENDING</option>
-          <option value="processing">PROCESSING</option>
-          <option value="shipped">SHIPPED</option>
-          <option value="delivered">DELIVERED</option>
-          <option value="cancelled">CANCELLED</option>
+          <option value="pending">⏳ PENDING (Awaiting Confirmation)</option>
+          <option value="confirmed">✅ CONFIRMED</option>
+          <option value="processing">🔄 PROCESSING</option>
+          <option value="shipped">📦 SHIPPED</option>
+          <option value="delivered">✔️ DELIVERED</option>
+          <option value="cancelled">❌ CANCELLED</option>
         </select>
         <div className="text-right text-gray-400 text-sm font-orbitron">
           Total Orders: <span className="text-cyber-muted-green font-bold">{filteredOrders.length}</span>
@@ -1389,9 +1437,84 @@ const OrdersManagement = () => {
                 </div>
               </div>
 
-              {/* Status Update */}
+              {/* Confirm/Reject for pending orders */}
+              {order.status === 'pending' && (
+                <div className="mb-4 p-4 border-2 border-yellow-500/50 bg-yellow-500/5 rounded-lg">
+                  <p className="text-yellow-400 font-orbitron text-sm font-bold mb-3">⏳ AWAITING ADMIN CONFIRMATION</p>
+                  
+                  {confirmingOrderId === order.id ? (
+                    <div className="space-y-3">
+                      <textarea
+                        placeholder="Admin notes (optional)..."
+                        value={adminNotes}
+                        onChange={(e) => setAdminNotes(e.target.value)}
+                        className="cyber-input w-full text-sm"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleConfirmOrder(order.id)}
+                          disabled={updatingOrderId === order.id}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-orbitron text-xs font-bold rounded transition-colors disabled:opacity-50"
+                        >
+                          {updatingOrderId === order.id ? 'CONFIRMING...' : '✅ CONFIRM ORDER'}
+                        </button>
+                        <button
+                          onClick={() => { setConfirmingOrderId(null); setAdminNotes(''); }}
+                          className="px-4 py-2 bg-cyber-gray/30 text-gray-300 font-orbitron text-xs font-bold rounded hover:bg-cyber-gray/50"
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    </div>
+                  ) : rejectingOrderId === order.id ? (
+                    <div className="space-y-3">
+                      <textarea
+                        placeholder="Reason for rejection (optional)..."
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        className="cyber-input w-full text-sm"
+                        rows={2}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRejectOrder(order.id)}
+                          disabled={updatingOrderId === order.id}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-orbitron text-xs font-bold rounded transition-colors disabled:opacity-50"
+                        >
+                          {updatingOrderId === order.id ? 'REJECTING...' : '❌ CONFIRM REJECTION'}
+                        </button>
+                        <button
+                          onClick={() => { setRejectingOrderId(null); setRejectReason(''); }}
+                          className="px-4 py-2 bg-cyber-gray/30 text-gray-300 font-orbitron text-xs font-bold rounded hover:bg-cyber-gray/50"
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setConfirmingOrderId(order.id)}
+                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-orbitron text-sm font-bold rounded transition-colors shadow-lg shadow-emerald-600/30"
+                      >
+                        ✅ CONFIRM
+                      </button>
+                      <button
+                        onClick={() => setRejectingOrderId(order.id)}
+                        className="px-6 py-2 bg-red-600/80 hover:bg-red-500 text-white font-orbitron text-sm font-bold rounded transition-colors shadow-lg shadow-red-600/30"
+                      >
+                        ❌ REJECT
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Status Update for confirmed+ orders */}
+              {order.status !== 'pending' && order.status !== 'cancelled' && (
               <div className="flex flex-wrap gap-2">
-                {['pending', 'processing', 'shipped', 'delivered'].map(status => (
+                {['confirmed', 'processing', 'shipped', 'delivered'].map(status => (
                   <button
                     key={status}
                     onClick={() => handleUpdateStatus(order.id, status)}
@@ -1406,6 +1529,7 @@ const OrdersManagement = () => {
                   </button>
                 ))}
               </div>
+              )}
             </div>
           ))}
         </div>

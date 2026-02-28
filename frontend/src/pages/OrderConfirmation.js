@@ -94,6 +94,7 @@ const OrderConfirmation = () => {
   const shippingInfo = location.state?.shippingInfo || {};
   const statusColors = {
     pending: 'border-yellow-500 bg-yellow-500/10 text-yellow-400',
+    confirmed: 'border-emerald-500 bg-emerald-500/10 text-emerald-400',
     processing: 'border-blue-500 bg-blue-500/10 text-blue-400',
     shipped: 'border-purple-500 bg-purple-500/10 text-purple-400',
     delivered: 'border-green-500 bg-green-500/10 text-green-400',
@@ -101,6 +102,15 @@ const OrderConfirmation = () => {
   };
 
   const orderStatus = order?.status || 'pending';
+
+  const statusSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+  const statusLabels = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    processing: 'Processing',
+    shipped: 'Shipped',
+    delivered: 'Delivered'
+  };
 
   return (
     <div className="min-h-screen bg-cyber-black scanlines">
@@ -137,21 +147,21 @@ const OrderConfirmation = () => {
                 <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">ORDER STATUS</h2>
                 
                 <div className="flex items-center justify-between mb-8">
-                  {['pending', 'processing', 'shipped', 'delivered'].map((status, index) => (
+                  {statusSteps.map((status, index) => (
                     <React.Fragment key={status}>
                       <div className="text-center flex-1">
                         <div className={`w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center font-orbitron font-bold ${
-                          ['pending', 'processing', 'shipped', 'delivered'].indexOf(orderStatus) >= index
+                          statusSteps.indexOf(orderStatus) >= index
                             ? 'bg-cyber-muted-green text-cyber-black'
                             : 'bg-cyber-gray text-gray-400'
                         }`}>
                           {index + 1}
                         </div>
-                        <p className="text-xs font-orbitron text-gray-400 uppercase">{status}</p>
+                        <p className="text-xs font-orbitron text-gray-400 uppercase">{statusLabels[status]}</p>
                       </div>
-                      {index < 3 && (
+                      {index < statusSteps.length - 1 && (
                         <div className={`flex-1 h-1 mx-2 ${
-                          ['pending', 'processing', 'shipped', 'delivered'].indexOf(orderStatus) > index
+                          statusSteps.indexOf(orderStatus) > index
                             ? 'bg-cyber-muted-green'
                             : 'bg-cyber-gray'
                         }`}></div>

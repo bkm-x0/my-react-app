@@ -9,7 +9,8 @@ const Product = require('../models/Product');
 const getAdminStats = async (req, res) => {
   try {
     const users = await User.findAll(999999, 0);
-    const orders = await Order.findAll({ limit: 999999, offset: 0 });
+    const ordersResult = await Order.findAll({ limit: 999999, offset: 0 });
+    const orders = ordersResult.orders || ordersResult;
     const products = await Product.findAll({ limit: 999999, offset: 0 });
 
     const totalUsers = users.length;

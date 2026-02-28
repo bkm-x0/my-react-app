@@ -16,17 +16,19 @@ const protect = async (req, res, next) => {
       const user = await User.findById(decoded.id);
       
       if (!user) {
+        console.log(`[AUTH] User not found for token id: ${decoded.id}`);
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
       req.user = user;
       next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      console.log(`[AUTH] Token verification failed: ${error.message}`);
+      res.status(401).json({ message: 'Not authorized, token expired or invalid. Please login again.' });
     }
   } else {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    console.log(`[AUTH] No token provided for ${req.method} ${req.originalUrl}`);
+    res.status(401).json({ message: 'Not authorized, please login first' });
   }
 };
 
