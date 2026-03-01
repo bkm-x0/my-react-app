@@ -1,356 +1,469 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, Shield, Cpu, Sparkles, ShoppingCart, Star, TrendingUp, Clock, Award, Users, Globe, Eye, Grid3X3, Monitor, Laptop, Gamepad2, Layers, HardDrive, Tv, Keyboard, Mouse, Headphones, Wifi } from 'lucide-react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import {
+  ArrowRight, Zap, Shield, Truck, Headphones,
+  Star, ChevronRight, TrendingUp, Award, Users, Package
+} from 'lucide-react';
+import ProductCard from '../components/ProductCard';
 import api from '../services/api';
-import useAuthStore from './store/authStore';
-import { MatrixRain, ScanningBar, CyberCounter, HudCorners, PulseDot } from '../components/TerminalAnimation';
+import useLangStore from './store/langStore';
+
+const brands = ['ASUS ROG', 'MSI', 'Corsair', 'Razer', 'Logitech', 'HyperX', 'SteelSeries', 'NZXT', 'Lian Li', 'Samsung', 'NVIDIA', 'AMD', 'Intel'];
+
+function AnimatedSection({ children, className = '' }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 const Home = () => {
-  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated } = useAuthStore();
+  const { t } = useLangStore();
 
-  useEffect(() => {
-    fetchTrendingProducts();
-  }, []);
-
-  const fetchTrendingProducts = async () => {
-    try {
-      const response = await api.get('/products?limit=4&sort=newest');
-      const productsData = Array.isArray(response.data) ? response.data : response.data.products || [];
-      setTrendingProducts(productsData.slice(0, 4));
-    } catch (error) {
-      console.error('Error fetching trending products:', error);
-      // Use fallback data if API fails
-      setTrendingProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [dbCategories, setDbCategories] = useState([]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.get('/products/categories');
-      const data = Array.isArray(response.data) ? response.data : response.data.categories || [];
-      setDbCategories(data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  // Map category slugs to icons
-  const categoryIconMap = {
-    'desktops': Monitor,
-    'laptops': Laptop,
-    'gaming-systems': Gamepad2,
-    'processors': Cpu,
-    'graphics-cards': Layers,
-    'memory-ram': HardDrive,
-    'storage': HardDrive,
-    'monitors': Tv,
-    'keyboards': Keyboard,
-    'mice': Mouse,
-    'audio': Headphones,
-    'networking': Wifi,
-  };
-
-  const stats = [
-    { icon: Users, value: '10K+', label: 'Active Users', color: 'blue' },
-    { icon: Award, value: '500+', label: 'Premium Products', color: 'pink' },
-    { icon: Globe, value: '50+', label: 'Countries Served', color: 'green' },
-    { icon: Clock, value: '24/7', label: 'Support', color: 'yellow' }
+  const heroSlides = [
+    {
+      id: 0,
+      badge: t('home.hero.badge'),
+      title: t('home.hero.slide1Title'),
+      highlight: t('home.hero.slide1Highlight'),
+      desc: t('home.hero.slide1Sub'),
+      cta: t('home.hero.cta'),
+      ctaLink: '/products',
+      image: 'https://images.unsplash.com/photo-1707312900236-12d6fefd2bbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200',
+    },
+    {
+      id: 1,
+      badge: t('home.hero.badge'),
+      title: t('home.hero.slide2Title'),
+      highlight: t('home.hero.slide2Highlight'),
+      desc: t('home.hero.slide2Sub'),
+      cta: t('home.hero.cta'),
+      ctaLink: '/products',
+      image: 'https://images.unsplash.com/photo-1578286788444-8c1487fcd823?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200',
+    },
+    {
+      id: 2,
+      badge: t('home.hero.badge'),
+      title: t('home.hero.slide3Title'),
+      highlight: t('home.hero.slide3Highlight'),
+      desc: t('home.hero.slide3Sub'),
+      cta: t('home.hero.cta'),
+      ctaLink: '/products',
+      image: 'https://images.unsplash.com/photo-1684127987312-43455fd95925?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200',
+    },
   ];
 
+  const categoryCards = [
+    { name: t('nav.desktops'), icon: '🖥️', desc: 'Gaming PCs & Rigs', path: '/products?category=kompyuterlar', color: 'from-orange-500/20 to-transparent' },
+    { name: t('nav.laptops'), icon: '💻', desc: 'ROG, Legion, MSI', path: '/products?category=noutbuklar', color: 'from-blue-500/20 to-transparent' },
+    { name: t('nav.components'), icon: '🎮', desc: 'RTX 4090, RX 7900 XTX', path: '/products?category=komponentlar', color: 'from-purple-500/20 to-transparent' },
+    { name: t('nav.accessories'), icon: '⌨️', desc: 'Keyboards, Mice, Headsets', path: '/products', color: 'from-green-500/20 to-transparent' },
+    { name: 'Monitors', icon: '🖱️', desc: '1440p, 4K, 165Hz+', path: '/products', color: 'from-red-500/20 to-transparent' },
+    { name: 'Headsets', icon: '🎧', desc: 'Gaming headsets, wireless', path: '/products', color: 'from-yellow-500/20 to-transparent' },
+    { name: 'New Arrivals', icon: '⚡', desc: 'Latest releases', path: '/new-arrivals', color: 'from-cyan-500/20 to-transparent' },
+    { name: 'On Sale', icon: '🔖', desc: 'Up to 30% off', path: '/sale', color: 'from-pink-500/20 to-transparent' },
+  ];
+
+  const statsData = [
+    { labelKey: 'home.stats.products', value: '500+', icon: Package },
+    { labelKey: 'home.stats.customers', value: '12,000+', icon: Users },
+    { labelKey: 'home.stats.brands', value: '50+', icon: Award },
+    { labelKey: 'home.stats.rating', value: '4.9★', icon: TrendingUp },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentSlide(s => (s + 1) % heroSlides.length), 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get('/products?limit=8&sort=newest');
+        const data = Array.isArray(response.data) ? response.data : response.data.products || [];
+        setFeaturedProducts(data.slice(0, 8));
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setFeaturedProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const slide = heroSlides[currentSlide];
+
   return (
-    <div className="relative overflow-hidden">
-      {/* Matrix Rain Background */}
-      <MatrixRain fullscreen opacity={0.12} />
-
+    <div className="bg-zinc-950 min-h-screen">
       {/* Hero Section */}
-      <div className="relative border-b border-aliexpress-border bg-aliexpress-black">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left Column - Main Text */}
-              <div>
-                <div className="inline-flex items-center space-x-2 mb-6">
-                  <Sparkles className="h-6 w-6 text-aliexpress-red" />
-                  <span className="badge-secondary">
-                    NEW ARRIVALS LIVE
-                  </span>
-                </div>
-                
-                <h1 className="text-4xl md:text-6xl font-display font-bold mb-6 leading-tight">
-                  <span className="text-aliexpress-white block">Dominate the</span>
-                  <span className="text-aliexpress-red block">competition</span>
-                </h1>
-                
-                <p className="text-lg text-aliexpress-medgray mb-10">
-                  Unleash maximum performance with our premium gaming gear, high-end PC components, and cutting-edge accessories built for champions.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/products" className="btn-primary text-lg py-4 px-8 flex items-center justify-center">
-                    POWER UP NOW
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  {!isAuthenticated && (
-                    <Link to="/register" className="btn-secondary text-lg py-4 px-8 text-center">
-                      JOIN THE ELITE
-                    </Link>
-                  )}
-                </div>
-              </div>
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0"
+          >
+            <img src={slide.image} alt="Hero" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-zinc-950/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+          </motion.div>
+        </AnimatePresence>
 
-              {/* Right Column - Featured Product Card */}
-              <div className="relative">
-                <div className="card shadow-lg shadow-aliexpress-red/20">
-                  <div className="relative h-64 mb-6 bg-aliexpress-black border-2 border-aliexpress-red rounded overflow-hidden">
-                    <div className="absolute top-4 left-4">
-                      <span className="badge">
-                        FEATURED
-                      </span>
-                    </div>
-                    <div className="absolute bottom-4 right-4 text-3xl font-display font-bold text-aliexpress-red">
-                      2999₡
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-2xl font-display font-bold mb-3 text-aliexpress-white">
-                    Neural Interface MK.II
-                  </h3>
-                  
-                  <div className="flex items-center mb-4">
-                    <div className="flex mr-4">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < 4
-                              ? 'text-aliexpress-red fill-aliexpress-red'
-                              : 'text-aliexpress-border'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-aliexpress-medgray">4.8 (128 reviews)</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-aliexpress-accent font-semibold">IN STOCK</span>
-                    <button className="flex items-center px-4 py-2 bg-aliexpress-red text-aliexpress-black rounded hover:bg-aliexpress-darkred transition-colors font-bold">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      ADD TO CART
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-orange-600/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Scanning Bar Separator */}
-      <ScanningBar />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 40 }}
+              transition={{ duration: 0.6 }}
+              className="max-w-2xl"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full mb-6"
+              >
+                <Zap className="w-4 h-4 text-orange-400" fill="currentColor" />
+                <span className="text-orange-400 text-sm font-bold tracking-wide">{slide.badge}</span>
+              </motion.div>
 
-      {/* Categories Section */}
-      <div className="py-16 bg-aliexpress-darkgray">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-12">
-            <div>
-              <div className="flex items-center mb-2">
-                <Grid3X3 className="h-6 w-6 text-aliexpress-red mr-3" />
-                <span className="badge-secondary">EXPLORE</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-aliexpress-white">
-                Browse <span className="text-aliexpress-red">categories</span>
-              </h2>
-              <p className="text-aliexpress-medgray mt-2">
-                Select your weapon of choice — from elite gaming peripherals to high-performance components
-              </p>
-            </div>
-            <Link to="/categories" className="btn-primary mt-4 md:mt-0 flex items-center">
-              <Grid3X3 className="h-4 w-4 mr-2" />
-              VIEW ALL CATEGORIES
-            </Link>
-          </div>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-white mb-4"
+                style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.1 }}
+              >
+                {slide.title} <span className="text-orange-500">{slide.highlight}</span>
+              </motion.h1>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {dbCategories.map((category) => {
-              const Icon = categoryIconMap[category.slug] || Cpu;
-              return (
-                <Link 
-                  key={category.id}
-                  to={`/categories`}
-                  className="group card hover:shadow-lg hover:shadow-aliexpress-red/20 transition-all hover:-translate-y-1 text-center"
-                >
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-aliexpress-black border-2 border-aliexpress-border group-hover:border-aliexpress-red flex items-center justify-center transition-colors">
-                    <Icon className="h-7 w-7 text-aliexpress-red" />
-                  </div>
-                  <h3 className="text-sm font-display font-bold text-aliexpress-white group-hover:text-aliexpress-red transition-colors">
-                    {category.name}
-                  </h3>
-                  {category.description && (
-                    <p className="text-xs text-aliexpress-medgray mt-1 line-clamp-2">{category.description}</p>
-                  )}
-                  <div className="flex items-center justify-center text-aliexpress-accent mt-3 text-xs font-display font-semibold group-hover:text-aliexpress-red transition-colors">
-                    BROWSE
-                    <ArrowRight className="ml-1 h-3 w-3" />
-                  </div>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-zinc-300 text-lg mb-8 leading-relaxed"
+              >
+                {slide.desc}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-wrap gap-3"
+              >
+                <Link to={slide.ctaLink}>
+                  <motion.button
+                    whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(249,115,22,0.4)' }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 px-7 py-4 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-xl transition-colors text-base"
+                  >
+                    {slide.cta} <ArrowRight className="w-5 h-5" />
+                  </motion.button>
                 </Link>
-              );
-            })}
-          </div>
+                <Link to="/products">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2 px-7 py-4 bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-xl border border-zinc-700 hover:border-orange-500/40 transition-all text-base backdrop-blur-sm"
+                  >
+                    {t('home.hero.ctaSecondary')}
+                  </motion.button>
+                </Link>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
-          {dbCategories.length === 0 && (
-            <div className="text-center py-10 text-aliexpress-medgray">Loading categories...</div>
-          )}
+          <div className="absolute bottom-8 left-4 sm:left-6 flex gap-2">
+            {heroSlides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === currentSlide ? 'bg-orange-500 w-8' : 'bg-zinc-600 w-3 hover:bg-zinc-400'
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
 
-      <ScanningBar />
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          className="absolute bottom-8 right-6 hidden lg:flex flex-col items-center gap-2"
+        >
+          <span className="text-zinc-500 text-xs tracking-widest rotate-90 mb-2">SCROLL</span>
+          <div className="w-px h-12 bg-gradient-to-b from-zinc-500 to-transparent" />
+        </motion.div>
+      </section>
 
-      {/* Trending Products */}
-      <div className="py-16 bg-aliexpress-black border-t border-aliexpress-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-12">
-            <div>
-              <div className="flex items-center mb-2">
-                <TrendingUp className="h-6 w-6 text-aliexpress-red mr-3" />
-                <span className="badge-secondary">
-                  TRENDING NOW
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-aliexpress-white">
-                Top <span className="text-aliexpress-red">performers</span>
-              </h2>
-            </div>
-            <Link to="/products" className="btn-primary mt-4 md:mt-0">
-              VIEW ALL PRODUCTS
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="py-10 text-center text-aliexpress-medgray">Loading trending products...</div>
-          ) : trendingProducts.length === 0 ? (
-            <div className="py-10 text-center text-aliexpress-medgray">No trending products available right now.</div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trendingProducts.map((product) => (
-                <div key={product.id} className="card group">
-                  <div className="relative h-48 mb-4 overflow-hidden rounded bg-aliexpress-black border-2 border-aliexpress-red">
-                    <div className="absolute top-3 left-3">
-                      <span className="badge-secondary">
-                        {product.category}
-                      </span>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <div className="flex items-center bg-aliexpress-darkgray px-2 py-1 rounded border border-aliexpress-border">
-                        <Star className="h-3 w-3 text-aliexpress-red fill-aliexpress-red mr-1" />
-                        <span className="text-xs text-aliexpress-white">{product.rating}</span>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-3 right-3 text-2xl font-display font-bold text-aliexpress-red">
-                      {product.price}₡
-                    </div>
-                  </div>
-
-                  <h3 className="text-xl font-display font-bold mb-2 text-aliexpress-white">
-                    {product.name}
-                  </h3>
-                  <p className="text-aliexpress-medgray text-sm mb-4 line-clamp-2">{product.description}</p>
-
-                  <div className="flex items-center justify-between">
-                    <Link 
-                      to={`/products/${product.id}`}
-                      className="flex items-center text-sm text-aliexpress-white hover:text-aliexpress-red transition-colors font-bold"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      DETAILS
-                    </Link>
-                    <button className="flex items-center px-3 py-2 bg-aliexpress-red text-aliexpress-black rounded hover:bg-aliexpress-darkred transition-colors text-sm font-bold">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      ADD
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <ScanningBar />
-
-      {/* Store Stats with HUD */}
-      <div className="py-12 bg-aliexpress-darkgray border-t border-aliexpress-border">
-        <div className="container mx-auto px-4">
-          {/* Status indicators */}
-          <div className="flex items-center justify-center gap-8 mb-8">
-            <PulseDot color="bg-green-400" label="SERVERS ONLINE" />
-            <PulseDot color="bg-aliexpress-red" label="LIVE ORDERS" />
-            <PulseDot color="bg-blue-400" label="SECURE" />
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
+      {/* Stats */}
+      <AnimatedSection>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-12 relative z-20">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {statsData.map((stat, i) => {
               const Icon = stat.icon;
-              const numericValue = parseInt(stat.value.replace(/[^0-9]/g, '')) || 0;
               return (
-                <HudCorners key={index}>
-                  <div className={`flex flex-col items-center text-center p-4 animate-float-up-delay-${index % 4}`}>
-                    <div className="w-12 h-12 rounded-full bg-aliexpress-black border-2 border-aliexpress-red flex items-center justify-center mb-3 hud-flicker">
-                      <Icon className="h-6 w-6 text-aliexpress-red" />
-                    </div>
-                    <div className="text-2xl font-display font-bold text-aliexpress-red mb-1 neon-glow">
-                      {numericValue > 0 ? (
-                        <CyberCounter end={numericValue} suffix={stat.value.replace(/[0-9]/g, '')} />
-                      ) : (
-                        stat.value
-                      )}
-                    </div>
-                    <div className="text-sm text-aliexpress-medgray uppercase tracking-wider">
-                      {stat.label}
-                    </div>
+                <motion.div
+                  key={stat.labelKey}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 hover:border-orange-500/30 rounded-2xl p-5 flex items-center gap-4 transition-colors"
+                >
+                  <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Icon className="w-6 h-6 text-orange-400" />
                   </div>
-                </HudCorners>
+                  <div>
+                    <p className="text-orange-400 font-black text-xl">{stat.value}</p>
+                    <p className="text-zinc-400 text-sm">{t(stat.labelKey)}</p>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
-
         </div>
-      </div>
+      </AnimatedSection>
 
-      {/* Call To Action */}
-      <div className="py-20 bg-aliexpress-black border-t border-aliexpress-border relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-aliexpress-red/10 via-transparent to-aliexpress-accent/10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-6 text-aliexpress-white">
-              Ready to <span className="text-aliexpress-red">level up</span>?
-            </h2>
-            <p className="text-lg text-aliexpress-medgray mb-10">
-              Join thousands of gamers and PC enthusiasts. Browse our premium collection and unleash your full potential.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/products" className="btn-primary text-lg px-10 py-4">
-                GEAR UP NOW
+      {/* Brands ticker */}
+      <AnimatedSection className="mt-16 overflow-hidden">
+        <p className="text-center text-zinc-500 text-xs font-bold uppercase tracking-widest mb-6">{t('home.brands')}</p>
+        <div className="relative">
+          <div className="flex gap-10 animate-[ticker_20s_linear_infinite]" style={{ width: 'max-content' }}>
+            {[...brands, ...brands].map((brand, i) => (
+              <span key={i} className="text-zinc-600 hover:text-zinc-300 font-black text-lg transition-colors shrink-0 cursor-default">
+                {brand}
+              </span>
+            ))}
+          </div>
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
+        </div>
+      </AnimatedSection>
+
+      {/* Categories */}
+      <AnimatedSection className="mt-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-1">{t('home.categoriesSub')}</p>
+            <h2 className="text-white font-black text-3xl">{t('home.categories')}</h2>
+          </div>
+          <Link to="/products" className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm font-bold transition-colors group">
+            {t('home.viewAll')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {categoryCards.map((cat, i) => (
+            <motion.div
+              key={cat.name}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.06 }}
+              whileHover={{ scale: 1.04, y: -4 }}
+            >
+              <Link
+                to={cat.path}
+                className={`block bg-zinc-900 border border-zinc-800 hover:border-orange-500/40 rounded-2xl p-5 transition-all duration-300 bg-gradient-to-br ${cat.color}`}
+              >
+                <span className="text-3xl mb-3 block">{cat.icon}</span>
+                <h3 className="text-white font-bold text-sm mb-1">{cat.name}</h3>
+                <p className="text-zinc-400 text-xs">{cat.desc}</p>
               </Link>
-              {!isAuthenticated && (
-                <Link to="/register" className="btn-secondary text-lg px-10 py-4">
-                  JOIN THE ELITE
-                </Link>
-              )}
+            </motion.div>
+          ))}
+        </div>
+      </AnimatedSection>
+
+      {/* Featured Products */}
+      <AnimatedSection className="mt-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-1">{t('home.featuredSub')}</p>
+            <h2 className="text-white font-black text-3xl">{t('home.featured')}</h2>
+          </div>
+          <Link to="/products" className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm font-bold transition-colors group">
+            {t('home.viewAll')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 animate-pulse">
+                <div className="aspect-square bg-zinc-800 rounded-xl mb-4" />
+                <div className="h-4 bg-zinc-800 rounded mb-2 w-3/4" />
+                <div className="h-4 bg-zinc-800 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {featuredProducts.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <ProductCard product={product} />
+              </motion.div>
+            ))}
+          </div>
+        )}
+        <div className="text-center mt-10">
+          <Link to="/products">
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(249,115,22,0.3)' }}
+              whileTap={{ scale: 0.97 }}
+              className="px-10 py-4 bg-orange-500 hover:bg-orange-600 text-black font-black rounded-xl transition-colors text-base"
+            >
+              {t('home.viewAll')}
+            </motion.button>
+          </Link>
+        </div>
+      </AnimatedSection>
+
+      {/* Promo Banners */}
+      <AnimatedSection className="mt-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 to-orange-900 p-8 cursor-pointer min-h-[200px] flex flex-col justify-between"
+          >
+            <div className="absolute inset-0 opacity-20">
+              <img src="https://images.unsplash.com/photo-1695480553563-4db8f08781d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600" alt="Gaming PC" className="w-full h-full object-cover" />
+            </div>
+            <div className="relative z-10">
+              <span className="text-orange-200 text-xs font-bold uppercase tracking-widest">{t('home.promoAssemblySub')}</span>
+              <h3 className="text-white font-black text-2xl mt-2 mb-2">{t('home.promoAssembly')}</h3>
+              <p className="text-orange-100 text-sm">{t('home.promoAssemblySub')}</p>
+            </div>
+            <Link to="/products">
+              <motion.button whileHover={{ x: 4 }} className="relative z-10 flex items-center gap-2 text-white font-bold text-sm group">
+                {t('home.promoAssemblyBtn')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </Link>
+            <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-orange-400/20 rounded-full" />
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-300/10 rounded-full" />
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 p-8 cursor-pointer min-h-[200px] flex flex-col justify-between"
+          >
+            <div className="absolute inset-0 opacity-30">
+              <img src="https://images.unsplash.com/photo-1643869094356-4dc3f74f22eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=600" alt="Keyboard" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-zinc-900/80" />
+            </div>
+            <div className="relative z-10">
+              <span className="text-orange-500 text-xs font-bold uppercase tracking-widest">{t('home.promoSale')}</span>
+              <h3 className="text-white font-black text-2xl mt-2 mb-2">{t('home.promoSale')}<br /><span className="text-orange-400">{t('home.promoSaleSub')}</span></h3>
+              <p className="text-zinc-300 text-sm">{t('home.promoSaleSub')}</p>
+            </div>
+            <Link to="/products">
+              <motion.button whileHover={{ x: 4 }} className="relative z-10 flex items-center gap-2 text-orange-400 font-bold text-sm group">
+                {t('home.promoSaleBtn')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </Link>
+          </motion.div>
+        </div>
+      </AnimatedSection>
+
+      {/* Why Choose Us */}
+      <AnimatedSection className="mt-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-2">{t('home.whyUsSub')}</p>
+          <h2 className="text-white font-black text-3xl">{t('home.whyUs')}</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { icon: Truck, title: t('home.delivery'), desc: t('home.deliverySub') },
+            { icon: Shield, title: t('home.warranty'), desc: t('home.warrantySub') },
+            { icon: Headphones, title: t('home.support'), desc: t('home.supportSub') },
+            { icon: Star, title: t('home.quality'), desc: t('home.qualitySub') },
+          ].map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={{ y: -4 }}
+              className="bg-zinc-900 border border-zinc-800 hover:border-orange-500/30 rounded-2xl p-6 text-center transition-all duration-300 group"
+            >
+              <div className="w-14 h-14 bg-orange-500/10 group-hover:bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors">
+                <item.icon className="w-7 h-7 text-orange-400" />
+              </div>
+              <h3 className="text-white font-bold mb-2">{item.title}</h3>
+              <p className="text-zinc-400 text-sm">{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </AnimatedSection>
+
+      {/* CTA Banner */}
+      <AnimatedSection className="mt-20 mb-20 mx-4 sm:mx-6 lg:mx-auto max-w-7xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-600 via-orange-500 to-orange-700 p-10 sm:p-14 text-center">
+          <div className="absolute inset-0 opacity-10">
+            <img src="https://images.unsplash.com/photo-1707312900236-12d6fefd2bbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200" alt="Gaming" className="w-full h-full object-cover" />
+          </div>
+          <div className="relative z-10">
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              className="w-16 h-16 mx-auto mb-6 bg-black/20 rounded-2xl flex items-center justify-center"
+            >
+              <Zap className="w-8 h-8 text-white" fill="white" />
+            </motion.div>
+            <h2 className="text-white font-black text-3xl sm:text-4xl mb-3">{t('home.cta')}</h2>
+            <p className="text-orange-100 text-base sm:text-lg mb-8 max-w-xl mx-auto">
+              {t('home.ctaSub')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/products">
+                <motion.button
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,0,0,0.4)' }}
+                  whileTap={{ scale: 0.97 }}
+                  className="px-8 py-4 bg-black hover:bg-zinc-900 text-white font-black rounded-xl transition-colors"
+                >
+                  {t('home.hero.cta')}
+                </motion.button>
+              </Link>
+              <Link to="/products">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="px-8 py-4 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl border border-white/40 transition-colors backdrop-blur-sm"
+                >
+                  {t('home.hero.ctaSecondary')}
+                </motion.button>
+              </Link>
             </div>
           </div>
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-orange-400/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-orange-300/10 rounded-full blur-3xl" />
         </div>
-      </div>
+      </AnimatedSection>
     </div>
   );
 };

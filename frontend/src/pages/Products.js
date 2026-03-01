@@ -1,292 +1,451 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Filter, Grid, List, Search, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  SlidersHorizontal, Grid3X3, List, Search, X,
+  ChevronDown, ChevronUp, Star, Filter
+} from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { productAPI } from '../services/api';
+import useLangStore from './store/langStore';
 
 const Products = () => {
-  const [viewMode, setViewMode] = useState('grid');
-  const [categories, setCategories] = useState([{ id: 'all', name: 'ALL PRODUCTS', slug: 'all', color: 'blue' }]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
-  const [limit] = useState(12);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sort, setSort] = useState('newest');
-  const [priceRange, setPriceRange] = useState('');
-  const [minRating, setMinRating] = useState('');
-  const [stockFilter, setStockFilter] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const { t } = useLangStore();
 
-  // Sync component state from URL query params so direct links work (e.g. ?page=2&view=list)
+  const SORT_OPTIONS = [
+    { value: 'popular', label: t('products.popular') },
+    { value: 'price-asc', label: t('products.priceLow') },
+    { value: 'price-desc', label: t('products.priceHigh') },
+    { value: 'rating', label: t('products.topRated') },
+    { value: 'newest', label: t('products.newest') },
+  ];
+
+  const PRICE_RANGES = [
+    { label: t('products.all'), min: 0, max: Infinity },
+    { label: '$100', min: 0, max: 100 },
+    { label: '$100 – $500', min: 100, max: 500 },
+    { label: '$500 – $1000', min: 500, max: 1000 },
+    { label: '$1000 – $5000', min: 1000, max: 5000 },
+    { label: '$5000+', min: 5000, max: Infinity },
+  ];
+
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('popular');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [priceRange, setPriceRange] = useState(0);
+  const [minRating, setMinRating] = useState(0);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({ category: true, price: true, rating: true });
+
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch categories
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(location.search);
-      const p = parseInt(params.get('page') || '1', 10);
-      if (!Number.isNaN(p) && p > 0 && p !== page) setPage(p);
-
-      const v = params.get('view') || 'grid';
-      if (v && v !== viewMode) setViewMode(v);
-
-      const cat = params.get('category');
-      if (cat && cat !== selectedCategory) setSelectedCategory(cat);
-
-      const s = params.get('search') || '';
-      if (s !== searchTerm) setSearchTerm(s);
-
-      const so = params.get('sort') || 'newest';
-      if (so !== sort) setSort(so);
-
-      const pr = params.get('price') || '';
-      if (pr !== priceRange) setPriceRange(pr);
-
-      const rt = params.get('rating') || '';
-      if (rt !== minRating) setMinRating(rt);
-
-      const st = params.get('stock') || '';
-      if (st !== stockFilter) setStockFilter(st);
-    } catch (err) {
-      // defensive: don't break the page if malformed query string
-      console.warn('Could not parse URL query params for Products page', err);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]);
-
-  const pushViewToUrl = (view) => {
-    const params = new URLSearchParams(location.search);
-    params.set('view', view);
-    if (!params.get('page')) params.set('page', String(page || 1));
-    navigate(`/products?${params.toString()}`);
-  };
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const res = await productAPI.getCategories();
-      const remote = Array.isArray(res.data) ? res.data : res.data.categories || [];
-      setCategories((prev) => [prev[0], ...remote.map(c => ({ id: c.id, name: String(c.name || '').toUpperCase(), slug: c.slug, color: c.color || 'blue' }))]);
-    } catch (err) {
-      // keep defaults on error
-      console.error('Could not load categories', err);
-    }
+    const fetchCategories = async () => {
+      try {
+        const res = await productAPI.getCategories();
+        const data = Array.isArray(res.data) ? res.data : res.data.categories || [];
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
+    fetchCategories();
   }, []);
 
+  // Fetch products
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
-      const params = {
-        page,
-        limit,
-        sort,
-      };
+      const params = { limit: 50, sort: sortBy === 'newest' ? 'newest' : sortBy === 'price-asc' ? 'price_asc' : sortBy === 'price-desc' ? 'price_desc' : 'newest' };
       if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory;
-      if (searchTerm) params.search = searchTerm;
+      if (searchQuery) params.search = searchQuery;
 
-      // Price range filter
-      if (priceRange) {
-        switch (priceRange) {
-          case 'under-1000': params.maxPrice = 1000; break;
-          case '1000-5000': params.minPrice = 1000; params.maxPrice = 5000; break;
-          case '5000-10000': params.minPrice = 5000; params.maxPrice = 10000; break;
-          case 'over-10000': params.minPrice = 10000; break;
-          default: break;
-        }
-      }
-
-      // Rating filter
-      if (minRating) params.rating = minRating;
-
-      // Stock filter
-      if (stockFilter) params.stock = stockFilter;
+      const range = PRICE_RANGES[priceRange];
+      if (range.min > 0) params.minPrice = range.min;
+      if (range.max < Infinity) params.maxPrice = range.max;
+      if (minRating > 0) params.minRating = minRating;
 
       const res = await productAPI.getProducts(params);
-      const data = res.data || {};
-      setProducts(Array.isArray(data.products) ? data.products : data);
-      setPages(data.pages || 1);
+      const data = Array.isArray(res.data) ? res.data : res.data.products || [];
+      setProducts(data);
     } catch (err) {
-      console.error(err);
-      setError('فشل تحميل المنتجات');
+      console.error('Failed to load products:', err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, selectedCategory, searchTerm, sort, priceRange, minRating, stockFilter]);
+  }, [sortBy, selectedCategory, searchQuery, priceRange, minRating]);
 
-  // initial load
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  // refetch when filters change
-  useEffect(() => {
-    setPage(1);
-    const t = setTimeout(() => fetchProducts(), 200); // small debounce for UX
-    return () => clearTimeout(t);
+    fetchProducts();
   }, [fetchProducts]);
 
-  const filteredProducts = products;
+  // Sync URL params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    const search = params.get('search');
+    if (cat && cat !== selectedCategory) setSelectedCategory(cat);
+    if (search && search !== searchQuery) setSearchQuery(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
-  return (
-    <div className="min-h-screen bg-aliexpress-black">
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-aliexpress-white">
-            Products <span className="text-aliexpress-red">catalog</span>
-          </h1>
-          <p className="text-aliexpress-medgray text-lg max-w-3xl mx-auto">
-            Browse and filter products easily using search, categories, and sorting options.
-          </p>
-        </div>
+  const toggleSection = (key) => {
+    setExpandedSections(s => ({ ...s, [key]: !s[key] }));
+  };
 
-        {/* Controls */}
-        <div className="mb-10 p-6 bg-aliexpress-darkgray border border-aliexpress-border rounded">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-aliexpress-red rounded">
-                <Filter className="h-5 w-5 text-aliexpress-black" />
-              </div>
-              <span className="font-display font-bold text-lg text-aliexpress-white">
-                Filters
-              </span>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-              <div className="relative flex-1 sm:flex-none w-full sm:w-80">
-                <input
-                  aria-label="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search products..."
-                  className="w-full px-5 py-3 pl-12 bg-aliexpress-black border border-aliexpress-border rounded focus:border-aliexpress-red focus:ring-1 focus:ring-aliexpress-red/30 transition-all outline-none font-medium text-aliexpress-white placeholder:text-aliexpress-medgray"
-                />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-aliexpress-medgray h-5 w-5" />
-              </div>
+  // Client-side sort for rating/popular
+  const sortedProducts = useMemo(() => {
+    let result = [...products];
+    switch (sortBy) {
+      case 'price-asc': result.sort((a, b) => a.price - b.price); break;
+      case 'price-desc': result.sort((a, b) => b.price - a.price); break;
+      case 'rating': result.sort((a, b) => (b.rating || b.average_rating || 0) - (a.rating || a.average_rating || 0)); break;
+      default: break;
+    }
+    return result;
+  }, [products, sortBy]);
 
-              <div className="flex border border-aliexpress-border rounded overflow-hidden bg-aliexpress-black">
-                <button 
-                  onClick={() => { setViewMode('grid'); pushViewToUrl('grid'); }}
-                  className={`p-3 transition-all ${viewMode === 'grid' ? 'bg-aliexpress-red text-aliexpress-black' : 'text-aliexpress-white hover:bg-aliexpress-darkgray'}`}
-                >
-                  <Grid className="h-5 w-5" />
-                </button>
-                <button 
-                  onClick={() => { setViewMode('list'); pushViewToUrl('list'); }}
-                  className={`p-3 transition-all ${viewMode === 'list' ? 'bg-aliexpress-red text-aliexpress-black' : 'text-aliexpress-white hover:bg-aliexpress-darkgray'}`}
-                >
-                  <List className="h-5 w-5" />
-                </button>
-              </div>
-              
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="w-full sm:w-52 px-4 py-3 bg-aliexpress-black border border-aliexpress-border rounded focus:border-aliexpress-red transition-all outline-none font-display font-semibold text-aliexpress-white cursor-pointer"
-              >
-                <option value="newest">SORT: NEWEST</option>
-                <option value="price_asc">PRICE: LOW TO HIGH</option>
-                <option value="price_desc">PRICE: HIGH TO LOW</option>
-                <option value="rating">RATING</option>
-                <option value="featured">FEATURED</option>
-              </select>
-            </div>
-          </div>
-        </div>
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setPriceRange(0);
+    setMinRating(0);
+    setSearchQuery('');
+    navigate('/products');
+  };
 
-        {/* Categories */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-display font-bold mb-4 text-aliexpress-white">
-            Browse <span className="text-aliexpress-red">categories</span>
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.slug || category.id}
-                onClick={() => setSelectedCategory(category.slug || category.id)}
-                className={`px-5 py-2.5 rounded font-display font-semibold text-sm transition-all ${
-                  selectedCategory === (category.slug || category.id)
-                    ? 'bg-aliexpress-red text-aliexpress-black'
-                    : 'bg-aliexpress-darkgray border border-aliexpress-border text-aliexpress-white hover:border-aliexpress-red hover:text-aliexpress-red'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
+  const hasFilters = selectedCategory !== 'all' || priceRange > 0 || minRating > 0 || searchQuery;
 
-        {/* Products Display */}
-        {loading ? (
-          <div className="text-center py-20 text-aliexpress-medgray font-display">Loading products...</div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <div className="inline-flex flex-col items-center gap-4 p-8 bg-aliexpress-darkgray border border-aliexpress-red/50 rounded">
-              <AlertCircle className="h-12 w-12 text-aliexpress-red" />
-              <p className="text-lg font-semibold text-aliexpress-red">{error}</p>
-            </div>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20 text-aliexpress-medgray font-display">No products found.</div>
-        ) : viewMode === 'grid' ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} view="grid" />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4 mb-12">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} view="list" />
-            ))}
-          </div>
-        )}
+  const allCategories = [{ id: 'all', name: t('products.allCategories'), slug: 'all' }, ...categories];
 
-        {/* Pagination */}
-        <div className="flex justify-center">
-          <div className="inline-flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-4 py-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray transition-colors font-display text-sm disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={page === 1}
+  const SidebarContent = () => (
+    <div className="space-y-1">
+      {hasFilters && (
+        <motion.button
+          onClick={clearFilters}
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors mb-3"
+        >
+          <X className="w-4 h-4" /> {t('products.clearAll')}
+        </motion.button>
+      )}
+
+      {/* Categories */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => toggleSection('category')}
+          className="w-full flex items-center justify-between p-4 text-white font-bold text-sm"
+        >
+          {t('products.category')} {expandedSections.category ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+        </button>
+        <AnimatePresence>
+          {expandedSections.category && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
             >
-              PREV
-            </button>
-
-            {Array.from({ length: pages }).map((_, idx) => {
-              const num = idx + 1;
-              if (num === 1 || num === pages || Math.abs(num - page) <= 1) {
-                return (
+              <div className="px-3 pb-3 space-y-1">
+                {allCategories.map(cat => (
                   <button
-                    key={num}
-                    onClick={() => setPage(num)}
-                    className={`min-w-[40px] px-3 py-2 border font-display font-bold text-sm transition-all ${
-                      num === page
-                        ? 'bg-aliexpress-red text-aliexpress-black border-aliexpress-red'
-                        : 'border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray'
+                    key={cat.id || cat.slug}
+                    onClick={() => setSelectedCategory(cat.slug || cat.id?.toString() || 'all')}
+                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                      selectedCategory === (cat.slug || cat.id?.toString())
+                        ? 'bg-orange-500 text-black font-bold'
+                        : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
                     }`}
                   >
-                    {num}
+                    {cat.name}
                   </button>
-                );
-              } else if (num === page - 2 || num === page + 2) {
-                return <span key={num} className="px-2 text-aliexpress-medgray">...</span>;
-              }
-              return null;
-            })}
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-            <button
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
-              className="px-4 py-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-darkgray transition-colors font-display text-sm disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={page === pages}
+      {/* Price Range */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => toggleSection('price')}
+          className="w-full flex items-center justify-between p-4 text-white font-bold text-sm"
+        >
+          {t('products.priceRange')} {expandedSections.price ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+        </button>
+        <AnimatePresence>
+          {expandedSections.price && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
             >
-              NEXT
-            </button>
+              <div className="px-3 pb-3 space-y-1">
+                {PRICE_RANGES.map((range, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPriceRange(i)}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                      priceRange === i ? 'bg-orange-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                    }`}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Rating */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => toggleSection('rating')}
+          className="w-full flex items-center justify-between p-4 text-white font-bold text-sm"
+        >
+          {t('products.rating')} {expandedSections.rating ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+        </button>
+        <AnimatePresence>
+          {expandedSections.rating && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 space-y-1">
+                {[0, 4, 4.5, 4.7, 4.9].map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setMinRating(r)}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                      minRating === r ? 'bg-orange-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                    }`}
+                  >
+                    {r === 0 ? (
+                      t('products.all')
+                    ) : (
+                      <>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <Star key={s} className={`w-3 h-3 ${s <= r ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />
+                          ))}
+                        </div>
+                        <span>{r}+</span>
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="bg-zinc-950 min-h-screen pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-white font-black text-2xl sm:text-3xl">{t('products.title')}</h1>
+              <p className="text-zinc-400 text-sm mt-1">
+                {sortedProducts.length} {t('products.results')}
+              </p>
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder={t('common.search')}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 text-white text-sm pl-9 pr-4 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-500 w-48"
+                />
+              </div>
+
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2.5 rounded-xl outline-none focus:border-orange-500 transition-colors cursor-pointer"
+              >
+                {SORT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-xl p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-orange-500 text-black' : 'text-zinc-400 hover:text-white'}`}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-orange-500 text-black' : 'text-zinc-400 hover:text-white'}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden flex items-center gap-2 px-3 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-xl hover:border-orange-500/40 transition-colors"
+              >
+                <Filter className="w-4 h-4" />
+                {t('products.filterMobile')}
+                {hasFilters && <span className="w-2 h-2 bg-orange-500 rounded-full" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Active filters */}
+          {hasFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-wrap gap-2"
+            >
+              {selectedCategory !== 'all' && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-xl">
+                  {allCategories.find(c => (c.slug || c.id?.toString()) === selectedCategory)?.name || selectedCategory}
+                  <button onClick={() => setSelectedCategory('all')}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {priceRange > 0 && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-xl">
+                  {PRICE_RANGES[priceRange].label}
+                  <button onClick={() => setPriceRange(0)}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {searchQuery && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-xl">
+                  "{searchQuery}"
+                  <button onClick={() => setSearchQuery('')}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+            </motion.div>
+          )}
+        </div>
+
+        <div className="flex gap-6">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block w-64 shrink-0">
+            <div className="sticky top-24 space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                <SlidersHorizontal className="w-4 h-4 text-orange-400" />
+                <span className="text-white font-bold text-sm">{t('products.filters')}</span>
+              </div>
+              <SidebarContent />
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          <div className="flex-1 min-w-0">
+            {loading ? (
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 animate-pulse">
+                    <div className="aspect-square bg-zinc-800 rounded-xl mb-4" />
+                    <div className="h-4 bg-zinc-800 rounded mb-2 w-3/4" />
+                    <div className="h-4 bg-zinc-800 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : sortedProducts.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-20"
+              >
+                <div className="text-5xl mb-4">🔍</div>
+                <p className="text-zinc-400 text-lg mb-2">{t('products.noProducts')}</p>
+                <p className="text-zinc-600 text-sm mb-6">{t('products.noProductsSub')}</p>
+                <button
+                  onClick={clearFilters}
+                  className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl transition-colors"
+                >
+                  {t('products.clearAll')}
+                </button>
+              </motion.div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${viewMode}-${selectedCategory}-${sortBy}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                      : 'space-y-3'
+                  }
+                >
+                  {sortedProducts.map((product, i) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(i * 0.05, 0.5) }}
+                    >
+                      <ProductCard product={product} viewMode={viewMode} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Sidebar Drawer */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-black/70 z-40 lg:hidden"
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed left-0 top-0 bottom-0 w-72 bg-zinc-950 border-r border-zinc-800 z-50 overflow-y-auto p-4 lg:hidden"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-orange-400" />
+                  <span className="text-white font-bold">{t('products.filters')}</span>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <SidebarContent />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,7 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from './pages/store/authStore';
+import useLangStore from './pages/store/langStore';
 import CyberNavbar from './components/CyberNavbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -40,197 +42,76 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   return children;
 };
 
+// Layout with Navbar + Footer
+const Layout = ({ children }) => {
+  const location = useLocation();
+  const hideFooter = ['/login', '/register', '/checkout', '/admin'].some(p => location.pathname.startsWith(p));
+  
+  return (
+    <>
+      <CyberNavbar />
+      <div className="min-h-screen bg-zinc-950">
+        {children}
+      </div>
+      {!hideFooter && <Footer />}
+    </>
+  );
+};
+
 function App() {
   // Initialize authentication on app start
   React.useEffect(() => {
     const { initializeAuth } = useAuthStore.getState();
     initializeAuth();
+    // Initialize language/dir on app start
+    const { lang } = useLangStore.getState();
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
   }, []);
   
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Home />
-            </div>
-          </>
-        } />
-        
-        <Route path="/products" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Products />
-            </div>
-          </>
-        } />
-        
-        <Route path="/categories" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Categories />
-            </div>
-          </>
-        } />
-        
-        <Route path="/about" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <About />
-            </div>
-          </>
-        } />
-        
-        <Route path="/contact" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Contact />
-            </div>
-          </>
-        } />
-        
-        <Route path="/products/:id" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <ProductDetail />
-            </div>
-          </>
-        } />
-        
-        <Route path="/cart" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Cart />
-            </div>
-          </>
-        } />
-        
+        {/* Public Routes with Layout */}
+        <Route path="/" element={<Layout><Home /></Layout>} />
+        <Route path="/products" element={<Layout><Products /></Layout>} />
+        <Route path="/categories" element={<Layout><Categories /></Layout>} />
+        <Route path="/about" element={<Layout><About /></Layout>} />
+        <Route path="/contact" element={<Layout><Contact /></Layout>} />
+        <Route path="/products/:id" element={<Layout><ProductDetail /></Layout>} />
+        <Route path="/cart" element={<Layout><Cart /></Layout>} />
+        <Route path="/support" element={<Layout><Support /></Layout>} />
+        <Route path="/track-order" element={<Layout><TrackOrder /></Layout>} />
+        <Route path="/new-arrivals" element={<Layout><NewArrivals /></Layout>} />
+        <Route path="/trending" element={<Layout><Trending /></Layout>} />
+        <Route path="/sale" element={<Layout><Sale /></Layout>} />
+        <Route path="/pre-order" element={<Layout><PreOrder /></Layout>} />
+
+        {/* Protected Routes with Layout */}
         <Route path="/checkout" element={
-          <ProtectedRoute>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Checkout />
-            </div>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><Checkout /></Layout></ProtectedRoute>
         } />
-        
         <Route path="/order-confirmation/:orderId" element={
-          <ProtectedRoute>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <OrderConfirmation />
-            </div>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><OrderConfirmation /></Layout></ProtectedRoute>
         } />
-        
-        <Route path="/login" element={
-          <div className="min-h-screen bg-aliexpress-bgcolor">
-            <Login />
-          </div>
-        } />
-        
-        <Route path="/register" element={
-          <div className="min-h-screen bg-aliexpress-bgcolor">
-            <Register />
-          </div>
-        } />
-        
-        {/* Protected Routes */}
         <Route path="/profile" element={
-          <ProtectedRoute>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Profile />
-            </div>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
         } />
-        
+
+        {/* Auth Routes (no navbar/footer) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+
         {/* Admin Routes */}
-        <Route path="/admin/login" element={
-          <div className="min-h-screen bg-aliexpress-bgcolor">
-            <AdminLogin />
-          </div>
-        } />
-
-        <Route path="/support" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Support />
-            </div>
-          </>
-        } />
-
-        <Route path="/track-order" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <TrackOrder />
-            </div>
-          </>
-        } />
-
-        <Route path="/new-arrivals" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <NewArrivals />
-            </div>
-          </>
-        } />
-
-        <Route path="/trending" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Trending />
-            </div>
-          </>
-        } />
-
-        <Route path="/sale" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <Sale />
-            </div>
-          </>
-        } />
-
-        <Route path="/pre-order" element={
-          <>
-            <CyberNavbar />
-            <div className="min-h-screen bg-aliexpress-bgcolor">
-              <PreOrder />
-            </div>
-          </>
-        } />
-        
         <Route path="/admin/dashboard" element={
-          <ProtectedRoute adminOnly>
-            <AdminDashboard />
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
         } />
-        
         <Route path="/admin/products/new" element={
-          <ProtectedRoute adminOnly>
-            <AddProduct />
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><AddProduct /></ProtectedRoute>
         } />
-        
         <Route path="/admin/products/edit/:id" element={
-          <ProtectedRoute adminOnly>
-            <AddProduct />
-          </ProtectedRoute>
+          <ProtectedRoute adminOnly><AddProduct /></ProtectedRoute>
         } />
       </Routes>
     </Router>

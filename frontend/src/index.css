@@ -1,455 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  * {
+    scroll-behavior: smooth;
+  }
+
+  :root {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  [dir="rtl"] {
+    font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
   body {
-    @apply bg-aliexpress-bgcolor text-aliexpress-white font-sans overflow-x-hidden;
+    background-color: #09090b;
+    color: #fafafa;
+    overflow-x: hidden;
   }
-  
-  /* Gaming scrollbar */
+
   ::-webkit-scrollbar {
-    width: 12px;
+    width: 6px;
+    height: 6px;
   }
-  
   ::-webkit-scrollbar-track {
-    @apply bg-aliexpress-darkgray;
+    background: #09090b;
   }
-  
   ::-webkit-scrollbar-thumb {
-    @apply bg-aliexpress-red rounded-full;
+    background: #3f3f46;
+    border-radius: 999px;
   }
-  
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-aliexpress-accent;
+    background: #f97316;
   }
 }
 
 @layer components {
-  /* Primary CTA buttons (neon orange) */
   .btn-primary {
-    @apply px-6 py-3 bg-aliexpress-red text-aliexpress-black font-bold rounded
-           transition-all duration-300 hover:bg-aliexpress-darkred hover:shadow-lg hover:shadow-aliexpress-red/50
-           active:scale-95 font-display uppercase;
+    @apply px-6 py-3 bg-orange-500 text-black font-bold rounded-xl
+           transition-all duration-300 hover:bg-orange-600 active:scale-95;
   }
-  
-  /* Secondary buttons (neon pink) */
+
   .btn-secondary {
-    @apply px-6 py-3 bg-transparent border-2 border-aliexpress-accent text-aliexpress-accent font-bold rounded
-           transition-all duration-300 hover:bg-aliexpress-accent hover:text-aliexpress-black hover:shadow-lg hover:shadow-aliexpress-accent/50
-           active:scale-95 font-display uppercase;
+    @apply px-6 py-3 bg-zinc-800 border border-zinc-700 text-white font-bold rounded-xl
+           transition-all duration-300 hover:bg-zinc-700 hover:border-orange-500/40 active:scale-95;
   }
-  
-  /* Outline buttons (subtle) */
+
   .btn-outline {
-    @apply px-6 py-3 border-2 border-aliexpress-white text-aliexpress-white
-           font-semibold rounded transition-all duration-300
-           hover:bg-aliexpress-white hover:text-aliexpress-black active:scale-95 font-display uppercase;
+    @apply px-6 py-3 border border-zinc-700 text-white
+           font-semibold rounded-xl transition-all duration-300
+           hover:border-orange-500/40 hover:bg-zinc-800 active:scale-95;
   }
-  
-  /* Cards */
+
   .card {
-    @apply bg-aliexpress-darkgray border border-aliexpress-border p-6 rounded
-           transition-all duration-300 hover:shadow-xl hover:shadow-aliexpress-red/20 hover:-translate-y-1
-           overflow-hidden;
+    @apply bg-zinc-900 border border-zinc-800 p-6 rounded-2xl
+           transition-all duration-300 hover:border-orange-500/30 overflow-hidden;
   }
-  
+
   .card-gradient {
     @apply relative overflow-hidden;
   }
-  
-  /* Inputs */
+
   .input-modern {
-    @apply w-full px-4 py-3 bg-aliexpress-darkgray border-2 border-aliexpress-border
-           text-aliexpress-white placeholder-aliexpress-medgray rounded
-           focus:outline-none focus:border-aliexpress-red focus:shadow-lg focus:shadow-aliexpress-red/30
-           transition-all font-display;
+    @apply w-full px-4 py-3 bg-zinc-800 border border-zinc-700
+           text-white placeholder-zinc-500 rounded-xl
+           focus:outline-none focus:border-orange-500 transition-all;
   }
-  
-  /* Badges */
+
   .badge {
-    @apply inline-block px-3 py-1 text-xs font-bold
-           bg-aliexpress-red text-aliexpress-black rounded font-display uppercase;
+    @apply inline-block px-2.5 py-1 text-xs font-bold bg-orange-500 text-black rounded-lg;
   }
-  
+
   .badge-secondary {
-    @apply inline-block px-3 py-1 text-xs font-bold
-           bg-transparent border border-aliexpress-accent text-aliexpress-accent rounded font-display uppercase;
+    @apply inline-block px-2.5 py-1 text-xs font-bold
+           bg-transparent border border-orange-500/30 text-orange-400 rounded-lg;
   }
-  
+
   .badge-success {
-    @apply inline-block px-3 py-1 text-xs font-bold
-           bg-aliexpress-darkgray text-aliexpress-white rounded font-display uppercase;
+    @apply inline-block px-2.5 py-1 text-xs font-bold bg-emerald-500 text-white rounded-lg;
   }
-  
-  /* Backward compatibility */
-  .cyber-button {
-    @apply btn-primary;
-  }
-  
-  .cyber-button-secondary {
-    @apply btn-secondary;
-  }
-  
-  .cyber-card {
-    @apply card card-gradient;
-  }
-  
-  .cyber-input {
-    @apply input-modern;
-  }
-  
-  .cyber-badge {
-    @apply badge;
-  }
+
+  .cyber-button { @apply btn-primary; }
+  .cyber-button-secondary { @apply btn-secondary; }
+  .cyber-card { @apply card card-gradient; }
+  .cyber-input { @apply input-modern; }
+  .cyber-badge { @apply badge; }
 }
 
-/* Text color helpers */
-.text-primary {
-  @apply text-aliexpress-red;
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-.text-secondary {
-  @apply text-aliexpress-medgray;
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
 }
 
-.text-light {
-  @apply text-aliexpress-lightgray;
-}
-
-/* Background helpers */
-.bg-aliexpress-light {
-  @apply bg-aliexpress-bgcolor;
-}
-
-/* Border helpers */
-.border-professional-gold {
-  @apply border-aliexpress-red;
-}
-
-.border-professional-navy {
-  @apply border-aliexpress-black;
-}
-
-.text-professional-gold {
-  @apply text-aliexpress-red;
-}
-
-.text-professional-navy {
-  @apply text-aliexpress-black;
-}
-
-.text-professional-darkgray {
-  @apply text-aliexpress-black;
-}
-
-.text-professional-medgray {
-  @apply text-aliexpress-medgray;
-}
-
-.bg-professional-lightergray {
-  @apply bg-aliexpress-bgcolor;
-}
-
-.bg-professional-lightgray {
-  @apply bg-aliexpress-bgcolor;
-}
-
-.bg-professional-gold {
-  @apply bg-aliexpress-red text-white;
-}
-
-.text-vibrant-orange {
-  @apply text-aliexpress-red;
-}
-
-.text-vibrant-blue {
-  @apply text-aliexpress-black;
-}
-
-.text-vibrant-purple {
-  @apply text-aliexpress-black;
-}
-
-.text-vibrant-pink {
-  @apply text-aliexpress-red;
-}
-
-.text-vibrant-green {
-  @apply text-aliexpress-black;
-}
-
-.text-vibrant-yellow {
-  @apply text-aliexpress-black;
-}
-
-.bg-vibrant-light {
-  @apply bg-aliexpress-bgcolor;
-}
-
-.border-vibrant-orange {
-  @apply border-aliexpress-red;
-}
-
-.border-vibrant-blue {
-  @apply border-aliexpress-black;
-}
-
-.border-vibrant-purple {
-  @apply border-aliexpress-black;
-}
-
-.border-vibrant-pink {
-  @apply border-aliexpress-red;
-}
-
-.border-vibrant-green {
-  @apply border-aliexpress-black;
-}
-
-.font-rajdhani {
-  @apply font-sans;
-}
-
-.font-orbitron {
-  @apply font-display;
-}
-
-.hover\:text-vibrant-orange {
-  @apply hover:text-aliexpress-red;
-}
-
-.hover\:bg-vibrant-pink {
-  @apply hover:bg-aliexpress-red;
-}
-
-.hover\:text-vibrant-blue {
-  @apply hover:text-aliexpress-black;
-}
-
-.hover\:bg-vibrant-blue {
-  @apply hover:bg-aliexpress-black;
-}
-
-.hover\:bg-vibrant-green {
-  @apply hover:bg-aliexpress-black;
-}
-
-.bg-vibrant-orange {
-  @apply bg-aliexpress-red text-white;
-}
-
-.bg-vibrant-green {
-  @apply bg-aliexpress-black text-white;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── Terminal Animations ──────────────────────────────────────────── */
-
-/* Blinking cursor */
-.terminal-cursor {
-  animation: cursorBlink 0.8s step-end infinite;
-  color: #FF9100;
-}
-
-@keyframes cursorBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Line appear from left */
-.terminal-line-enter {
-  animation: lineSlideIn 0.3s ease-out forwards;
-}
-
-@keyframes lineSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Glitch text effect */
-.glitch-text {
-  position: relative;
-  display: inline-block;
-}
-
-.glitch-text::before,
-.glitch-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.glitch-text::before {
-  animation: glitchBefore 3s infinite linear alternate-reverse;
-  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-  color: #FF3860;
-}
-
-.glitch-text::after {
-  animation: glitchAfter 2s infinite linear alternate-reverse;
-  clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0 100%);
-  color: #FF9100;
-}
-
-@keyframes glitchBefore {
-  0% { transform: translate(0); }
-  20% { transform: translate(-3px, 2px); }
-  40% { transform: translate(3px, -1px); }
-  60% { transform: translate(-2px, 1px); }
-  80% { transform: translate(2px, -2px); }
-  100% { transform: translate(0); }
-}
-
-@keyframes glitchAfter {
-  0% { transform: translate(0); }
-  20% { transform: translate(2px, -1px); }
-  40% { transform: translate(-3px, 2px); }
-  60% { transform: translate(1px, -2px); }
-  80% { transform: translate(-2px, 1px); }
-  100% { transform: translate(0); }
-}
-
-/* Scanning bar */
-.scanning-bar-container {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 145, 0, 0.1);
-}
-
-.scanning-bar {
-  position: absolute;
-  top: 0;
-  left: -40%;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, #FF9100, transparent);
-  animation: scanMove 2s ease-in-out infinite;
-}
-
-@keyframes scanMove {
-  0% { left: -40%; }
-  100% { left: 100%; }
-}
-
-/* HUD flicker */
-@keyframes hudFlicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.7; }
-  94% { opacity: 1; }
-  96% { opacity: 0.8; }
-  97% { opacity: 1; }
-}
-
-.hud-flicker {
-  animation: hudFlicker 4s infinite;
-}
-
-/* Scanlines overlay */
-.scanlines::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  opacity: 0.4;
-}
-
-/* Float up animation for cards */
 @keyframes floatUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-float-up {
   animation: floatUp 0.6s ease-out forwards;
-}
-
-.animate-float-up-delay-1 {
-  animation: floatUp 0.6s ease-out 0.1s forwards;
-  opacity: 0;
-}
-
-.animate-float-up-delay-2 {
-  animation: floatUp 0.6s ease-out 0.2s forwards;
-  opacity: 0;
-}
-
-.animate-float-up-delay-3 {
-  animation: floatUp 0.6s ease-out 0.3s forwards;
-  opacity: 0;
-}
-
-/* Neon glow pulse */
-@keyframes neonPulse {
-  0%, 100% {
-    text-shadow: 0 0 5px #FF9100, 0 0 10px #FF9100, 0 0 20px #FF9100;
-  }
-  50% {
-    text-shadow: 0 0 10px #FF9100, 0 0 20px #FF9100, 0 0 40px #FF9100, 0 0 60px #FF9100;
-  }
-}
-
-.neon-glow {
-  animation: neonPulse 2s ease-in-out infinite;
-}
-
-/* Border trace animation */
-@keyframes borderTrace {
-  0% { background-position: 0% 0%; }
-  25% { background-position: 100% 0%; }
-  50% { background-position: 100% 100%; }
-  75% { background-position: 0% 100%; }
-  100% { background-position: 0% 0%; }
-}
-
-.border-trace {
-  position: relative;
-}
-
-.border-trace::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(90deg, #FF9100, #FF3860, #FF9100);
-  background-size: 200% 200%;
-  animation: borderTrace 3s linear infinite;
-  border-radius: inherit;
-  z-index: -1;
-  opacity: 0.6;
 }
 
 

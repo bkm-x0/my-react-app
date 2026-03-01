@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
+import useLangStore from './store/langStore';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } })
+};
+
+const inputClasses = 'w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder:text-zinc-600';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +21,7 @@ const Contact = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const { t } = useLangStore();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,346 +33,185 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the form data to a server
     console.log('Form submitted:', formData);
     setSubmitted(true);
-    
-    // Reset form after 3 seconds
     setTimeout(() => {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      });
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       setSubmitted(false);
     }, 3000);
   };
 
   const contactInfo = [
-    {
-      icon: Mail,
-      title: 'Email',
-      details: 'support@cyberstore.com',
-      subtext: 'Reply within 24 hours'
-    },
-    {
-      icon: Phone,
-      title: 'Phone',
-      details: '+1 (555) CYBER-TECH',
-      subtext: '24/7 Support'
-    },
-    {
-      icon: MapPin,
-      title: 'Address',
-      details: 'Tech Hub, Silicon Valley',
-      subtext: 'San Francisco, CA 94105'
-    },
-    {
-      icon: Clock,
-      title: 'Hours',
-      details: '24/7 Operations',
-      subtext: 'Always available'
-    }
+    { icon: Mail, title: t('contact.infoEmail'), details: t('contact.infoEmailDetail'), subtext: t('contact.infoEmailSub') },
+    { icon: Phone, title: t('contact.infoPhone'), details: t('contact.infoPhoneDetail'), subtext: t('contact.infoPhoneSub') },
+    { icon: MapPin, title: t('contact.infoAddress'), details: t('contact.infoAddressDetail'), subtext: t('contact.infoAddressSub') },
+    { icon: Clock, title: t('contact.infoHours'), details: t('contact.infoHoursDetail'), subtext: t('contact.infoHoursSub') }
   ];
 
   const faqs = [
-    {
-      question: 'What is the warranty period?',
-      answer: 'All CyberStore products come with a standard 2-year warranty covering manufacturing defects and technical issues.'
-    },
-    {
-      question: 'Do you offer international shipping?',
-      answer: 'Yes! We ship to 50+ countries worldwide. Shipping costs and delivery times vary by location.'
-    },
-    {
-      question: 'How can I track my order?',
-      answer: 'You can track your order in real-time through your account dashboard or using the tracking link sent to your email.'
-    },
-    {
-      question: 'What is your return policy?',
-      answer: 'We offer a 30-day money-back guarantee if you\'re not satisfied with your purchase, no questions asked.'
-    },
-    {
-      question: 'Do you offer bulk discounts?',
-      answer: 'Yes! Contact our sales team for custom pricing on bulk orders and enterprise solutions.'
-    },
-    {
-      question: 'Are your products customizable?',
-      answer: 'Many of our products can be customized. Contact us to discuss your specific requirements.'
-    }
+    { question: t('contact.faq1q'), answer: t('contact.faq1a') },
+    { question: t('contact.faq2q'), answer: t('contact.faq2a') },
+    { question: t('contact.faq3q'), answer: t('contact.faq3a') },
+    { question: t('contact.faq4q'), answer: t('contact.faq4a') },
+    { question: t('contact.faq5q'), answer: t('contact.faq5a') },
+    { question: t('contact.faq6q'), answer: t('contact.faq6a') }
   ];
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-cyber-muted-blue/30">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyber-muted-pink/10 via-transparent to-cyber-muted-blue/10"></div>
-        
-        <div className="container mx-auto px-4 py-24 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-orbitron font-bold mb-6 leading-tight">
-              <span className="text-cyber-muted-blue">GET IN</span>
-              <span className="text-cyber-muted-pink"> TOUCH</span>
-            </h1>
-            <p className="text-xl text-gray-300 mb-10 font-rajdhani">
-              Have questions? We'd love to hear from you. Get in touch with our support team.
-            </p>
-          </div>
+    <div className="bg-zinc-950 min-h-screen pt-20">
+      {/* Hero */}
+      <div className="border-b border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center">
+          <motion.h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white" initial="hidden" animate="visible" variants={fadeUp}>
+            {t('contact.title') + ' '}<span className="text-orange-400">{t('contact.titleHighlight')}</span>
+          </motion.h1>
+          <motion.p className="text-lg text-zinc-400 max-w-2xl mx-auto" initial="hidden" animate="visible" variants={fadeUp} custom={1}>
+            {t('contact.subtitle')}
+          </motion.p>
         </div>
       </div>
 
-      {/* Contact Information Cards */}
-      <div className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {contactInfo.map((info, index) => {
-              const Icon = info.icon;
-              return (
-                <div key={index} className="cyber-card text-center hover:scale-105 transition-transform">
-                  <div className="flex justify-center mb-6">
-                    <Icon className="h-12 w-12 text-cyber-muted-pink" />
+      {/* Contact Info Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {contactInfo.map((info, index) => {
+            const Icon = info.icon;
+            return (
+              <motion.div key={index} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center hover:border-zinc-700 transition-colors" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={index}>
+                <div className="flex justify-center mb-5">
+                  <div className="w-14 h-14 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                    <Icon className="h-7 w-7 text-orange-400" />
                   </div>
-                  <h3 className="text-xl font-orbitron font-bold mb-3 text-cyber-muted-blue">
-                    {info.title}
-                  </h3>
-                  <p className="text-white font-semibold mb-2">{info.details}</p>
-                  <p className="text-gray-400 text-sm">{info.subtext}</p>
                 </div>
-              );
-            })}
-          </div>
+                <h3 className="text-lg font-bold mb-2 text-white">{info.title}</h3>
+                <p className="text-white font-semibold text-sm mb-1">{info.details}</p>
+                <p className="text-zinc-500 text-sm">{info.subtext}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Contact Form and Map Section */}
-      <div className="py-20 bg-cyber-dark/50">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Contact Form */}
-            <div className="cyber-card">
+      {/* Form & Support */}
+      <div className="border-t border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+          <div className="grid lg:grid-cols-2 gap-10 max-w-6xl mx-auto">
+            {/* Form */}
+            <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
               <div className="flex items-center mb-8">
-                <MessageSquare className="h-8 w-8 text-cyber-muted-pink mr-3" />
-                <h2 className="text-3xl font-orbitron font-bold text-cyber-muted-blue">SEND US A MESSAGE</h2>
+                <MessageSquare className="h-6 w-6 text-orange-400 mr-3" />
+                <h2 className="text-2xl font-bold text-white">{t('contact.formTitle')}</h2>
               </div>
 
               {submitted ? (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">✓</div>
-                  <h3 className="text-2xl font-orbitron font-bold text-cyber-muted-green mb-3">
-                    MESSAGE SENT!
-                  </h3>
-                  <p className="text-gray-300">
-                    Thank you for your message. We'll get back to you shortly.
-                  </p>
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-emerald-400 text-2xl">✓</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-emerald-400 mb-2">{t('contact.messageSent')}</h3>
+                  <p className="text-zinc-400">{t('contact.messageSentDesc')}</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-rajdhani font-semibold text-gray-300 mb-2">
-                      Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="cyber-input w-full"
-                      placeholder="Your name"
-                    />
+                    <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">{t('contact.formName')}</label>
+                    <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className={inputClasses} placeholder={t('contact.namePlaceholder')} />
                   </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-5">
                     <div>
-                      <label htmlFor="email" className="block text-sm font-rajdhani font-semibold text-gray-300 mb-2">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="cyber-input w-full"
-                        placeholder="your@email.com"
-                      />
+                      <label htmlFor="email" className="block text-sm font-medium text-zinc-400 mb-2">{t('contact.formEmail')}</label>
+                      <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className={inputClasses} placeholder={t('contact.emailPlaceholder')} />
                     </div>
-
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-rajdhani font-semibold text-gray-300 mb-2">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="cyber-input w-full"
-                        placeholder="+1 (555) 123-4567"
-                      />
+                      <label htmlFor="phone" className="block text-sm font-medium text-zinc-400 mb-2">{t('contact.formPhone')}</label>
+                      <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} className={inputClasses} placeholder={t('contact.phonePlaceholder')} />
                     </div>
                   </div>
-
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-rajdhani font-semibold text-gray-300 mb-2">
-                      Subject *
-                    </label>
-                    <input
-                      type="text"
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                      className="cyber-input w-full"
-                      placeholder="How can we help?"
-                    />
+                    <label htmlFor="subject" className="block text-sm font-medium text-zinc-400 mb-2">{t('contact.formSubject')}</label>
+                    <input type="text" id="subject" name="subject" value={formData.subject} onChange={handleChange} required className={inputClasses} placeholder={t('contact.subjectPlaceholder')} />
                   </div>
-
                   <div>
-                    <label htmlFor="message" className="block text-sm font-rajdhani font-semibold text-gray-300 mb-2">
-                      Message *
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                      rows="6"
-                      className="cyber-input w-full resize-none"
-                      placeholder="Tell us more about your inquiry..."
-                    ></textarea>
+                    <label htmlFor="message" className="block text-sm font-medium text-zinc-400 mb-2">{t('contact.formMessage')}</label>
+                    <textarea id="message" name="message" value={formData.message} onChange={handleChange} required rows="6" className={`${inputClasses} resize-none`} placeholder={t('contact.messagePlaceholder')} />
                   </div>
-
-                  <button
-                    type="submit"
-                    className="cyber-button w-full py-3 flex items-center justify-center text-lg"
-                  >
-                    SEND MESSAGE
+                  <button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl py-3 flex items-center justify-center transition-colors">
+                    {t('contact.sendMessage')}
                     <Send className="ml-2 h-5 w-5" />
                   </button>
                 </form>
               )}
-            </div>
+            </motion.div>
 
-            {/* Support Info */}
-            <div className="space-y-8">
-              <div className="cyber-card">
+            {/* Support */}
+            <div className="space-y-6">
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}>
                 <div className="flex items-center mb-4">
-                  <Users className="h-8 w-8 text-cyber-muted-blue mr-3" />
-                  <h3 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">SUPPORT TEAM</h3>
+                  <Users className="h-6 w-6 text-orange-400 mr-3" />
+                  <h3 className="text-xl font-bold text-white">{t('contact.supportTeam')}</h3>
                 </div>
-                <p className="text-gray-300 mb-4">
-                  Our dedicated support team is ready to help you with any questions or concerns.
-                </p>
-                <ul className="space-y-3 text-gray-300">
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-cyber-muted-pink rounded-full mr-3"></span>
-                    Technical Support
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-cyber-muted-pink rounded-full mr-3"></span>
-                    Order Assistance
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-cyber-muted-pink rounded-full mr-3"></span>
-                    Product Customization
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-cyber-muted-pink rounded-full mr-3"></span>
-                    Bulk Order Quotes
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-cyber-muted-pink rounded-full mr-3"></span>
-                    After-Sale Support
-                  </li>
+                <p className="text-zinc-400 mb-4 text-sm">{t('contact.supportTeamDesc')}</p>
+                <ul className="space-y-3 text-zinc-300 text-sm">
+                  {[t('contact.technicalSupport'), t('contact.orderAssistance'), t('contact.productCustomization'), t('contact.bulkOrderQuotes'), t('contact.afterSaleSupport')].map((item, i) => (
+                    <li key={i} className="flex items-center">
+                      <span className="w-2 h-2 bg-orange-400 rounded-full mr-3" />
+                      {item}
+                    </li>
+                  ))}
                 </ul>
-              </div>
+              </motion.div>
 
-              <div className="cyber-card">
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}>
                 <div className="flex items-center mb-4">
-                  <Clock className="h-8 w-8 text-cyber-muted-green mr-3" />
-                  <h3 className="text-2xl font-orbitron font-bold text-cyber-muted-green">RESPONSE TIME</h3>
+                  <Clock className="h-6 w-6 text-orange-400 mr-3" />
+                  <h3 className="text-xl font-bold text-white">{t('contact.responseTime')}</h3>
                 </div>
-                <ul className="space-y-2 text-gray-300">
-                  <li>
-                    <span className="font-semibold text-cyber-muted-green">Email:</span> Within 24 hours
-                  </li>
-                  <li>
-                    <span className="font-semibold text-cyber-muted-green">Phone:</span> Immediate
-                  </li>
-                  <li>
-                    <span className="font-semibold text-cyber-muted-green">Chat:</span> Within minutes
-                  </li>
+                <ul className="space-y-2 text-zinc-300 text-sm">
+                  <li><span className="font-semibold text-orange-400">Email:</span> {t('contact.emailResponseTime')}</li>
+                  <li><span className="font-semibold text-orange-400">Phone:</span> {t('contact.phoneResponseTime')}</li>
+                  <li><span className="font-semibold text-orange-400">Chat:</span> {t('contact.chatResponseTime')}</li>
                 </ul>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* FAQ Section */}
-      <div className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-orbitron font-bold mb-4">
-              <span className="text-cyber-muted-blue">FREQUENTLY</span>
-              <span className="text-cyber-muted-pink"> ASKED</span>
-              <span className="text-cyber-muted-blue"> QUESTIONS</span>
-            </h2>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-4">
+      {/* FAQ */}
+      <div className="border-t border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+          <motion.h2 className="text-3xl font-bold text-center mb-12 text-white" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            {t('contact.faqTitle') + ' '}<span className="text-orange-400">{t('contact.faqTitleHighlight')}</span>
+          </motion.h2>
+          <div className="max-w-3xl mx-auto space-y-4">
             {faqs.map((faq, index) => (
-              <details 
-                key={index}
-                className="cyber-card group cursor-pointer"
-              >
-                <summary className="flex items-center justify-between py-6 px-6 font-orbitron font-bold text-lg text-cyber-muted-blue hover:text-cyber-muted-pink transition-colors">
+              <motion.details key={index} className="bg-zinc-900 border border-zinc-800 rounded-2xl group cursor-pointer" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={index * 0.5}>
+                <summary className="flex items-center justify-between py-5 px-6 font-semibold text-white hover:text-orange-400 transition-colors">
                   {faq.question}
-                  <span className="text-cyber-muted-pink group-open:rotate-180 transition-transform">
-                    ▼
-                  </span>
+                  <span className="text-orange-400 group-open:rotate-180 transition-transform text-sm">▼</span>
                 </summary>
-                <div className="px-6 pb-6 text-gray-300 border-t border-cyber-muted-blue/20">
+                <div className="px-6 pb-5 text-zinc-400 text-sm border-t border-zinc-800">
                   {faq.answer}
                 </div>
-              </details>
+              </motion.details>
             ))}
           </div>
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyber-muted-blue/10 via-cyber-muted-purple/10 to-cyber-muted-pink/10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="cyber-card bg-cyber-dark/80 backdrop-blur-sm">
-              <h2 className="text-4xl font-orbitron font-bold mb-6">
-                <span className="text-cyber-muted-blue">READY TO</span>
-                <span className="text-cyber-muted-pink"> EXPLORE?</span>
-              </h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Return to our store and discover amazing products.
-              </p>
-              <a href="/products" className="cyber-button text-lg py-4 px-8 inline-block">
-                BACK TO SHOP
-              </a>
-            </div>
-          </div>
+      {/* CTA */}
+      <div className="border-t border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+          <motion.div className="max-w-3xl mx-auto text-center bg-zinc-900 border border-zinc-800 rounded-2xl p-10" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <h2 className="text-3xl font-bold mb-4 text-white">
+              {t('contact.ctaTitle') + ' '}<span className="text-orange-400">{t('contact.ctaTitleHighlight')}</span>
+            </h2>
+            <p className="text-zinc-400 mb-8">{t('contact.ctaDesc')}</p>
+            <Link to="/products" className="bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl py-3 px-8 inline-block transition-colors">
+              {t('contact.ctaBtn')}
+            </Link>
+          </motion.div>
         </div>
-      </div>
-
-      {/* Animated grid overlay */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:80px_80px]"></div>
       </div>
     </div>
   );

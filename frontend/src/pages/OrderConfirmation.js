@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { CheckCircle, Download, Mail, MapPin, Package, Clock, Home, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '../services/api';
 import useAuthStore from './store/authStore';
+import useLangStore from './store/langStore';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } })
+};
 
 const OrderConfirmation = () => {
   const { orderId } = useParams();
@@ -12,6 +19,7 @@ const OrderConfirmation = () => {
   const [loading, setLoading] = useState(!order);
   const [error, setError] = useState('');
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const { t } = useLangStore();
 
   useEffect(() => {
     if (!order) {
@@ -25,7 +33,7 @@ const OrderConfirmation = () => {
       const response = await api.get(`/orders/${orderId}`);
       setOrder(response.data);
     } catch (err) {
-      setError('Failed to load order details');
+      setError(t('orderConfirmation.failedLoad'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -38,8 +46,6 @@ const OrderConfirmation = () => {
       const response = await api.get(`/orders/${orderId}/invoice`, {
         responseType: 'blob'
       });
-      
-      // Create downloadable link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -48,7 +54,7 @@ const OrderConfirmation = () => {
       link.click();
       link.parentNode.removeChild(link);
     } catch (err) {
-      setError('Failed to download invoice');
+      setError(t('orderConfirmation.failedDownload'));
       console.error(err);
     } finally {
       setInvoiceLoading(false);
@@ -58,21 +64,21 @@ const OrderConfirmation = () => {
   const handleSendEmail = async () => {
     try {
       await api.post(`/orders/${orderId}/send-invoice`);
-      alert('Invoice sent to your email!');
+      alert(t('orderConfirmation.invoiceSent'));
     } catch (err) {
-      setError('Failed to send invoice');
+      setError(t('orderConfirmation.failedSend'));
       console.error(err);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cyber-black scanlines flex items-center justify-center">
+      <div className="bg-zinc-950 min-h-screen pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin mb-4">
-            <Package className="h-12 w-12 text-cyber-muted-blue mx-auto" />
+            <Package className="h-12 w-12 text-orange-400 mx-auto" />
           </div>
-          <p className="text-gray-400 font-orbitron">LOADING ORDER DETAILS...</p>
+          <p className="text-zinc-400 font-semibold">{t('orderConfirmation.loading')}</p>
         </div>
       </div>
     );
@@ -80,11 +86,11 @@ const OrderConfirmation = () => {
 
   if (error && !order) {
     return (
-      <div className="min-h-screen bg-cyber-black scanlines flex items-center justify-center">
-        <div className="text-center cyber-card max-w-md">
-          <p className="text-cyber-muted-pink font-orbitron mb-4">{error}</p>
-          <Link to="/" className="cyber-button inline-block">
-            RETURN HOME
+      <div className="bg-zinc-950 min-h-screen pt-20 flex items-center justify-center">
+        <div className="text-center bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md">
+          <p className="text-red-400 font-semibold mb-4">{error}</p>
+          <Link to="/" className="inline-block bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl px-6 py-3 transition-colors">
+            {t('orderConfirmation.returnHome')}
           </Link>
         </div>
       </div>
@@ -102,275 +108,254 @@ const OrderConfirmation = () => {
   };
 
   const orderStatus = order?.status || 'pending';
-
   const statusSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
   const statusLabels = {
-    pending: 'Pending',
-    confirmed: 'Confirmed',
-    processing: 'Processing',
-    shipped: 'Shipped',
-    delivered: 'Delivered'
+    pending: t('orderConfirmation.statusPending'),
+    confirmed: t('orderConfirmation.statusConfirmed'),
+    processing: t('orderConfirmation.statusProcessing'),
+    shipped: t('orderConfirmation.statusShipped'),
+    delivered: t('orderConfirmation.statusDelivered')
   };
 
   return (
-    <div className="min-h-screen bg-cyber-black scanlines">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-zinc-950 min-h-screen pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header with Success Message */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-cyber-muted-green/10 border-2 border-cyber-muted-green mb-6 animate-pulse">
-              <CheckCircle className="h-12 w-12 text-cyber-muted-green" />
+          {/* Header */}
+          <motion.div className="text-center mb-12" initial="hidden" animate="visible" variants={fadeUp}>
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 mb-6">
+              <CheckCircle className="h-12 w-12 text-emerald-400" />
             </div>
-            <h1 className="text-5xl font-orbitron font-bold mb-4">
-              <span className="text-cyber-muted-green">ORDER</span>
-              <span className="text-cyber-muted-blue"> CONFIRMED</span>
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-white">
+              {t('orderConfirmation.title')} <span className="text-orange-400">{t('orderConfirmation.titleHighlight')}</span>
             </h1>
-            <p className="text-gray-300 text-lg mb-4">
-              Thank you for your purchase! Your cybernetic upgrades are being prepared.
+            <p className="text-zinc-400 text-lg mb-4">
+              {t('orderConfirmation.thankYou')}
             </p>
-            <p className="text-gray-400 text-sm font-mono">
-              Order ID: <span className="text-cyber-muted-pink font-bold">{orderId}</span>
+            <p className="text-zinc-500 text-sm font-mono">
+              {t('orderConfirmation.orderId')}: <span className="text-orange-400 font-bold">{orderId}</span>
             </p>
-          </div>
+          </motion.div>
 
           {error && (
-            <div className="mb-8 p-4 border border-cyber-muted-pink bg-cyber-muted-pink/10 rounded">
-              <p className="text-cyber-muted-pink text-sm">{error}</p>
+            <div className="mb-8 p-4 border border-red-500/30 bg-red-500/10 rounded-xl">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           <div className="grid lg:grid-cols-3 gap-8 mb-8">
             {/* Main Order Details */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-8">
               {/* Status */}
-              <div className="cyber-card mb-8">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">ORDER STATUS</h2>
-                
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={1}>
+                <h2 className="text-xl font-bold mb-6 text-white">{t('orderConfirmation.orderStatus')}</h2>
                 <div className="flex items-center justify-between mb-8">
                   {statusSteps.map((status, index) => (
                     <React.Fragment key={status}>
                       <div className="text-center flex-1">
-                        <div className={`w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center font-orbitron font-bold ${
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full mx-auto mb-3 flex items-center justify-center font-bold text-sm ${
                           statusSteps.indexOf(orderStatus) >= index
-                            ? 'bg-cyber-muted-green text-cyber-black'
-                            : 'bg-cyber-gray text-gray-400'
+                            ? 'bg-orange-500 text-black'
+                            : 'bg-zinc-800 text-zinc-500'
                         }`}>
                           {index + 1}
                         </div>
-                        <p className="text-xs font-orbitron text-gray-400 uppercase">{statusLabels[status]}</p>
+                        <p className="text-xs text-zinc-500 uppercase">{statusLabels[status]}</p>
                       </div>
                       {index < statusSteps.length - 1 && (
-                        <div className={`flex-1 h-1 mx-2 ${
-                          statusSteps.indexOf(orderStatus) > index
-                            ? 'bg-cyber-muted-green'
-                            : 'bg-cyber-gray'
-                        }`}></div>
+                        <div className={`flex-1 h-1 mx-1 rounded ${
+                          statusSteps.indexOf(orderStatus) > index ? 'bg-orange-500' : 'bg-zinc-800'
+                        }`} />
                       )}
                     </React.Fragment>
                   ))}
                 </div>
-
-                <div className={`p-4 border-2 rounded-lg ${statusColors[orderStatus]}`}>
-                  <p className="font-orbitron font-bold uppercase">Current Status: {orderStatus}</p>
+                <div className={`p-4 border rounded-xl ${statusColors[orderStatus]}`}>
+                  <p className="font-bold uppercase text-sm">{t('orderConfirmation.currentStatus')}: {orderStatus}</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Order Items */}
-              <div className="cyber-card mb-8">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 flex items-center">
-                  <Package className="h-6 w-6 mr-3 text-cyber-muted-blue" />
-                  ORDER ITEMS
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={2}>
+                <h2 className="text-xl font-bold mb-6 flex items-center text-white">
+                  <Package className="h-5 w-5 mr-3 text-orange-400" />
+                  {t('orderConfirmation.orderItems')}
                 </h2>
-
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {order?.items?.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg"
-                    >
+                    <div key={index} className="flex items-center justify-between p-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl">
                       <div className="flex-1">
-                        <p className="font-orbitron font-bold text-cyber-muted-blue">{item.product_name || 'Product'}</p>
-                        <p className="text-sm text-gray-400 mt-1">SKU: {item.product_sku || 'N/A'}</p>
+                        <p className="font-semibold text-white">{item.product_name || 'Product'}</p>
+                        <p className="text-sm text-zinc-500 mt-1">{t('orderConfirmation.sku')}: {item.product_sku || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-gray-300">Qty: {item.quantity}</p>
-                        <p className="font-orbitron font-bold text-cyber-muted-green">
-                          {(item.price * item.quantity).toLocaleString()}₡
+                        <p className="text-zinc-400 text-sm">{t('orderConfirmation.qty')}: {item.quantity}</p>
+                        <p className="font-bold text-orange-400">
+                          ${(item.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Invoice Actions */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 flex items-center">
-                  <FileText className="h-6 w-6 mr-3 text-cyber-muted-pink" />
-                  INVOICE & DOCUMENTS
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={3}>
+                <h2 className="text-xl font-bold mb-6 flex items-center text-white">
+                  <FileText className="h-5 w-5 mr-3 text-orange-400" />
+                  {t('orderConfirmation.invoiceDocs')}
                 </h2>
-
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={handleDownloadInvoice}
                     disabled={invoiceLoading}
-                    className="flex items-center justify-center p-4 border-2 border-cyber-muted-blue hover:bg-cyber-muted-blue/10 transition-colors rounded-lg font-orbitron font-bold disabled:opacity-50"
+                    className="flex items-center justify-center p-4 border border-zinc-700 hover:border-orange-500 text-white transition-colors rounded-xl font-semibold text-sm disabled:opacity-50"
                   >
-                    <Download className="h-5 w-5 mr-2" />
-                    {invoiceLoading ? 'DOWNLOADING...' : 'DOWNLOAD INVOICE'}
+                    <Download className="h-5 w-5 mr-2 text-orange-400" />
+                    {invoiceLoading ? t('orderConfirmation.downloading') : t('orderConfirmation.downloadInvoice')}
                   </button>
-                  
                   <button
                     onClick={handleSendEmail}
-                    className="flex items-center justify-center p-4 border-2 border-cyber-muted-green hover:bg-cyber-muted-green/10 transition-colors rounded-lg font-orbitron font-bold"
+                    className="flex items-center justify-center p-4 border border-zinc-700 hover:border-orange-500 text-white transition-colors rounded-xl font-semibold text-sm"
                   >
-                    <Mail className="h-5 w-5 mr-2" />
-                    EMAIL INVOICE
+                    <Mail className="h-5 w-5 mr-2 text-orange-400" />
+                    {t('orderConfirmation.emailInvoice')}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
               {/* Order Summary */}
-              <div className="cyber-card mb-8">
-                <h2 className="text-xl font-orbitron font-bold mb-4 text-cyber-muted-blue">ORDER SUMMARY</h2>
-                
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={1}>
+                <h2 className="text-lg font-bold mb-4 text-white">{t('orderConfirmation.orderSummary')}</h2>
                 <div className="space-y-3 text-sm mb-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-300">Subtotal</span>
-                    <span className="font-orbitron">{(order?.total_amount || 0).toLocaleString()}₡</span>
+                    <span className="text-zinc-400">{t('orderConfirmation.subtotal')}</span>
+                    <span className="text-white">${(order?.total_amount || 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-cyber-gray/30 pt-3">
-                    <span className="font-orbitron font-bold">TOTAL</span>
-                    <span className="text-cyber-muted-green font-bold">{(order?.total_amount || 0).toLocaleString()}₡</span>
+                  <div className="flex justify-between border-t border-zinc-800 pt-3">
+                    <span className="font-bold text-white">{t('orderConfirmation.total')}</span>
+                    <span className="text-orange-400 font-bold">${(order?.total_amount || 0).toLocaleString()}</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Shipping Info */}
-              <div className="cyber-card mb-8">
-                <h2 className="text-xl font-orbitron font-bold mb-4 flex items-center text-cyber-muted-blue">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  SHIPPING TO
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={2}>
+                <h2 className="text-lg font-bold mb-4 flex items-center text-white">
+                  <MapPin className="h-5 w-5 mr-2 text-orange-400" />
+                  {t('orderConfirmation.shippingTo')}
                 </h2>
-                
-                <div className="text-sm space-y-2 text-gray-300">
-                  <p className="font-orbitron font-bold">
+                <div className="text-sm space-y-2 text-zinc-400">
+                  <p className="font-semibold text-white">
                     {shippingInfo.firstName} {shippingInfo.lastName}
                   </p>
                   <p>{shippingInfo.address}</p>
                   <p>{shippingInfo.city}, {shippingInfo.zipCode}</p>
                   <p>{shippingInfo.country}</p>
-                  <p className="text-gray-400">{shippingInfo.email}</p>
-                  <p className="text-gray-400">{shippingInfo.phone}</p>
+                  <p className="text-zinc-500">{shippingInfo.email}</p>
+                  <p className="text-zinc-500">{shippingInfo.phone}</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Payment Method */}
-              <div className="cyber-card mb-8">
-                <h2 className="text-xl font-orbitron font-bold mb-4 flex items-center text-cyber-muted-blue">
-                  💳 PAYMENT METHOD
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={3}>
+                <h2 className="text-lg font-bold mb-4 flex items-center text-white">
+                  {'💳 ' + t('orderConfirmation.paymentMethod')}
                 </h2>
-                
-                <div className={`p-4 rounded-lg text-sm font-orbitron font-bold ${
+                <div className={`p-4 rounded-xl text-sm font-bold ${
                   shippingInfo.paymentMethod === 'cod'
-                    ? 'bg-cyber-muted-pink/10 border-2 border-cyber-muted-pink text-cyber-muted-pink'
-                    : 'bg-cyber-muted-blue/10 border-2 border-cyber-muted-blue text-cyber-muted-blue'
+                    ? 'bg-orange-500/10 border border-orange-500/30 text-orange-400'
+                    : 'bg-zinc-800 border border-zinc-700 text-white'
                 }`}>
-                  {shippingInfo.paymentMethod === 'credit_card' && 'CREDIT CARD'}
-                  {shippingInfo.paymentMethod === 'crypto' && 'CRYPTOCURRENCY'}
-                  {shippingInfo.paymentMethod === 'cod' && 'CASH ON DELIVERY'}
+                  {shippingInfo.paymentMethod === 'credit_card' && t('orderConfirmation.creditCard')}
+                  {shippingInfo.paymentMethod === 'crypto' && t('orderConfirmation.crypto')}
+                  {shippingInfo.paymentMethod === 'cod' && t('orderConfirmation.cod')}
                 </div>
-                
                 {shippingInfo.paymentMethod === 'cod' && (
-                  <div className="mt-4 p-3 bg-cyber-muted-pink/10 border border-cyber-muted-pink/30 rounded text-sm text-gray-300">
-                    💵 Payment will be collected upon delivery. Please have the exact amount ready.
+                  <div className="mt-4 p-3 bg-orange-500/5 border border-orange-500/20 rounded-xl text-sm text-zinc-400">
+                    {'💵 ' + t('orderConfirmation.codNote')}
                   </div>
                 )}
-              </div>
+              </motion.div>
 
               {/* Timeline */}
-              <div className="cyber-card">
-                <h2 className="text-xl font-orbitron font-bold mb-4 flex items-center text-cyber-muted-blue">
-                  <Clock className="h-5 w-5 mr-2" />
-                  TIMELINE
+              <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={4}>
+                <h2 className="text-lg font-bold mb-4 flex items-center text-white">
+                  <Clock className="h-5 w-5 mr-2 text-orange-400" />
+                  {t('orderConfirmation.timeline')}
                 </h2>
-                
                 <div className="text-sm space-y-3">
                   <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-cyber-muted-green rounded-full mt-1.5 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-orbitron text-cyber-muted-green">Order Confirmed</p>
-                      <p className="text-xs text-gray-400">Just now</p>
+                      <p className="text-emerald-400 font-medium">{t('orderConfirmation.orderConfirmed')}</p>
+                      <p className="text-xs text-zinc-500">{t('orderConfirmation.justNow')}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-cyber-gray rounded-full mt-1.5 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-zinc-700 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-orbitron text-gray-400">Processing</p>
-                      <p className="text-xs text-gray-500">In progress</p>
+                      <p className="text-zinc-500">{t('orderConfirmation.processing')}</p>
+                      <p className="text-xs text-zinc-600">{t('orderConfirmation.inProgress')}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-cyber-gray rounded-full mt-1.5 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-zinc-700 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-orbitron text-gray-400">Shipped</p>
-                      <p className="text-xs text-gray-500">TBA</p>
+                      <p className="text-zinc-500">{t('orderConfirmation.shipped')}</p>
+                      <p className="text-xs text-zinc-600">{t('orderConfirmation.tba')}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-cyber-gray rounded-full mt-1.5 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-zinc-700 rounded-full mt-1.5 flex-shrink-0" />
                     <div>
-                      <p className="font-orbitron text-gray-400">Delivered</p>
-                      <p className="text-xs text-gray-500">TBA</p>
+                      <p className="text-zinc-500">{t('orderConfirmation.delivered')}</p>
+                      <p className="text-xs text-zinc-600">{t('orderConfirmation.tba')}</p>
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
 
           {/* Next Steps */}
-          <div className="cyber-card">
-            <h2 className="text-2xl font-orbitron font-bold mb-6 flex items-center">
-              <Home className="h-6 w-6 mr-3 text-cyber-muted-pink" />
-              WHAT'S NEXT?
+          <motion.div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6" initial="hidden" animate="visible" variants={fadeUp} custom={4}>
+            <h2 className="text-xl font-bold mb-6 flex items-center text-white">
+              <Home className="h-5 w-5 mr-3 text-orange-400" />
+              {t('orderConfirmation.whatsNext')}
             </h2>
-
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="p-4 border border-cyber-gray/30 rounded-lg">
-                <p className="font-orbitron font-bold text-cyber-muted-blue mb-2">1. CONFIRMATION EMAIL</p>
-                <p className="text-sm text-gray-400">A detailed order confirmation will be sent to your email with invoice and tracking information.</p>
+              <div className="p-4 border border-zinc-800 rounded-xl">
+                <p className="font-bold text-orange-400 mb-2">{t('orderConfirmation.step1Title')}</p>
+                <p className="text-sm text-zinc-400">{t('orderConfirmation.step1Desc')}</p>
               </div>
-              
-              <div className="p-4 border border-cyber-gray/30 rounded-lg">
-                <p className="font-orbitron font-bold text-cyber-muted-blue mb-2">2. PROCESSING & QA</p>
-                <p className="text-sm text-gray-400">Our cybernetic specialists will process and quality-check your order (1-2 business days).</p>
+              <div className="p-4 border border-zinc-800 rounded-xl">
+                <p className="font-bold text-orange-400 mb-2">{t('orderConfirmation.step2Title')}</p>
+                <p className="text-sm text-zinc-400">{t('orderConfirmation.step2Desc')}</p>
               </div>
-              
-              <div className="p-4 border border-cyber-gray/30 rounded-lg">
-                <p className="font-orbitron font-bold text-cyber-muted-blue mb-2">3. SHIPPING</p>
-                <p className="text-sm text-gray-400">Your package will be shipped with real-time tracking. Expected delivery: 3-5 business days.</p>
+              <div className="p-4 border border-zinc-800 rounded-xl">
+                <p className="font-bold text-orange-400 mb-2">{t('orderConfirmation.step3Title')}</p>
+                <p className="text-sm text-zinc-400">{t('orderConfirmation.step3Desc')}</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 mt-12">
+          <div className="flex gap-4 mt-10">
             <Link
               to="/track-order"
-              className="flex-1 cyber-button py-4 text-lg text-center"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl py-4 text-center text-lg transition-colors"
             >
-              TRACK YOUR ORDER
+              {t('orderConfirmation.trackOrder')}
             </Link>
-            
             <Link
               to="/"
-              className="flex-1 px-6 py-4 border-2 border-cyber-gray text-gray-300 font-orbitron font-bold hover:border-cyber-muted-purple transition-colors rounded-lg text-center"
+              className="flex-1 border border-zinc-700 hover:border-orange-500 text-white font-bold rounded-xl py-4 text-center text-lg transition-colors"
             >
-              CONTINUE SHOPPING
+              {t('orderConfirmation.continueShopping')}
             </Link>
           </div>
         </div>

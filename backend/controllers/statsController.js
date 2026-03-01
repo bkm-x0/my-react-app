@@ -10,12 +10,13 @@ const getDashboardStats = async (req, res) => {
     // Overall stats
     const products = await Product.findAll({ limit: 999999, offset: 0 });
     const users = await User.findAll(999999, 0);
-    const orders = await Order.findAll({ limit: 999999, offset: 0 });
+    const ordersResult = await Order.findAll({ limit: 999999, offset: 0 });
+    const orders = ordersResult.orders || ordersResult;
 
-    const totalProducts = products.filter(p => p.is_active).length;
+    const totalProducts = products.length;
     const totalUsers = users.filter(u => u.is_active).length;
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
     // Today's stats
     const today = new Date();
@@ -23,7 +24,7 @@ const getDashboardStats = async (req, res) => {
       const orderDate = new Date(o.created_at);
       return orderDate.toDateString() === today.toDateString();
     });
-    const todaysRevenue = todaysOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    const todaysRevenue = todaysOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
     // Low stock products
     const lowStockProducts = products.filter(p => p.stock < 10 && p.is_active).slice(0, 5);
@@ -55,7 +56,8 @@ const getDashboardStats = async (req, res) => {
 // @access  Private/Admin
 const getSalesReport = async (req, res) => {
   try {
-    const orders = await Order.findAll({ limit: 999999, offset: 0 });
+    const ordersResult = await Order.findAll({ limit: 999999, offset: 0 });
+    const orders = ordersResult.orders || ordersResult;
 
     // Group by date
     const salesByDate = {};
@@ -69,7 +71,7 @@ const getSalesReport = async (req, res) => {
           averageOrderValue: 0
         };
       }
-      salesByDate[date].totalRevenue += order.total_amount || 0;
+      salesByDate[date].totalRevenue += parseFloat(order.total_amount) || 0;
       salesByDate[date].totalOrders += 1;
     });
 

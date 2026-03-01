@@ -77,10 +77,11 @@ export const orderAPI = {
 };
 
 export const adminAPI = {
-  getDashboardStats: () => api.get('/admin/stats'),
+  getDashboardStats: () => api.get('/stats/dashboard'),
   getUsers: (params) => api.get('/users', { params }),
   getUser: (id) => api.get(`/users/${id}`),
-  updateUser: (id, userData) => api.put(`/users/${id}`, userData)
+  updateUser: (id, userData) => api.put(`/users/${id}`, userData),
+  deleteUser: (id) => api.delete(`/users/${id}`)
 };
 
 export default api;

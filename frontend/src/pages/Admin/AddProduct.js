@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Save, X, Upload, Plus, Trash2, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2 } from 'lucide-react';
+import { productAPI } from '../../services/api';
 
-const API_BASE = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000/api`;
+const inputClasses = "w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder:text-zinc-600";
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
-    category: 'neural',
+    category: 'desktops',
     stock: '',
     sku: '',
     manufacturer: '',
@@ -24,6 +27,38 @@ const AddProduct = () => {
     isFeatured: false,
     image: null
   });
+
+  // Fetch existing product data for edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+    const fetchProduct = async () => {
+      setLoadingProduct(true);
+      try {
+        const { data } = await productAPI.getProduct(id);
+        const imgBase = `http://${window.location.hostname}:5000`;
+        setFormData({
+          name: data.name || '',
+          description: data.description || '',
+          price: data.price != null ? String(data.price) : '',
+          category: data.category_slug || data.category || data.category_name || 'desktops',
+          stock: data.stock != null ? String(data.stock) : '',
+          sku: data.sku || '',
+          manufacturer: data.manufacturer || '',
+          warranty: data.warranty || '1 year',
+          features: (data.features && data.features.length > 0) ? data.features : [''],
+          specifications: data.specifications || {},
+          tags: data.tags || [],
+          isFeatured: data.is_featured || data.isFeatured || false,
+          image: data.image ? (data.image.startsWith('http') ? data.image : `${imgBase}${data.image}`) : null
+        });
+      } catch (err) {
+        setError('Failed to load product data: ' + (err.response?.data?.message || err.message));
+      } finally {
+        setLoadingProduct(false);
+      }
+    };
+    fetchProduct();
+  }, [id, isEditMode]);
 
   const addSpec = () => setFormData(f => ({ ...f, specifications: { ...f.specifications, '': '' } }));
   const updateSpecKey = (oldKey, newKey) => {
@@ -39,12 +74,14 @@ const AddProduct = () => {
   const removeSpec = (key) => setFormData(f => { const s = { ...f.specifications }; delete s[key]; return { ...f, specifications: s }; });
 
   const categories = [
-    { value: 'neural', label: 'Neural Tech' },
-    { value: 'cybernetic', label: 'Cybernetic Limbs' },
-    { value: 'quantum', label: 'Quantum Hardware' },
-    { value: 'holographic', label: 'Holographic Tech' },
-    { value: 'software', label: 'Software' },
-    { value: 'accessories', label: 'Accessories' }
+    { value: 'desktops', label: 'Gaming Desktops' },
+    { value: 'laptops', label: 'Laptops' },
+    { value: 'components', label: 'Components' },
+    { value: 'accessories', label: 'Accessories' },
+    { value: 'monitors', label: 'Monitors' },
+    { value: 'peripherals', label: 'Peripherals' },
+    { value: 'storage', label: 'Storage' },
+    { value: 'networking', label: 'Networking' },
   ];
 
   const handleSubmit = async (e) => {
@@ -56,15 +93,6 @@ const AddProduct = () => {
       // Validate required fields
       if (!formData.name || !formData.sku || !formData.price || !formData.stock) {
         setError('Please fill all required fields: Name, SKU, Price, Stock');
-        setLoading(false);
-        return;
-      }
-
-      // Get token from localStorage or sessionStorage
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      
-      if (!token) {
-        setError('Not authenticated. Please log in as admin.');
         setLoading(false);
         return;
       }
@@ -84,26 +112,18 @@ const AddProduct = () => {
         productData.image = formData.image;
       }
 
-      console.log('Sending product data:', productData);
+      console.log(`${isEditMode ? 'Updating' : 'Sending'} product data:`, productData);
 
-      const response = await axios.post(
-        `${API_BASE}/products`, 
-        productData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          timeout: 10000
-        }
-      );
+      const response = isEditMode
+        ? await productAPI.updateProduct(id, productData)
+        : await productAPI.createProduct(productData);
       
       if (response.status === 201 || response.status === 200) {
         navigate('/admin/dashboard?tab=products');
       }
     } catch (error) {
-      console.error('Error adding product:', error);
-      let errorMessage = 'Error adding product';
+      console.error(`Error ${isEditMode ? 'updating' : 'adding'} product:`, error);
+      let errorMessage = `Error ${isEditMode ? 'updating' : 'adding'} product`;
       
       if (error.response?.status === 401) {
         errorMessage = 'Unauthorized - Please log in as admin';
@@ -113,12 +133,10 @@ const AddProduct = () => {
         errorMessage = `Bad request: ${error.response.data?.message || 'Invalid data'}`;
       } else if (error.response?.status === 500) {
         errorMessage = `Server error: ${error.response.data?.error || error.response.data?.message || 'Check backend logs'}`;
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout - Backend is not responding';
-      } else if (error.message.includes('Network')) {
-        errorMessage = 'Network error - Make sure backend server is running';
-      } else {
-        errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Unknown error';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       setError(errorMessage);
@@ -171,41 +189,47 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cyber-black p-8">
+    <div className="min-h-screen bg-zinc-950 p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-orbitron font-bold">
-              <span className="text-cyber-muted-blue">ADD</span>
-              <span className="text-cyber-muted-pink"> PRODUCT</span>
+            <h1 className="text-3xl font-bold">
+              <span className="text-orange-400">{isEditMode ? 'EDIT' : 'ADD'}</span>
+              <span className="text-white"> PRODUCT</span>
             </h1>
-            <p className="text-gray-300">Add new cybernetic product to store</p>
+            <p className="text-zinc-400">{isEditMode ? 'Edit existing product details' : 'Add a new product to the store'}</p>
           </div>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate('/admin/dashboard?tab=products')}
-              className="px-4 py-2 border border-cyber-muted-purple text-cyber-muted-purple hover:bg-cyber-muted-purple hover:text-cyber-black rounded-lg"
+              className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl px-4 py-2 transition-colors"
             >
               <X className="h-4 w-4 mr-2 inline" />
               CANCEL
             </button>
             <button
               onClick={handleSubmit}
-              disabled={loading}
-              className="cyber-button"
+              disabled={loading || loadingProduct}
+              className="bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl px-4 py-2 transition-colors disabled:opacity-50"
             >
               <Save className="h-4 w-4 mr-2 inline" />
-              {loading ? 'SAVING...' : 'SAVE PRODUCT'}
+              {loading ? 'SAVING...' : isEditMode ? 'UPDATE PRODUCT' : 'SAVE PRODUCT'}
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        {loadingProduct && (
+          <div className="flex items-center justify-center py-32">
+            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          </div>
+        )}
+
+        {!loadingProduct && <form onSubmit={handleSubmit}>
           {error && (
-            <div className="mb-6 p-4 bg-cyber-muted-pink/20 border border-cyber-muted-pink rounded-lg flex items-center">
-              <AlertCircle className="h-5 w-5 text-cyber-muted-pink mr-3" />
-              <span className="text-cyber-muted-pink">{error}</span>
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
+              <span className="text-red-400">{error}</span>
             </div>
           )}
 
@@ -213,14 +237,14 @@ const AddProduct = () => {
             {/* Left Column - Basic Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Information Card */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400">
                   BASIC INFORMATION
                 </h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                    <label className="block text-sm font-bold mb-2 text-orange-400">
                       PRODUCT NAME *
                     </label>
                     <input
@@ -228,21 +252,21 @@ const AddProduct = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="cyber-input"
+                      className={inputClasses}
                       required
                       placeholder="e.g., Neural Interface MK.III"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                    <label className="block text-sm font-bold mb-2 text-orange-400">
                       DESCRIPTION *
                     </label>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      className="cyber-input min-h-[150px]"
+                      className={`${inputClasses} min-h-[150px]`}
                       required
                       placeholder="Detailed description of the product..."
                     />
@@ -250,15 +274,15 @@ const AddProduct = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                        PRICE (₡) *
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
+                        PRICE ($) *
                       </label>
                       <input
                         type="number"
                         name="price"
                         value={formData.price}
                         onChange={handleChange}
-                        className="cyber-input"
+                        className={inputClasses}
                         required
                         min="0"
                         step="0.01"
@@ -266,7 +290,7 @@ const AddProduct = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
                         STOCK QUANTITY *
                       </label>
                       <input
@@ -274,7 +298,7 @@ const AddProduct = () => {
                         name="stock"
                         value={formData.stock}
                         onChange={handleChange}
-                        className="cyber-input"
+                        className={inputClasses}
                         required
                         min="0"
                         placeholder="100"
@@ -284,7 +308,7 @@ const AddProduct = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
                         SKU *
                       </label>
                       <input
@@ -292,13 +316,13 @@ const AddProduct = () => {
                         name="sku"
                         value={formData.sku}
                         onChange={handleChange}
-                        className="cyber-input"
+                        className={inputClasses}
                         required
                         placeholder="NI-MKIII-001"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
                         MANUFACTURER
                       </label>
                       <input
@@ -306,8 +330,8 @@ const AddProduct = () => {
                         name="manufacturer"
                         value={formData.manufacturer}
                         onChange={handleChange}
-                        className="cyber-input"
-                        placeholder="Cybernet Corporation"
+                        className={inputClasses}
+                        placeholder="Manufacturer name"
                       />
                     </div>
                   </div>
@@ -315,15 +339,15 @@ const AddProduct = () => {
               </div>
 
               {/* Features Card */}
-              <div className="cyber-card">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-orbitron font-bold text-cyber-muted-blue">
+                  <h2 className="text-2xl font-bold text-orange-400">
                     FEATURES
                   </h2>
                   <button
                     type="button"
                     onClick={addFeature}
-                    className="flex items-center px-3 py-2 border border-cyber-muted-green text-cyber-muted-green hover:bg-cyber-muted-green hover:text-cyber-black rounded-lg"
+                    className="flex items-center bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl px-3 py-2 transition-colors"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     ADD FEATURE
@@ -337,14 +361,14 @@ const AddProduct = () => {
                         type="text"
                         value={feature}
                         onChange={(e) => updateFeature(index, e.target.value)}
-                        className="cyber-input flex-1 mr-3"
+                        className={`${inputClasses} flex-1 mr-3`}
                         placeholder="e.g., 256-Channel Neural Sensors"
                       />
                       {formData.features.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeFeature(index)}
-                          className="p-2 border border-cyber-muted-pink text-cyber-muted-pink hover:bg-cyber-muted-pink hover:text-cyber-black rounded-lg"
+                          className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-xl transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -356,18 +380,18 @@ const AddProduct = () => {
                 {/* Specifications editor */}
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-orbitron font-bold text-cyber-muted-blue">SPECIFICATIONS</h3>
-                    <button type="button" onClick={addSpec} className="px-3 py-2 border border-cyber-muted-green text-cyber-muted-green rounded-lg">Add spec</button>
+                    <h3 className="text-lg font-bold text-orange-400">SPECIFICATIONS</h3>
+                    <button type="button" onClick={addSpec} className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl px-3 py-2 transition-colors text-sm">Add spec</button>
                   </div>
                   <div className="space-y-3">
                     {Object.keys(formData.specifications || {}).length === 0 && (
-                      <div className="text-sm text-gray-400">No specifications added yet.</div>
+                      <div className="text-sm text-zinc-400">No specifications added yet.</div>
                     )}
                     {Object.entries(formData.specifications || {}).map(([k, v], idx) => (
                       <div key={String(k) + idx} className="flex gap-2 items-center">
-                        <input className="cyber-input w-1/3" value={k} onChange={(e) => updateSpecKey(k, e.target.value)} placeholder="Spec name" />
-                        <input className="cyber-input flex-1" value={v} onChange={(e) => updateSpecValue(k, e.target.value)} placeholder="Spec value" />
-                        <button type="button" onClick={() => removeSpec(k)} className="p-2 border border-cyber-muted-pink text-cyber-muted-pink rounded-lg"><Trash2 className="h-4 w-4" /></button>
+                        <input className={`${inputClasses} w-1/3`} value={k} onChange={(e) => updateSpecKey(k, e.target.value)} placeholder="Spec name" />
+                        <input className={`${inputClasses} flex-1`} value={v} onChange={(e) => updateSpecValue(k, e.target.value)} placeholder="Spec value" />
+                        <button type="button" onClick={() => removeSpec(k)} className="p-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-xl transition-colors"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     ))}
                   </div>
@@ -378,21 +402,21 @@ const AddProduct = () => {
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
               {/* Product Image Card */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400">
                   PRODUCT IMAGE
                 </h2>
 
                 <div className="space-y-4">
                   {formData.image && (
                     <div className="relative">
-                      <img src={formData.image} alt="Product preview" className="w-full h-48 object-cover rounded-lg border border-cyber-muted-blue" />
+                      <img src={formData.image} alt="Product preview" className="w-full h-48 object-cover rounded-xl border border-zinc-700" />
                     </div>
                   )}
                   <label className="block">
-                    <div className="border-2 border-dashed border-cyber-muted-blue rounded-lg p-4 text-center cursor-pointer hover:border-cyber-muted-pink transition-colors">
-                      <Upload className="h-8 w-8 mx-auto text-cyber-muted-blue mb-2" />
-                      <p className="text-sm text-gray-300">Click to upload image</p>
+                    <div className="border-2 border-dashed border-zinc-700 rounded-xl p-4 text-center cursor-pointer hover:border-orange-500 transition-colors">
+                      <Upload className="h-8 w-8 mx-auto text-orange-400 mb-2" />
+                      <p className="text-sm text-zinc-400">Click to upload image</p>
                     </div>
                     <input
                       type="file"
@@ -405,21 +429,21 @@ const AddProduct = () => {
               </div>
 
               {/* Category & Status Card */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400">
                   CATEGORY & STATUS
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                    <label className="block text-sm font-bold mb-2 text-orange-400">
                       CATEGORY *
                     </label>
                     <select
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      className="cyber-input"
+                      className={inputClasses}
                       required
                     >
                       {categories.map(category => (
@@ -431,7 +455,7 @@ const AddProduct = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
+                    <label className="block text-sm font-bold mb-2 text-orange-400">
                       WARRANTY
                     </label>
                     <input
@@ -439,7 +463,7 @@ const AddProduct = () => {
                       name="warranty"
                       value={formData.warranty}
                       onChange={handleChange}
-                      className="cyber-input"
+                      className={inputClasses}
                       placeholder="1 year"
                     />
                   </div>
@@ -451,9 +475,9 @@ const AddProduct = () => {
                       name="isFeatured"
                       checked={formData.isFeatured}
                       onChange={handleChange}
-                      className="mr-3"
+                      className="mr-3 accent-orange-500"
                     />
-                    <label htmlFor="isFeatured" className="text-sm font-orbitron font-bold text-cyber-muted-blue">
+                    <label htmlFor="isFeatured" className="text-sm font-bold text-orange-400">
                       MARK AS FEATURED PRODUCT
                     </label>
                   </div>
@@ -461,33 +485,33 @@ const AddProduct = () => {
               </div>
 
               {/* Images Card */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400">
                   PRODUCT IMAGES
                 </h2>
 
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-cyber-muted-blue/50 rounded-lg p-8 text-center">
-                    <Upload className="h-12 w-12 text-cyber-muted-blue mx-auto mb-4" />
-                    <div className="font-orbitron font-bold mb-2">UPLOAD IMAGES</div>
-                    <p className="text-sm text-gray-400 mb-4">
+                  <div className="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center">
+                    <Upload className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+                    <div className="font-bold text-white mb-2">UPLOAD IMAGES</div>
+                    <p className="text-sm text-zinc-400 mb-4">
                       Drag & drop or click to upload
                     </p>
                     <button
                       type="button"
-                      className="px-4 py-2 border border-cyber-muted-blue text-cyber-muted-blue hover:bg-cyber-muted-blue hover:text-cyber-black rounded-lg"
+                      className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl px-4 py-2 transition-colors"
                     >
                       BROWSE FILES
                     </button>
                   </div>
 
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-zinc-400">
                     <div className="flex items-center mb-1">
-                      <div className="w-2 h-2 bg-cyber-muted-green rounded-full mr-2"></div>
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></div>
                       <span>Recommended size: 800x600px</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-2 h-2 bg-cyber-muted-green rounded-full mr-2"></div>
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></div>
                       <span>Max file size: 5MB</span>
                     </div>
                   </div>
@@ -495,27 +519,27 @@ const AddProduct = () => {
               </div>
 
               {/* Preview Card */}
-              <div className="cyber-card">
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400">
                   PREVIEW
                 </h2>
 
-                <div className="p-4 bg-cyber-dark border border-cyber-gray/30 rounded-lg">
-                  <div className="h-40 bg-cyber-gray rounded-lg mb-4"></div>
-                  <div className="font-orbitron font-bold mb-2">
+                <div className="p-4 bg-zinc-800 border border-zinc-700 rounded-xl">
+                  <div className="h-40 bg-zinc-700 rounded-xl mb-4"></div>
+                  <div className="font-bold text-white mb-2">
                     {formData.name || 'Product Name'}
                   </div>
-                  <div className="text-cyber-muted-green font-mono mb-2">
-                    {formData.price ? `${formData.price}₡` : '0₡'}
+                  <div className="text-emerald-400 font-mono mb-2">
+                    {formData.price ? `$${formData.price}` : '$0'}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-zinc-400">
                     {formData.category ? categories.find(c => c.value === formData.category)?.label : 'Category'}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </form>
+        </form>}
       </div>
     </div>
   );

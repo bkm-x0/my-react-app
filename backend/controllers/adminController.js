@@ -31,7 +31,7 @@ const getAdminStats = async (req, res) => {
       return createdDate.toDateString() === new Date().toDateString();
     }).length;
 
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     res.json({

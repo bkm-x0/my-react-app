@@ -1,462 +1,205 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, Eye, EyeOff, Cpu, Scan, Shield, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Zap, Mail, Lock, User, Phone, ArrowRight, Loader2, Check, X } from 'lucide-react';
 import useAuthStore from './store/authStore';
+import useLangStore from './store/langStore';
 
 const Register = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [step, setStep] = useState(1);
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    neuralImplantId: '',
-    biometricConsent: false,
-    termsAccepted: false,
-  });
-
-  const { register } = useAuthStore();
+  const [error, setError] = useState('');
+  const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
+  const { t } = useLangStore();
+
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+
+  const passwordChecks = [
+    { ok: form.password.length >= 8 },
+    { ok: /[A-Z]/.test(form.password) },
+    { ok: /[a-z]/.test(form.password) },
+    { ok: /[0-9]/.test(form.password) },
+    { ok: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(form.password) },
+  ];
+  const strength = passwordChecks.filter(c => c.ok).length;
+  const strengthLabels = [t('register.passWeak'), t('register.passWeak'), t('register.passWeak2'), t('register.passMedium'), t('register.passGood'), t('register.passStrong')];
+  const strengthLabel = strengthLabels[strength];
+  const strengthColor = ['', 'bg-red-500', 'bg-red-500', 'bg-yellow-500', 'bg-orange-500', 'bg-green-500'][strength];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (step < 3) {
-      setStep(step + 1);
-      return;
-    }
-
-    // Final validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (!formData.termsAccepted) {
-      setError('You must accept the terms and conditions');
-      return;
-    }
-
+    if (!form.name || !form.email || !form.password) { setError(t('common.required')); return; }
+    if (form.password !== form.confirmPassword) { setError(t('common.error')); return; }
+    if (!agreed) { setError(t('common.required')); return; }
     setLoading(true);
-
     try {
-      const userData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        neuralImplantId: formData.neuralImplantId || ''
-      };
-
-      await register(userData);
+      await register(form.name, form.email, form.password);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
-
-  const validateStep = () => {
-    if (step === 1) {
-      if (!formData.username.trim()) {
-        setError('Username is required');
-        return false;
-      }
-      if (!formData.email.trim()) {
-        setError('Email is required');
-        return false;
-      }
-      if (!formData.email.includes('@')) {
-        setError('Please enter a valid email');
-        return false;
-      }
-    } else if (step === 2) {
-      if (!formData.password) {
-        setError('Password is required');
-        return false;
-      }
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters');
-        return false;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleNextStep = (e) => {
-    e.preventDefault();
-    if (validateStep()) {
-      setStep(step + 1);
-      setError('');
-    }
-  };
+  const fields = [
+    { key: 'name', label: t('register.name'), icon: User, type: 'text', placeholder: t('register.name'), delay: 0.25 },
+    { key: 'email', label: t('register.email'), icon: Mail, type: 'email', placeholder: 'email@example.com', delay: 0.3, dir: 'ltr' },
+    { key: 'phone', label: t('register.phone'), icon: Phone, type: 'tel', placeholder: '+1 555 123 4567', delay: 0.35, dir: 'ltr' },
+  ];
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyber-muted-pink to-cyber-muted-blue rounded-xl mb-4">
-            <UserPlus className="h-10 w-10 text-cyber-black" />
-          </div>
-          <h1 className="text-4xl font-orbitron font-bold mb-2">
-            <span className="text-cyber-muted-blue">JOIN THE</span>
-            <span className="text-cyber-muted-pink"> NETWORK</span>
-          </h1>
-          <p className="text-gray-300">
-            Create your cybernetic profile in {4 - step} simple step{4 - step !== 1 ? 's' : ''}
-          </p>
-        </div>
+    <div className="bg-zinc-950 min-h-screen flex items-center justify-center relative overflow-hidden py-8">
+      {/* Background */}
+      <div className="absolute inset-0 opacity-10">
+        <img src="https://images.unsplash.com/photo-1707312900236-12d6fefd2bbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200" alt="" className="w-full h-full object-cover" />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-950/95 to-orange-950/30" />
+      <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Progress Steps */}
-        <div className="flex justify-between mb-8 relative">
-          <div className="absolute top-4 left-0 w-full h-0.5 bg-cyber-gray/50 -z-10"></div>
-          {[1, 2, 3].map((stepNum) => (
-            <div key={stepNum} className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                step >= stepNum
-                  ? 'bg-cyber-muted-blue text-cyber-black'
-                  : 'bg-cyber-gray text-gray-400'
-              } font-orbitron font-bold`}>
-                {stepNum}
+      <div className="relative z-10 w-full max-w-md px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 shadow-2xl shadow-black/50"
+        >
+          {/* Logo */}
+          <div className="text-center mb-6">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 200 }} className="inline-flex items-center gap-2 mb-3">
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 bg-orange-500 rounded-xl rotate-45" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-black relative z-10" fill="black" />
+                </div>
               </div>
-              <span className={`text-sm font-orbitron ${
-                step >= stepNum ? 'text-cyber-muted-blue' : 'text-gray-400'
-              }`}>
-                {stepNum === 1 ? 'BASIC INFO' : stepNum === 2 ? 'SECURITY' : 'CONFIRM'}
+              <div className="flex flex-col leading-none">
+                <span className="text-white font-black text-2xl tracking-tight">K PC</span>
+                <span className="text-orange-500 text-xs font-bold tracking-widest uppercase">Store</span>
+              </div>
+            </motion.div>
+            <h1 className="text-white font-black text-2xl">{t('register.title')}</h1>
+            <p className="text-zinc-400 text-sm mt-1">{t('register.sub')}</p>
+          </div>
+
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl">
+              {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {fields.map(f => (
+              <motion.div key={f.key} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: f.delay }}>
+                <label className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 block">{f.label}</label>
+                <div className="relative">
+                  <f.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <input
+                    type={f.type}
+                    value={form[f.key]}
+                    onChange={set(f.key)}
+                    placeholder={f.placeholder}
+                    dir={f.dir || 'auto'}
+                    className="w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm pl-10 pr-4 py-3.5 rounded-xl outline-none transition-colors placeholder:text-zinc-600"
+                  />
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Password */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+              <label className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 block">{t('register.password')}</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={set('password')}
+                  placeholder={t('register.passHint')}
+                  className="w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm pl-10 pr-11 py-3.5 rounded-xl outline-none transition-colors placeholder:text-zinc-600"
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {/* Strength */}
+              {form.password && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
+                  <div className="flex gap-1 mb-1.5">
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} className={`flex-1 h-1 rounded-full transition-colors ${i <= strength ? strengthColor : 'bg-zinc-700'}`} />
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">{strengthLabel}</span>
+                    <span className="text-zinc-600">{strength}/5</span>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Confirm */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.45 }}>
+              <label className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 block">{t('register.confirmPassword')}</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={form.confirmPassword}
+                  onChange={set('confirmPassword')}
+                  placeholder={t('register.passRepeat')}
+                  className="w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm pl-10 pr-11 py-3.5 rounded-xl outline-none transition-colors placeholder:text-zinc-600"
+                />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+                {form.confirmPassword && (
+                  <span className="absolute right-10 top-1/2 -translate-y-1/2">
+                    {form.password === form.confirmPassword
+                      ? <Check className="w-4 h-4 text-green-500" />
+                      : <X className="w-4 h-4 text-red-500" />}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Terms */}
+            <label className="flex items-start gap-2 cursor-pointer mt-2">
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="w-4 h-4 accent-orange-500 mt-0.5" />
+              <span className="text-zinc-400 text-sm">
+                <span className="text-orange-400 hover:text-orange-300 cursor-pointer">{t('register.termsLink')}</span> {t('register.and')}{' '}
+                <span className="text-orange-400 hover:text-orange-300 cursor-pointer">{t('register.privacyLink')}</span>
               </span>
-            </div>
-          ))}
-        </div>
+            </label>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-cyber-muted-pink/20 border border-cyber-muted-pink rounded-lg">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-cyber-muted-pink mr-3" />
-              <p className="text-cyber-muted-pink">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Registration Form */}
-        <div className="cyber-card">
-          <form onSubmit={handleSubmit}>
-            {step === 1 && (
-              <>
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-blue">
-                  BASIC INFORMATION
-                </h2>
-                
-                {/* Username */}
-                <div className="mb-6">
-                  <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                    USERNAME *
-                  </label>
-                  <div className="relative">
-                    <UserPlus className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyber-muted-purple" />
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      placeholder="Enter your network handle"
-                      className="cyber-input pl-10"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    This will be your public identity in the network
-                  </p>
-                </div>
-
-                {/* Email */}
-                <div className="mb-6">
-                  <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                    EMAIL ADDRESS *
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyber-muted-purple" />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="user@cyberstore.com"
-                      className="cyber-input pl-10"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Quantum-encrypted communication only
-                  </p>
-                </div>
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-pink">
-                  SECURITY SETUP
-                </h2>
-                
-                {/* Password */}
-                <div className="mb-6">
-                  <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                    PASSWORD *
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyber-muted-purple" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Create a strong password"
-                      className="cyber-input pl-10 pr-10"
-                      required
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cyber-muted-purple disabled:opacity-50"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                  <div className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      {['WEAK', 'MEDIUM', 'STRONG', 'QUANTUM'].map((level, index) => (
-                        <div
-                          key={level}
-                          className={`flex-1 h-2 rounded ${
-                            formData.password.length >= index * 3 + 3 
-                              ? 'bg-cyber-muted-green' 
-                              : 'bg-cyber-gray'
-                          }`}
-                        ></div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Password strength: <span className="text-cyber-muted-green">
-                        {formData.password.length < 6 ? 'WEAK' : 
-                         formData.password.length < 9 ? 'MEDIUM' : 
-                         formData.password.length < 12 ? 'STRONG' : 'QUANTUM'}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Confirm Password */}
-                <div className="mb-6">
-                  <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                    CONFIRM PASSWORD *
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyber-muted-purple" />
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Re-enter your password"
-                      className="cyber-input pl-10 pr-10"
-                      required
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      disabled={loading}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cyber-muted-purple disabled:opacity-50"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Neural Implant ID (Optional) */}
-                <div className="mb-6">
-                  <label className="block text-sm font-orbitron font-bold mb-2 text-cyber-muted-blue">
-                    NEURAL IMPLANT ID (OPTIONAL)
-                  </label>
-                  <div className="relative">
-                    <Cpu className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-cyber-muted-purple" />
-                    <input
-                      type="text"
-                      name="neuralImplantId"
-                      value={formData.neuralImplantId}
-                      onChange={handleChange}
-                      placeholder="For neural authentication"
-                      className="cyber-input pl-10"
-                      disabled={loading}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Link your neural interface for enhanced security
-                  </p>
-                </div>
-              </>
-            )}
-
-            {step === 3 && (
-              <>
-                <h2 className="text-2xl font-orbitron font-bold mb-6 text-cyber-muted-green">
-                  CONFIRM & ACTIVATE
-                </h2>
-                
-                {/* Summary */}
-                <div className="mb-6 p-4 bg-cyber-dark/50 border border-cyber-muted-blue/30 rounded-lg">
-                  <h3 className="font-orbitron font-bold mb-3 text-cyber-muted-blue">PROFILE SUMMARY</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Username:</span>
-                      <span className="font-mono text-cyber-muted-green">{formData.username}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Email:</span>
-                      <span className="font-mono text-cyber-muted-green">{formData.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Security:</span>
-                      <span className="font-mono text-cyber-muted-green">Quantum-Encrypted</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="mb-6">
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="termsAccepted"
-                      checked={formData.termsAccepted}
-                      onChange={handleChange}
-                      className="mr-3 mt-1"
-                      required
-                      disabled={loading}
-                    />
-                    <span className={`text-sm ${loading ? 'text-gray-500' : 'text-gray-300'}`}>
-                      I accept the{' '}
-                      <Link to="/terms" className="text-cyber-muted-blue hover:text-cyber-muted-pink">
-                        Neural Network Terms of Service
-                      </Link>
-                      {' '}and{' '}
-                      <Link to="/privacy" className="text-cyber-muted-blue hover:text-cyber-muted-pink">
-                        Quantum Privacy Policy
-                      </Link>
-                    </span>
-                  </label>
-                </div>
-
-                {/* Biometric Consent */}
-                <div className="mb-6">
-                  <label className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="biometricConsent"
-                      checked={formData.biometricConsent}
-                      onChange={handleChange}
-                      className="mr-3 mt-1"
-                      disabled={loading}
-                    />
-                    <span className={`text-sm ${loading ? 'text-gray-500' : 'text-gray-300'}`}>
-                      I consent to biometric authentication for enhanced security.
-                      <span className="block text-xs text-gray-400 mt-1">
-                        (Optional) Allows fingerprint and retinal scanning
-                      </span>
-                    </span>
-                  </label>
-                </div>
-              </>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setStep(step - 1)}
-                  disabled={loading}
-                  className="px-6 py-3 border border-cyber-muted-purple text-cyber-muted-purple hover:bg-cyber-muted-purple hover:text-cyber-black transition-colors font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  BACK
-                </button>
-              )}
-              
-              {step < 3 ? (
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  disabled={loading}
-                  className={`${step > 1 ? 'ml-auto' : 'w-full'} cyber-button py-3 px-8 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  CONTINUE
-                </button>
+            <motion.button
+              type="submit"
+              disabled={loading || !agreed}
+              whileHover={!loading && agreed ? { scale: 1.02, boxShadow: '0 0 25px rgba(249,115,22,0.35)' } : {}}
+              whileTap={!loading && agreed ? { scale: 0.98 } : {}}
+              className="w-full flex items-center justify-center gap-2 py-4 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-black disabled:text-zinc-500 font-black rounded-xl transition-colors mt-2"
+            >
+              {loading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> {t('register.loading')}</>
               ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`${step > 1 ? 'ml-auto' : 'w-full'} cyber-button py-3 px-8 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      ACTIVATING...
-                    </span>
-                  ) : (
-                    'ACTIVATE PROFILE'
-                  )}
-                </button>
+                <><span>{t('register.submit')}</span><ArrowRight className="w-5 h-5" /></>
               )}
-            </div>
+            </motion.button>
           </form>
-        </div>
 
-        {/* Login Link */}
-        <div className="text-center mt-6">
-          <span className="text-gray-400">Already have a profile? </span>
-          <Link 
-            to="/login" 
-            className="text-cyber-muted-pink hover:text-cyber-muted-blue font-orbitron"
-          >
-            ACCESS NETWORK
-          </Link>
-        </div>
-
-        {/* Security Notice */}
-        <div className="mt-6 p-4 bg-cyber-dark/50 border border-cyber-muted-green/30 rounded-lg text-center">
-          <div className="flex items-center justify-center mb-2">
-            <Shield className="h-5 w-5 text-cyber-muted-green mr-2" />
-            <span className="font-orbitron font-bold text-cyber-muted-green">QUANTUM-SECURE REGISTRATION</span>
-          </div>
-          <p className="text-sm text-gray-300">
-            All data is encrypted end-to-end. Your neural patterns are never stored.
+          <p className="text-center text-zinc-400 text-sm mt-6">
+            {t('register.hasAccount')}{' '}
+            <Link to="/login" className="text-orange-400 hover:text-orange-300 font-bold transition-colors">
+              {t('register.signIn')}
+            </Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

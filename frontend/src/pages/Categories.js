@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
   ChevronRight, Zap, Grid3X3, Search, Filter,
   Monitor, Laptop, Gamepad2, Cpu, Layers, HardDrive,
   Tv, Keyboard, Mouse, Headphones, Wifi,
-  Router, Cable, Server, Radio, Plug, Usb, 
+  Router, Cable, Server, Radio, Plug, Usb,
   Mic, Volume2, Speaker
 } from 'lucide-react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
+import useLangStore from './store/langStore';
 
 // Subcategories for each main category (keyed by slug)
 const subcategoriesMap = {
@@ -110,6 +112,7 @@ const Categories = () => {
   const cacheRef = useRef({});
   const hoverTimeoutRef = useRef(null);
   const navigate = useNavigate();
+  const { t } = useLangStore();
 
   useEffect(() => {
     fetchCategories();
@@ -195,42 +198,53 @@ const Categories = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-aliexpress-black flex items-center justify-center">
-        <div className="animate-pulse text-aliexpress-red font-display text-xl">Loading...</div>
+      <div className="bg-zinc-950 min-h-screen pt-20 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-400 text-lg">{t('categories.loading')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-aliexpress-black">
+    <div className="bg-zinc-950 min-h-screen pt-20">
       {/* Hero Section */}
-      <div className="border-b border-aliexpress-border bg-aliexpress-black py-12">
-        <div className="container mx-auto px-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="border-b border-zinc-800 py-12"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-aliexpress-red rounded">
-              <Zap className="h-6 w-6 text-aliexpress-black" />
+            <div className="p-2.5 bg-orange-500 rounded-xl">
+              <Zap className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-aliexpress-white">
-              Browse <span className="text-aliexpress-red">Categories</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              {t('categories.title') + ' '}<span className="text-orange-400">{t('categories.titleHighlight')}</span>
             </h1>
           </div>
-          <p className="text-aliexpress-medgray text-lg">
-            Hover over any category to explore subcategories
+          <p className="text-zinc-400 text-lg">
+            {t('categories.subtitle')}
           </p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const subs = subcategoriesMap[category.slug] || [];
             const isHovered = hoveredCategorySlug === category.slug;
             const isSelected = selectedCategoryId === category.id;
 
             return (
-              <div
+              <motion.div
                 key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
                 className="relative"
                 onMouseEnter={() => handleCategoryEnter(category.slug)}
                 onMouseLeave={handleCategoryLeave}
@@ -238,15 +252,15 @@ const Categories = () => {
                 {/* Category Card */}
                 <button
                   onClick={() => handleCategoryClick(category.id)}
-                  className={`w-full p-5 rounded border-2 transition-all duration-300 cursor-pointer text-left ${
+                  className={`w-full p-5 rounded-2xl border transition-all duration-300 cursor-pointer text-left ${
                     isSelected
-                      ? 'border-aliexpress-red bg-aliexpress-darkgray shadow-lg shadow-aliexpress-red/20'
-                      : 'border-aliexpress-border bg-aliexpress-darkgray hover:border-aliexpress-red'
+                      ? 'border-orange-500 bg-zinc-900 shadow-lg shadow-orange-500/10'
+                      : 'border-zinc-800 bg-zinc-900 hover:border-orange-500/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-display font-bold text-sm md:text-base ${
-                      isSelected || isHovered ? 'text-aliexpress-red' : 'text-aliexpress-white'
+                    <h3 className={`font-semibold text-sm md:text-base ${
+                      isSelected || isHovered ? 'text-orange-400' : 'text-white'
                     }`}>
                       {category.name}
                     </h3>
@@ -254,73 +268,83 @@ const Categories = () => {
                       size={18}
                       className={`transition-all flex-shrink-0 ${
                         isSelected || isHovered
-                          ? 'text-aliexpress-red translate-x-1'
-                          : 'text-aliexpress-medgray'
+                          ? 'text-orange-400 translate-x-1'
+                          : 'text-zinc-500'
                       }`}
                     />
                   </div>
                   {category.description && (
-                    <p className="text-xs text-aliexpress-medgray line-clamp-2">{category.description}</p>
+                    <p className="text-xs text-zinc-400 line-clamp-2">{category.description}</p>
                   )}
                   {subs.length > 0 && (
-                    <div className="mt-2 text-xs text-aliexpress-accent font-display font-semibold">
-                      {subs.length} subcategories ▾
+                    <div className="mt-2 text-xs text-orange-400 font-medium">
+                      {subs.length} {t('categories.subcategories')}
                     </div>
                   )}
                 </button>
 
                 {/* Subcategories Dropdown */}
-                {isHovered && subs.length > 0 && (
-                  <div
-                    className="absolute z-50 left-0 w-full min-w-[220px] mt-1 bg-aliexpress-darkgray border-2 border-aliexpress-red rounded shadow-2xl shadow-aliexpress-red/30"
-                    style={{ animation: 'fadeIn 0.15s ease-in' }}
-                    onMouseEnter={() => handleCategoryEnter(category.slug)}
-                    onMouseLeave={handleCategoryLeave}
-                  >
-                    <div className="p-3">
-                      <div className="text-xs font-display font-bold text-aliexpress-red mb-2 px-2 pb-2 border-b border-aliexpress-border uppercase tracking-wider">
-                        {category.name}
+                <AnimatePresence>
+                  {isHovered && subs.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 left-0 w-full min-w-[220px] mt-1 bg-zinc-900 border border-orange-500/40 rounded-2xl shadow-2xl shadow-black/50"
+                      onMouseEnter={() => handleCategoryEnter(category.slug)}
+                      onMouseLeave={handleCategoryLeave}
+                    >
+                      <div className="p-3">
+                        <div className="text-xs font-bold text-orange-400 mb-2 px-2 pb-2 border-b border-zinc-800 uppercase tracking-wider">
+                          {category.name}
+                        </div>
+                        <div className="space-y-0.5 max-h-72 overflow-y-auto">
+                          {subs.map((sub) => {
+                            const Icon = sub.icon;
+                            return (
+                              <button
+                                key={sub.slug}
+                                onClick={() => handleSubcategoryClick(category.id)}
+                                className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors group/sub text-left"
+                              >
+                                <Icon className="h-4 w-4 text-zinc-500 group-hover/sub:text-orange-400 transition-colors flex-shrink-0" />
+                                <span className="text-sm text-zinc-300 group-hover/sub:text-orange-400 transition-colors">
+                                  {sub.name}
+                                </span>
+                                <ChevronRight className="h-3 w-3 text-zinc-700 group-hover/sub:text-orange-400 ml-auto transition-colors" />
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="space-y-0.5 max-h-72 overflow-y-auto">
-                        {subs.map((sub) => {
-                          const Icon = sub.icon;
-                          return (
-                            <button
-                              key={sub.slug}
-                              onClick={() => handleSubcategoryClick(category.id)}
-                              className="w-full flex items-center gap-3 px-2 py-2.5 rounded hover:bg-aliexpress-black transition-colors group/sub text-left"
-                            >
-                              <Icon className="h-4 w-4 text-aliexpress-accent group-hover/sub:text-aliexpress-red transition-colors flex-shrink-0" />
-                              <span className="text-sm text-aliexpress-white group-hover/sub:text-aliexpress-red transition-colors">
-                                {sub.name}
-                              </span>
-                              <ChevronRight className="h-3 w-3 text-aliexpress-border group-hover/sub:text-aliexpress-red ml-auto transition-colors" />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
         </div>
 
         {/* Products Section */}
         {selectedCategory && (
-          <div ref={productsRef}>
+          <motion.div
+            ref={productsRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             {/* Category Header */}
             <div className="mb-8">
-              <div className="bg-aliexpress-darkgray border-l-4 border-aliexpress-red p-6 rounded">
-                <h2 className="text-3xl font-display font-bold text-aliexpress-white mb-2">
+              <div className="bg-zinc-900 border border-zinc-800 border-l-4 border-l-orange-500 p-6 rounded-2xl">
+                <h2 className="text-3xl font-bold text-white mb-2">
                   {selectedCategory.name}
                 </h2>
                 {selectedCategory.description && (
-                  <p className="text-aliexpress-medgray">{selectedCategory.description}</p>
+                  <p className="text-zinc-400">{selectedCategory.description}</p>
                 )}
-                <p className="text-sm text-aliexpress-red mt-2 font-display font-semibold">
-                  {productsLoading ? '...' : categoryProducts.length} PRODUCTS
+                <p className="text-sm text-orange-400 mt-2 font-semibold">
+                  {productsLoading ? '...' : categoryProducts.length} {t('categories.products')}
                 </p>
               </div>
             </div>
@@ -328,54 +352,64 @@ const Categories = () => {
             {/* Filters */}
             <div className="flex flex-col md:flex-row gap-4 mb-8">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 text-aliexpress-red" size={20} />
+                <Search className="absolute left-3 top-3 text-orange-400" size={20} />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder={t('categories.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-aliexpress-black border border-aliexpress-border rounded text-aliexpress-white placeholder-aliexpress-medgray focus:outline-none focus:border-aliexpress-red focus:ring-1 focus:ring-aliexpress-red/30 font-display"
+                  className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 transition-colors"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Filter size={20} className="text-aliexpress-red" />
+                <Filter size={20} className="text-orange-400" />
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
-                  className="px-4 py-2.5 bg-aliexpress-black border border-aliexpress-border rounded text-aliexpress-white focus:outline-none focus:border-aliexpress-red focus:ring-1 focus:ring-aliexpress-red/30 font-display cursor-pointer"
+                  className="px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 cursor-pointer transition-colors"
                 >
-                  <option value="newest">SORT: NEWEST</option>
-                  <option value="price_asc">PRICE: LOW TO HIGH</option>
-                  <option value="price_desc">PRICE: HIGH TO LOW</option>
-                  <option value="rating">RATING</option>
+                  <option value="newest">{t('categories.sortNewest')}</option>
+                  <option value="price_asc">{t('categories.sortPriceLow')}</option>
+                  <option value="price_desc">{t('categories.sortPriceHigh')}</option>
+                  <option value="rating">{t('categories.sortRating')}</option>
                 </select>
               </div>
             </div>
 
             {/* Products Grid */}
             {productsLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-2 border-aliexpress-red border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-aliexpress-medgray font-display">Loading products...</p>
+              <div className="text-center py-16">
+                <div className="inline-block w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-zinc-400">{t('categories.loadingProducts')}</p>
               </div>
             ) : categoryProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {categoryProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {categoryProducts.map((product, i) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.04 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Grid3X3 size={48} className="mx-auto text-aliexpress-border mb-4" />
-                <p className="text-aliexpress-medgray text-lg font-display">No products in this category</p>
+              <div className="text-center py-16">
+                <Grid3X3 size={48} className="mx-auto text-zinc-700 mb-4" />
+                <p className="text-zinc-400 text-lg">{t('categories.noProducts')}</p>
                 {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} className="mt-4 btn-primary">
-                    CLEAR SEARCH
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="mt-4 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors"
+                  >
+                    {t('categories.clearSearch')}
                   </button>
                 )}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

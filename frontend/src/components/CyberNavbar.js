@@ -1,76 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingCart, User, LogIn, LogOut, Menu, X, Search, Settings, 
-  ChevronDown, Filter, Home, ChevronLeft, ChevronRight, Grid, List, 
-  Zap, TrendingUp, Gift, Shield, Truck, Clock
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, User, Menu, X, Search, Zap, ChevronDown, LogOut, Settings } from 'lucide-react';
 import useAuthStore from '../pages/store/authStore';
+import useCartStore from '../pages/store/cartStore';
+import useLangStore from '../pages/store/langStore';
 
 const CyberNavbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isScrolled, setIsScrolled] = useState(false);
-  
+  const [dropdownOpen, setDropdownOpen] = useState(null);
   const { user, isAuthenticated, logout } = useAuthStore();
+  const cartItems = useCartStore((state) => state.items);
+  const cartCount = cartItems?.length || 0;
   const location = useLocation();
   const navigate = useNavigate();
-  const filtersRef = useRef(null);
+  const { lang, setLang, t } = useLangStore();
 
-  const isProductsPage = location.pathname === '/products';
-  
-  // Extract query parameters
-  const searchParams = new URLSearchParams(location.search);
-  const currentPage = parseInt(searchParams.get('page') || '1');
-  const currentView = searchParams.get('view') || 'grid';
-  const [viewMode, setViewMode] = useState(currentView);
-  const totalPages = 5; // This should come from your API
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filtersRef.current && !filtersRef.current.contains(event.target)) {
-        setShowFilters(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Update view mode when URL changes
   useEffect(() => {
-    const view = searchParams.get('view') || 'grid';
-    setViewMode(view);
-  }, [location.search]);
+    setIsOpen(false);
+    setSearchOpen(false);
+  }, [location]);
 
-  const handleLogout = () => {
-    logout();
-    setIsMenuOpen(false);
-  };
-
-  const quickLinks = [
-    { name: 'New Arrivals', icon: Zap, href: '/new-arrivals', badge: 'NEW' },
-    { name: 'Trending', icon: TrendingUp, href: '/trending', badge: 'HOT' },
-    { name: 'On Sale', icon: Gift, href: '/sale', badge: 'SALE' },
-    { name: 'Pre-order', icon: Clock, href: '/pre-order', badge: 'PRE' },
-  ];
-
-  const filters = [
-    { label: 'Price Range', param: 'price', options: ['under-1000', '1000-5000', '5000-10000', 'over-10000'] },
-    { label: 'Rating', param: 'rating', options: ['4', '4.5', '5'] },
-    { label: 'Stock Status', param: 'stock', options: ['in-stock', 'low-stock', 'pre-order'] },
-    { label: 'Features', param: 'feature', options: ['rgb', 'wireless', 'mechanical', 'customizable'] }
+  const navLinks = [
+    { label: t('nav.home'), path: '/' },
+    {
+      label: t('nav.products'), path: '/products', dropdown: [
+        { label: t('nav.allProducts'), path: '/products' },
+        { label: t('nav.desktops'), path: '/products?category=desktops' },
+        { label: t('nav.laptops'), path: '/products?category=laptops' },
+        { label: t('nav.components'), path: '/products?category=components' },
+        { label: t('nav.accessories'), path: '/products?category=accessories' },
+      ]
+    },
+    { label: t('nav.categories'), path: '/categories' },
+    { label: t('nav.about'), path: '/about' },
+    { label: t('nav.contact'), path: '/contact' },
   ];
 
   const handleSearch = (e) => {
@@ -78,610 +51,258 @@ const CyberNavbar = () => {
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
-      setIsMenuOpen(false);
+      setSearchOpen(false);
     }
   };
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      const params = new URLSearchParams(location.search);
-      params.set('page', page);
-      navigate(`/products?${params.toString()}`);
-    }
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
   };
 
-  const handleViewChange = (view) => {
-    setViewMode(view);
-    const params = new URLSearchParams(location.search);
-    params.set('view', view);
-    navigate(`/products?${params.toString()}`);
-  };
-
-  const applyFilter = (param, value) => {
-    const params = new URLSearchParams(location.search);
-    params.set(param, value);
-    navigate(`/products?${params.toString()}`);
-    setShowFilters(false);
-  };
-
-  const clearAllFilters = () => {
-    navigate('/products');
-    setShowFilters(false);
-  };
-
-  // Check if a filter is active
-  const isFilterActive = (param, value) => {
-    const params = new URLSearchParams(location.search);
-    return params.get(param) === value;
-  };
-
-  // Generate pagination buttons
-  const getPaginationButtons = () => {
-    const buttons = [];
-    const maxVisible = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-    
-    if (startPage > 1) {
-      buttons.push(
-        <button
-          key={1}
-          onClick={() => handlePageChange(1)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-display ${
-            currentPage === 1
-              ? 'bg-aliexpress-red text-aliexpress-black font-bold'
-              : 'border border-aliexpress-border text-aliexpress-white hover:border-aliexpress-red hover:text-aliexpress-red'
-          }`}
-        >
-          1
-        </button>
-      );
-      
-      if (startPage > 2) {
-        buttons.push(
-          <span key="ellipsis1" className="text-aliexpress-medgray px-2">...</span>
-        );
-      }
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      buttons.push(
-        <button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-display ${
-            currentPage === i
-              ? 'bg-aliexpress-red text-aliexpress-black font-bold'
-              : 'border border-aliexpress-border text-aliexpress-white hover:border-aliexpress-red hover:text-aliexpress-red'
-          }`}
-        >
-          {i}
-        </button>
-      );
-    }
-    
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        buttons.push(
-          <span key="ellipsis2" className="text-aliexpress-medgray px-2">...</span>
-        );
-      }
-      
-      buttons.push(
-        <button
-          key={totalPages}
-          onClick={() => handlePageChange(totalPages)}
-          className={`w-8 h-8 rounded flex items-center justify-center text-sm font-display ${
-            currentPage === totalPages
-              ? 'bg-aliexpress-red text-aliexpress-black font-bold'
-              : 'border border-aliexpress-border text-aliexpress-white hover:border-aliexpress-red hover:text-aliexpress-red'
-          }`}
-        >
-          {totalPages}
-        </button>
-      );
-    }
-    
-    return buttons;
-  };
+  const toggleLang = () => setLang(lang === 'en' ? 'ar' : 'en');
 
   return (
-    <>
-      {/* Top Announcement Bar */}
-      <div className="bg-aliexpress-red py-2">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between text-sm text-aliexpress-black font-bold">
-            <div className="flex items-center space-x-4">
-              <span className="flex items-center">
-                <Truck className="h-4 w-4 mr-2" />
-                FREE SHIPPING ON ORDERS OVER 5000₡
-              </span>
-              <span className="hidden md:flex items-center">
-                <Shield className="h-4 w-4 mr-2" />
-                2-YEAR WARRANTY ON ALL PRODUCTS
-              </span>
+    <motion.nav
+      initial={{ y: -80 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-zinc-950/95 backdrop-blur-xl border-b border-orange-500/20 shadow-lg shadow-black/50'
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="relative w-9 h-9">
+              <div className="absolute inset-0 bg-orange-500 rounded-lg rotate-45 group-hover:rotate-90 transition-transform duration-300" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-black relative z-10" fill="black" />
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link to="/support" className="hover:text-gray-100 transition-colors">
-                24/7 SUPPORT
-              </Link>
-              <span className="hidden md:inline">|</span>
-              <Link to="/track-order" className="hidden md:block hover:text-gray-100 transition-colors">
-                TRACK ORDER
-              </Link>
+            <div className="flex flex-col leading-none">
+              <span className="text-white font-black text-xl tracking-tight">CYBER</span>
+              <span className="text-orange-500 text-xs font-bold tracking-widest uppercase">Store</span>
             </div>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden lg:flex items-center gap-1">
+            {navLinks.map(link => (
+              <div
+                key={link.path + link.label}
+                className="relative"
+                onMouseEnter={() => link.dropdown && setDropdownOpen(link.label)}
+                onMouseLeave={() => setDropdownOpen(null)}
+              >
+                <Link
+                  to={link.path}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    location.pathname === link.path
+                      ? 'text-orange-500'
+                      : 'text-zinc-300 hover:text-orange-400'
+                  }`}
+                >
+                  {link.label}
+                  {link.dropdown && <ChevronDown className="w-3 h-3" />}
+                </Link>
+                {link.dropdown && dropdownOpen === link.label && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute top-full start-0 w-52 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl shadow-black/50 overflow-hidden"
+                  >
+                    {link.dropdown.map(item => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className="block px-4 py-3 text-sm text-zinc-300 hover:text-orange-400 hover:bg-zinc-800 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <AnimatePresence>
+              {searchOpen ? (
+                <motion.form
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 220, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  onSubmit={handleSearch}
+                  className="flex items-center bg-zinc-800 border border-orange-500/40 rounded-lg overflow-hidden"
+                >
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={t('nav.search')}
+                    className="bg-transparent text-white text-sm px-3 py-2 outline-none w-full placeholder:text-zinc-500"
+                    dir="auto"
+                  />
+                  <button type="button" onClick={() => setSearchOpen(false)} className="p-2 text-zinc-400 hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.form>
+              ) : (
+                <motion.button
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 text-zinc-400 hover:text-orange-400 transition-colors rounded-lg hover:bg-zinc-800"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Search className="w-5 h-5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Language Switcher */}
+            <motion.button
+              onClick={toggleLang}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-orange-500/40 rounded-lg transition-colors"
+              title={lang === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+            >
+              <span className="text-base leading-none">{lang === 'en' ? '🇸🇦' : '🇬🇧'}</span>
+              <span className="text-zinc-300 text-xs font-bold hidden sm:block">
+                {lang === 'en' ? 'عربي' : 'EN'}
+              </span>
+            </motion.button>
+
+            {/* Cart */}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                to="/cart"
+                className="relative flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors group"
+              >
+                <ShoppingCart className="w-5 h-5 text-zinc-300 group-hover:text-orange-400 transition-colors" />
+                {cartCount > 0 && (
+                  <motion.span
+                    key={cartCount}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-orange-500 text-black text-xs font-black rounded-full flex items-center justify-center"
+                  >
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </motion.span>
+                )}
+                <span className="hidden sm:block text-sm text-zinc-300 group-hover:text-white transition-colors">{t('nav.cart')}</span>
+              </Link>
+            </motion.div>
+
+            {/* Auth */}
+            {isAuthenticated ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"
+                >
+                  <User className="w-4 h-4 text-black" />
+                  <span className="text-black text-sm font-bold">{user?.username || user?.email?.split('@')[0]}</span>
+                </Link>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-300 hover:text-orange-400"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-400 hover:text-red-400"
+                  title={t('nav.logout')}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <motion.div whileHover={{ scale: 1.05 }} className="hidden sm:block">
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"
+                >
+                  <User className="w-4 h-4 text-black" />
+                  <span className="text-black text-sm font-bold">{t('nav.login')}</span>
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Mobile menu button */}
+            <motion.button
+              onClick={() => setIsOpen(!isOpen)}
+              className="lg:hidden p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors"
+              whileTap={{ scale: 0.95 }}
+            >
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </motion.button>
           </div>
         </div>
       </div>
 
-      <nav className={`sticky top-0 z-50 bg-aliexpress-black/90 backdrop-blur-md border-b border-aliexpress-border shadow-md transition-all duration-300 ${isScrolled ? 'shadow-lg shadow-aliexpress-red/20 bg-aliexpress-black' : ''}`}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-aliexpress-red rounded flex items-center justify-center">
-                <span className="font-bold text-aliexpress-black">CS</span>
-              </div>
-              <div className="text-2xl font-bold tracking-wide">
-                <span className="text-aliexpress-red">CYBER</span>
-                <span className="text-aliexpress-white">STORE</span>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation - FIXED VERSION */}
-            <div className="hidden lg:flex items-center space-x-4">
-              {/* Main Navigation */}
-              <div className="flex items-center space-x-4">
-                <Link 
-                  to="/" 
-                  className="font-semibold text-lg text-aliexpress-white hover:text-aliexpress-red transition-colors flex items-center"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  HOME
-                </Link>
-                
-                {/* Categories Page */}
-                <Link 
-                  to="/categories" 
-                  className="font-semibold text-lg text-aliexpress-white hover:text-aliexpress-red transition-colors flex items-center"
-                >
-                  <Grid className="h-4 w-4 mr-2" />
-                  CATEGORIES
-                </Link>
-
-                {/* Additional Pages */}
-                <Link 
-                  to="/about" 
-                  className="font-semibold text-lg text-aliexpress-white hover:text-aliexpress-red transition-colors"
-                >
-                  ABOUT
-                </Link>
-                
-                <Link 
-                  to="/contact" 
-                  className="font-semibold text-lg text-aliexpress-white hover:text-aliexpress-red transition-colors"
-                >
-                  CONTACT
-                </Link>
-              </div>
-
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-aliexpress-red" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="SEARCH PRODUCTS..."
-                  className="cyber-input pl-10 pr-24 font-mono w-64"
-                />
-                <button 
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-aliexpress-red text-aliexpress-black text-sm font-display rounded hover:bg-aliexpress-darkred transition-colors"
-                >
-                  SEARCH
-                </button>
-              </form>
-
-              {/* Cart */}
-              <Link 
-                to="/cart" 
-                className="relative p-2 hover:bg-aliexpress-darkgray rounded-lg transition-colors group"
-              >
-                <ShoppingCart className="h-6 w-6 text-aliexpress-accent group-hover:text-aliexpress-red transition-colors" />
-                <span className="absolute -top-1 -right-1 bg-aliexpress-accent text-aliexpress-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                  {user?.cartCount || 0}
-                </span>
-              </Link>
-              
-              {/* User Menu */}
-              {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-right">
-                      <div className="text-sm font-display font-bold text-aliexpress-red">
-                        {user?.username || user?.email}
-                      </div>
-                      <div className="text-xs text-aliexpress-medgray">
-                        {user?.balance ? user.balance.toLocaleString() + '₡' : '0₡'}
-                      </div>
-                    </div>
-                    <Link to="/profile" className="p-2 border border-aliexpress-red text-aliexpress-red hover:bg-aliexpress-red hover:text-aliexpress-black rounded-lg transition-colors">
-                      <User className="h-5 w-5" />
-                    </Link>
-                  </div>
-                  
-                  {user?.role === 'admin' && (
-                    <Link 
-                      to="/admin/dashboard" 
-                      className="p-2 border border-aliexpress-accent text-aliexpress-accent hover:bg-aliexpress-accent hover:text-aliexpress-black rounded-lg transition-colors"
-                    >
-                      <Settings className="h-5 w-5" />
-                    </Link>
-                  )}
-                  
-                  <button 
-                    onClick={handleLogout}
-                    className="p-2 border border-aliexpress-lightgray text-aliexpress-lightgray hover:bg-aliexpress-lightgray hover:text-aliexpress-black rounded-lg transition-colors"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link to="/login" className="flex items-center space-x-2 text-aliexpress-red hover:text-aliexpress-accent transition-colors">
-                    <LogIn className="h-5 w-5" />
-                    <span className="font-display font-bold">LOGIN</span>
-                  </Link>
-                  <Link to="/register" className="cyber-button text-sm">
-                    REGISTER
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile menu button */}
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 border border-aliexpress-red text-aliexpress-red rounded-lg hover:bg-aliexpress-red/10 transition-colors"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Updated Products Page Controls */}
-        {isProductsPage && (
-          <div className="border-t border-aliexpress-border py-3 bg-aliexpress-darkgray">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                
-                {/* Left Side: Filter Controls */}
-                <div className="flex items-center gap-4">
-                  <div className="relative" ref={filtersRef}>
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="flex items-center gap-2 px-4 py-2 border border-aliexpress-red text-aliexpress-red hover:bg-aliexpress-red/10 rounded transition-colors font-display"
-                    >
-                      <Filter className="h-4 w-4" />
-                      FILTERS
-                      <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showFilters && (
-                      <div className="absolute top-full left-0 mt-2 w-80 bg-aliexpress-darkgray border border-aliexpress-red rounded shadow-xl z-50 p-4">
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-display font-bold text-aliexpress-red">FILTER PRODUCTS</h3>
-                          {filters.map((filter) => (
-                            <div key={filter.param}>
-                              <h4 className="text-sm font-semibold text-aliexpress-white mb-2">{filter.label}</h4>
-                              <div className="flex flex-wrap gap-2">
-                                {filter.options.map((option) => {
-                                  const isActive = isFilterActive(filter.param, option);
-                                  const displayText = {
-                                    'under-1000': 'Under 1000₡',
-                                    '1000-5000': '1000-5000₡',
-                                    '5000-10000': '5000-10000₡',
-                                    'over-10000': '10000₡+',
-                                    '4': '4+ Stars',
-                                    '4.5': '4.5+ Stars',
-                                    '5': '5 Stars',
-                                    'in-stock': 'In Stock',
-                                    'low-stock': 'Low Stock',
-                                    'pre-order': 'Pre-order',
-                                    'rgb': 'RGB Lighting',
-                                    'wireless': 'Wireless',
-                                    'mechanical': 'Mechanical',
-                                    'customizable': 'Customizable'
-                                  }[option] || option;
-                                  
-                                  return (
-                                    <button
-                                      key={option}
-                                      onClick={() => applyFilter(filter.param, option)}
-                                      className={`px-3 py-1 text-xs rounded transition-colors font-display ${
-                                        isActive
-                                          ? 'bg-aliexpress-red text-aliexpress-black'
-                                          : 'border border-aliexpress-border text-aliexpress-medgray hover:border-aliexpress-red hover:text-aliexpress-red'
-                                      }`}
-                                    >
-                                      {displayText}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                          <div className="flex gap-2">
-                            <button
-                              onClick={clearAllFilters}
-                              className="flex-1 py-2 border border-aliexpress-accent text-aliexpress-accent hover:bg-aliexpress-accent hover:text-aliexpress-black rounded transition-colors text-sm font-display"
-                            >
-                              CLEAR ALL
-                            </button>
-                            <button
-                              onClick={() => setShowFilters(false)}
-                              className="flex-1 py-2 bg-aliexpress-red text-aliexpress-black hover:bg-aliexpress-darkred rounded transition-colors text-sm font-display font-bold"
-                            >
-                              APPLY
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center gap-1 border border-aliexpress-border rounded p-1">
-                    <button
-                      onClick={() => handleViewChange('grid')}
-                      className={`p-2 rounded transition-colors ${
-                        viewMode === 'grid' 
-                          ? 'bg-aliexpress-red text-aliexpress-black' 
-                          : 'text-aliexpress-white hover:bg-aliexpress-black'
-                      }`}
-                      title="Grid View"
-                    >
-                      <Grid className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleViewChange('list')}
-                      className={`p-2 rounded transition-colors ${
-                        viewMode === 'list' 
-                          ? 'bg-aliexpress-red text-aliexpress-black' 
-                          : 'text-aliexpress-white hover:bg-aliexpress-black'
-                      }`}
-                      title="List View"
-                    >
-                      <List className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="text-sm text-aliexpress-medgray font-display hidden md:block">
-                    Showing 1-12 of 245 products
-                  </div>
-                </div>
-
-                {/* Right Side: Pagination */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="p-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-red hover:text-aliexpress-black hover:border-aliexpress-red disabled:opacity-30 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Previous Page"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    
-                    {/* Page Numbers */}
-                    <div className="flex items-center gap-1">
-                      {getPaginationButtons()}
-                    </div>
-                    
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="p-2 border border-aliexpress-border text-aliexpress-white hover:bg-aliexpress-red hover:text-aliexpress-black hover:border-aliexpress-red disabled:opacity-30 disabled:cursor-not-allowed rounded transition-colors"
-                      title="Next Page"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="text-sm text-aliexpress-medgray font-display">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
-
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-aliexpress-black/95 backdrop-blur-sm">
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-aliexpress-border">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-aliexpress-red rounded flex items-center justify-center">
-                  <span className="font-display font-bold text-aliexpress-black">CS</span>
-                </div>
-                <div className="text-xl font-bold">
-                  <span className="text-aliexpress-red">CYBER</span>
-                  <span className="text-aliexpress-white">STORE</span>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsMenuOpen(false)}
-                className="p-2 text-aliexpress-red hover:bg-aliexpress-red/10 rounded"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-zinc-950/98 backdrop-blur-xl border-t border-zinc-800"
+          >
+            <div className="px-4 py-4 space-y-1">
+              {navLinks.map(link => (
+                <Link
+                  key={link.path + link.label}
+                  to={link.path}
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    location.pathname === link.path
+                      ? 'text-orange-500 bg-orange-500/10'
+                      : 'text-zinc-300 hover:text-orange-400 hover:bg-zinc-800'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              {/* Mobile lang toggle */}
+              <button
+                onClick={toggleLang}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-zinc-300 hover:text-orange-400 hover:bg-zinc-800 transition-colors"
               >
-                <X className="h-6 w-6" />
+                <span className="text-base">{lang === 'en' ? '🇸🇦' : '🇬🇧'}</span>
+                <span>{lang === 'en' ? 'عربي' : 'English'}</span>
               </button>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {/* Search in Mobile */}
-              <form onSubmit={handleSearch} className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-aliexpress-red" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="SEARCH PRODUCTS..."
-                    className="input-modern w-full pl-10"
-                  />
-                </div>
-              </form>
-
-              {/* Quick Links */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {quickLinks.map((link) => {
-                  const Icon = link.icon;
-                  return (
-                    <Link
-                      key={link.name}
-                      to={link.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="p-3 border border-aliexpress-border rounded text-center hover:border-aliexpress-red hover:bg-aliexpress-darkgray transition-colors"
-                    >
-                      <Icon className="h-5 w-5 text-aliexpress-red mx-auto mb-2" />
-                      <div className="text-sm font-display text-aliexpress-white">{link.name}</div>
-                      <span className="text-xs text-aliexpress-accent font-bold">{link.badge}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Main Navigation */}
-              <div className="space-y-2">
-                <Link 
-                  to="/" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center p-3 text-lg font-display font-bold text-aliexpress-white hover:bg-aliexpress-darkgray hover:text-aliexpress-red rounded transition-colors"
-                >
-                  <Home className="h-5 w-5 mr-3 text-aliexpress-red" />
-                  HOME
-                </Link>
-
-                <Link 
-                  to="/products" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center p-3 text-lg font-display font-bold text-aliexpress-white hover:bg-aliexpress-darkgray hover:text-aliexpress-red rounded transition-colors"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-3 text-aliexpress-red" />
-                  PRODUCTS
-                </Link>
-
-                {/* Other Pages */}
-                <Link 
-                  to="/categories" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center p-3 text-lg font-display font-bold text-aliexpress-white hover:bg-aliexpress-darkgray hover:text-aliexpress-red rounded transition-colors"
-                >
-                  <Grid className="h-5 w-5 mr-3 text-aliexpress-accent" />
-                  CATEGORIES
-                </Link>
-
-                <Link 
-                  to="/about" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center p-3 text-lg font-display text-aliexpress-white hover:bg-aliexpress-darkgray hover:text-aliexpress-red rounded transition-colors"
-                >
-                  ABOUT US
-                </Link>
-                
-                <Link 
-                  to="/contact" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center p-3 text-lg font-display text-aliexpress-white hover:bg-aliexpress-darkgray hover:text-aliexpress-red rounded transition-colors"
-                >
-                  CONTACT
-                </Link>
+              <div className="pt-3 flex gap-2">
+                {isAuthenticated ? (
+                  <>
+                    <Link to="/profile" className="flex-1 text-center py-2.5 bg-orange-500 text-black font-bold rounded-lg text-sm">{t('nav.profile')}</Link>
+                    <button onClick={handleLogout} className="flex-1 text-center py-2.5 bg-zinc-800 text-white font-bold rounded-lg text-sm border border-zinc-700">{t('nav.logout')}</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="flex-1 text-center py-2.5 bg-orange-500 text-black font-bold rounded-lg text-sm">{t('nav.login')}</Link>
+                    <Link to="/register" className="flex-1 text-center py-2.5 bg-zinc-800 text-white font-bold rounded-lg text-sm border border-zinc-700">{t('nav.register')}</Link>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Bottom User Section */}
-            <div className="border-t border-aliexpress-border p-4">
-              {isAuthenticated ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-lg font-display font-bold text-aliexpress-red">
-                        {user?.username || user?.email}
-                      </div>
-                      <div className="text-sm text-aliexpress-accent font-display">
-                        {user?.balance ? user.balance.toLocaleString() + '₡' : '0₡'}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link 
-                        to="/cart" 
-                        onClick={() => setIsMenuOpen(false)}
-                        className="p-2 border border-aliexpress-accent text-aliexpress-accent rounded hover:bg-aliexpress-accent hover:text-aliexpress-black transition-colors"
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                      </Link>
-                      <Link 
-                        to="/profile" 
-                        onClick={() => setIsMenuOpen(false)}
-                        className="p-2 border border-aliexpress-red text-aliexpress-red rounded hover:bg-aliexpress-red hover:text-aliexpress-black transition-colors"
-                      >
-                        <User className="h-5 w-5" />
-                      </Link>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {user?.role === 'admin' && (
-                      <Link 
-                        to="/admin/dashboard" 
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex-1 py-2 border border-aliexpress-accent text-aliexpress-accent text-center rounded hover:bg-aliexpress-accent hover:text-aliexpress-black transition-colors font-display font-bold text-sm"
-                      >
-                        ADMIN PANEL
-                      </Link>
-                    )}
-                    <button 
-                      onClick={handleLogout}
-                      className="flex-1 py-2 border border-aliexpress-medgray text-aliexpress-medgray rounded hover:bg-aliexpress-medgray hover:text-aliexpress-black transition-colors font-display text-sm"
-                    >
-                      LOGOUT
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex gap-3">
-                  <Link 
-                    to="/login" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex-1 py-3 border-2 border-aliexpress-red text-aliexpress-red text-center rounded hover:bg-aliexpress-red hover:text-aliexpress-black transition-colors font-display font-bold"
-                  >
-                    LOGIN
-                  </Link>
-                  <Link 
-                    to="/register" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex-1 py-3 bg-aliexpress-red text-aliexpress-black text-center rounded hover:bg-aliexpress-darkred transition-colors font-display font-bold"
-                  >
-                    REGISTER
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   );
 };
 

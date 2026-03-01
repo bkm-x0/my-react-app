@@ -1,225 +1,242 @@
 import React, { useState } from 'react';
-import { Star, ShoppingCart, Eye, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShoppingCart, Heart, Star, Eye, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../pages/store/cartStore';
+import useLangStore from '../pages/store/langStore';
 
-const ProductCard = ({ product, view = 'grid' }) => {
-  const [addedToCart, setAddedToCart] = useState(false);
+const API_URL = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`;
+
+function getImageUrl(product) {
+  if (!product.image_url && !product.image) return null;
+  const img = product.image_url || product.image;
+  if (img.startsWith('http')) return img;
+  return `${API_URL}${img.startsWith('/') ? '' : '/'}${img}`;
+}
+
+function formatPrice(price) {
+  if (!price) return '$0';
+  return '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function StarRating({ rating, reviews }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(i => (
+          <Star
+            key={i}
+            className={`w-3 h-3 ${i <= Math.round(rating || 0) ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`}
+          />
+        ))}
+      </div>
+      <span className="text-zinc-400 text-xs">({reviews || 0})</span>
+    </div>
+  );
+}
+
+const ProductCard = ({ product, viewMode = 'grid' }) => {
   const addToCart = useCartStore((state) => state.addToCart);
-  
-  // Safe defaults
-  const category = product?.category_name || product?.category || 'UNKNOWN';
-  const features = Array.isArray(product?.features) ? product.features : [];
-  
-  const handleAddToCart = () => {
+  const { t } = useLangStore();
+  const [added, setAdded] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const imageUrl = getImageUrl(product);
+  const discount = product.original_price && product.original_price > product.price
+    ? Math.round((1 - product.price / product.original_price) * 100)
+    : null;
+  const inStock = product.stock > 0 || product.stock === undefined;
+  const categoryName = product.category_name || product.category || '';
+  const rating = product.rating || product.average_rating || 0;
+  const reviewCount = product.review_count || product.reviews || 0;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     addToCart(product);
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
-  
-  if (view === 'list') {
+
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsWishlisted(!isWishlisted);
+  };
+
+  if (viewMode === 'list') {
     return (
-      <div className="card card-gradient group">
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          {/* Product Image */}
-          <div className="md:w-48 h-48 bg-aliexpress-black border-2 border-aliexpress-red rounded overflow-hidden relative">
-            <div className="absolute top-3 left-3 z-10">
-              <span className="badge">
-                {String(category).toUpperCase()}
-              </span>
-            </div>
-            {product.stock < 10 && (
-              <div className="absolute top-3 right-3 z-10">
-                <span className="px-2 py-1 bg-aliexpress-accent text-aliexpress-black text-xs font-bold rounded animate-pulse">
-                  LOW STOCK
-                </span>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ x: 4 }}
+        className="group relative bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 rounded-2xl overflow-hidden transition-all duration-300"
+      >
+        <Link to={`/products/${product.id}`} className="flex gap-0">
+          <div className="relative w-40 sm:w-52 shrink-0 bg-zinc-800">
+            {imageUrl ? (
+              <img src={imageUrl} alt={product.name} className="w-full h-full object-cover aspect-square" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center aspect-square text-zinc-600">
+                <ShoppingCart className="w-8 h-8" />
               </div>
             )}
+            {product.badge && (
+              <span className="absolute top-2 left-2 text-xs font-bold px-2 py-1 rounded-lg bg-orange-500 text-black">
+                {product.badge}
+              </span>
+            )}
           </div>
-          
-          {/* Product Info */}
-          <div className="flex-1">
-            <div className="flex justify-between items-start mb-4">
+          <div className="flex-1 p-4 flex flex-col justify-between">
+            <div>
+              <p className="text-zinc-500 text-xs mb-1 capitalize">{categoryName}</p>
+              <h3 className="text-white font-bold text-sm sm:text-base mb-2 group-hover:text-orange-400 transition-colors line-clamp-2">
+                {product.name}
+              </h3>
+              <StarRating rating={rating} reviews={reviewCount} />
+              {product.description && (
+                <p className="text-zinc-400 text-xs mt-2 line-clamp-1 hidden sm:block">{product.description}</p>
+              )}
+            </div>
+            <div className="flex items-center justify-between mt-3">
               <div>
-                <h3 className="text-2xl font-bold text-aliexpress-white mb-2">
-                  {product.name}
-                </h3>
-                <p className="text-aliexpress-medgray mb-4 line-clamp-2">{product.description}</p>
+                <p className="text-orange-400 font-black text-lg">{formatPrice(product.price)}</p>
+                {product.original_price && product.original_price > product.price && (
+                  <p className="text-zinc-500 text-xs line-through">{formatPrice(product.original_price)}</p>
+                )}
               </div>
-              <div className="text-3xl font-bold text-aliexpress-red ml-4">
-                {product.price}₡
-              </div>
-            </div>
-            
-            {/* Rating and Stock */}
-            <div className="flex items-center space-x-6 mb-4">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < Math.floor(product.rating)
-                        ? 'text-aliexpress-red fill-aliexpress-red'
-                        : 'text-aliexpress-border'
-                    }`}
-                  />
-                ))}
-                <span className="ml-2 text-sm font-semibold text-aliexpress-white">{product.rating}</span>
-              </div>
-              <div className="text-sm font-semibold">
-                <span className="text-aliexpress-white">STOCK: </span>
-                <span className={product.stock < 10 ? 'text-aliexpress-accent' : 'text-aliexpress-medgray'}>
-                  {product.stock} UNITS
-                </span>
-              </div>
-            </div>
-            
-            {/* Features */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {features.slice(0, 3).map((feature, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 bg-aliexpress-black border border-aliexpress-accent text-aliexpress-accent text-sm font-semibold rounded"
-                >
-                  {typeof feature === 'string' ? feature : JSON.stringify(feature)}
-                </span>
-              ))}
-            </div>
-            
-            {/* Actions */}
-            <div className="flex items-center space-x-3">
-              <Link 
-                to={`/products/${product.id}`}
-                className="flex items-center px-4 py-2 border-2 border-aliexpress-white text-aliexpress-white hover:bg-aliexpress-white hover:text-aliexpress-black transition-colors font-semibold rounded"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                VIEW
-              </Link>
-              <button 
+              <motion.button
                 onClick={handleAddToCart}
-                className={`flex items-center px-4 py-2 font-bold transition-colors rounded ${
-                  addedToCart
-                    ? 'bg-aliexpress-accent text-aliexpress-black'
-                    : 'bg-aliexpress-red text-aliexpress-black hover:bg-aliexpress-darkred'
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  added ? 'bg-emerald-500 text-white' : 'bg-orange-500 hover:bg-orange-600 text-black'
                 }`}
               >
-                {addedToCart ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    ADDED
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    ADD TO CART
-                  </>
-                )}
-              </button>
+                <ShoppingCart className="w-4 h-4" />
+                <span>{added ? t('productCard.added') : t('productCard.addToCart')}</span>
+              </motion.button>
             </div>
           </div>
-        </div>
-      </div>
+        </Link>
+      </motion.div>
     );
   }
 
-  // Grid View
+  // Grid view
   return (
-    <div className="card card-gradient group hover:-translate-y-2 transition-all duration-300">
-      {/* Product Image */}
-      <div className="relative h-56 bg-aliexpress-black border-b-2 border-aliexpress-red overflow-hidden">
-        <div className="absolute top-3 left-3 z-10">
-          <span className="badge">
-            {String(category).toUpperCase()}
-          </span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      className="group relative bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 rounded-2xl overflow-hidden transition-colors duration-300 flex flex-col"
+      style={{ boxShadow: 'none' }}
+      onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 25px rgba(249, 115, 22, 0.1)')}
+      onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+    >
+      {/* Image */}
+      <div className="relative overflow-hidden bg-zinc-800 aspect-square">
+        <Link to={`/products/${product.id}`}>
+          {imageUrl ? (
+            <img src={imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-zinc-600">
+              <ShoppingCart className="w-12 h-12" />
+            </div>
+          )}
+        </Link>
+
+        {/* Overlay actions */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 gap-2">
+          <motion.button
+            onClick={handleAddToCart}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              added ? 'bg-emerald-500 text-white' : 'bg-orange-500 hover:bg-orange-600 text-black'
+            }`}
+          >
+            {added ? <Zap className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {added ? t('productCard.added') : t('productCard.addToCart')}
+          </motion.button>
+          <Link to={`/products/${product.id}`}>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 bg-zinc-800/90 hover:bg-zinc-700 rounded-xl text-zinc-300 hover:text-white transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+            </motion.button>
+          </Link>
         </div>
-        
-        <div className="absolute top-3 right-3 z-10">
-          {product.stock < 10 && (
-            <span className="px-2 py-1 bg-aliexpress-accent text-aliexpress-black text-xs font-bold rounded animate-pulse">
-              LOW STOCK
+
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1">
+          {product.badge && (
+            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-orange-500 text-black">
+              {product.badge}
+            </span>
+          )}
+          {discount && (
+            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-red-500 text-white">
+              -{discount}%
             </span>
           )}
         </div>
-        
-        <div className="absolute bottom-3 right-3 text-3xl font-bold text-aliexpress-red z-10">
-          {product.price}₡
-        </div>
-      </div>
-      
-      <div className="p-5">
-        {/* Product Info */}
-        <h3 className="text-lg font-bold mb-2 text-aliexpress-white group-hover:text-aliexpress-red transition-colors line-clamp-1">
-          {product.name}
-        </h3>
-        <p className="text-aliexpress-medgray text-sm mb-4 line-clamp-2">{product.description}</p>
-        
-        {/* Rating */}
-        <div className="flex items-center mb-4">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i}
-                className={`h-4 w-4 ${
-                  i < Math.floor(product.rating)
-                    ? 'text-aliexpress-red fill-aliexpress-red'
-                    : 'text-aliexpress-border'
-                }`}
-              />
-            ))}
+
+        {/* Wishlist */}
+        <motion.button
+          onClick={handleWishlist}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-3 right-3 p-2 bg-zinc-900/80 backdrop-blur-sm rounded-xl transition-colors"
+        >
+          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-zinc-400'}`} />
+        </motion.button>
+
+        {/* Out of stock */}
+        {!inStock && (
+          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+            <span className="text-white font-bold text-sm bg-red-500/90 px-4 py-2 rounded-lg">{t('productCard.outOfStock')}</span>
           </div>
-          <span className="ml-2 text-sm font-bold text-aliexpress-white">{product.rating}</span>
-          <span className="mx-2 text-aliexpress-border">•</span>
-          <span className="text-xs font-semibold">
-            <span className={product.stock < 10 ? 'text-aliexpress-accent' : 'text-aliexpress-medgray'}>
-              {product.stock} UNITS
-            </span>
-          </span>
-        </div>
-        
-        {/* Features */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {features.slice(0, 2).map((feature, index) => (
-            <span 
-              key={index}
-              className="px-2 py-1 bg-aliexpress-black border border-aliexpress-accent text-aliexpress-accent text-xs font-semibold rounded"
-            >
-              {typeof feature === 'string' ? feature : JSON.stringify(feature)}
-            </span>
-          ))}
-        </div>
-        
-        {/* Actions */}
-        <div className="flex items-center justify-between gap-2">
-          <Link 
-            to={`/products/${product.id}`}
-            className="flex items-center text-sm text-aliexpress-white hover:text-aliexpress-red transition-colors font-semibold"
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            VIEW
-          </Link>
-          <button 
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1">
+        <p className="text-zinc-500 text-xs mb-1 capitalize">{categoryName}</p>
+        <Link to={`/products/${product.id}`}>
+          <h3 className="text-white font-bold text-sm mb-2 group-hover:text-orange-400 transition-colors line-clamp-2 min-h-[2.5rem]">
+            {product.name}
+          </h3>
+        </Link>
+        <StarRating rating={rating} reviews={reviewCount} />
+
+        <div className="flex items-end justify-between mt-3 pt-3 border-t border-zinc-800">
+          <div>
+            <p className="text-orange-400 font-black text-base">{formatPrice(product.price)}</p>
+            {product.original_price && product.original_price > product.price && (
+              <p className="text-zinc-500 text-xs line-through">{formatPrice(product.original_price)}</p>
+            )}
+          </div>
+          <motion.button
             onClick={handleAddToCart}
-            className={`flex items-center px-4 py-2 transition-all text-sm font-bold rounded ${
-              addedToCart
-                ? 'bg-aliexpress-accent text-aliexpress-black'
-                : 'bg-aliexpress-red text-aliexpress-black hover:bg-aliexpress-darkred hover:scale-105'
+            disabled={!inStock}
+            whileHover={inStock ? { scale: 1.05 } : {}}
+            whileTap={inStock ? { scale: 0.95 } : {}}
+            className={`p-2 rounded-xl transition-all ${
+              !inStock
+                ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+                : added
+                ? 'bg-emerald-500 text-white'
+                : 'bg-orange-500 hover:bg-orange-600 text-black'
             }`}
           >
-            {addedToCart ? (
-              <>
-                <Check className="h-4 w-4 mr-1" />
-                ADDED
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="h-4 w-4 mr-1" />
-                ADD
-              </>
-            )}
-          </button>
+            {added ? <Zap className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+          </motion.button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
