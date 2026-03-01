@@ -25,6 +25,8 @@ import PreOrder from './pages/PreOrder';
 import Categories from './pages/Categories';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Suppliers from './pages/Suppliers';
+import SupplierDetail from './pages/SupplierDetail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -86,6 +88,8 @@ function App() {
         <Route path="/trending" element={<Layout><Trending /></Layout>} />
         <Route path="/sale" element={<Layout><Sale /></Layout>} />
         <Route path="/pre-order" element={<Layout><PreOrder /></Layout>} />
+        <Route path="/suppliers" element={<Layout><Suppliers /></Layout>} />
+        <Route path="/suppliers/:id" element={<Layout><SupplierDetail /></Layout>} />
 
         {/* Protected Routes with Layout */}
         <Route path="/checkout" element={

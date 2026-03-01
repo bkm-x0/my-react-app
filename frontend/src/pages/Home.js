@@ -1,15 +1,105 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Zap, Shield, Truck, Headphones,
-  Star, ChevronRight, TrendingUp, Award, Users, Package
+  Star, ChevronRight, TrendingUp, Award, Users, Package,
+  Monitor, Laptop, Gamepad2, Cpu, Layers, HardDrive,
+  Tv, Keyboard, Mouse, Wifi,
+  Router, Cable, Server, Radio, Plug, Usb,
+  Mic, Volume2, Speaker
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import api from '../services/api';
 import useLangStore from './store/langStore';
 
 const brands = ['ASUS ROG', 'MSI', 'Corsair', 'Razer', 'Logitech', 'HyperX', 'SteelSeries', 'NZXT', 'Lian Li', 'Samsung', 'NVIDIA', 'AMD', 'Intel'];
+
+const subcategoriesMap = {
+  'desktops': [
+    { name: 'Gaming Desktops', slug: 'gaming-desktops', icon: Gamepad2 },
+    { name: 'Workstations', slug: 'workstations', icon: Monitor },
+    { name: 'Office PCs', slug: 'office-pcs', icon: Monitor },
+    { name: 'Mini PCs', slug: 'mini-pcs', icon: Cpu },
+    { name: 'All-in-One', slug: 'all-in-one', icon: Tv },
+  ],
+  'laptops': [
+    { name: 'Gaming Laptops', slug: 'gaming-laptops', icon: Gamepad2 },
+    { name: 'Business Laptops', slug: 'business-laptops', icon: Laptop },
+    { name: 'Ultrabooks', slug: 'ultrabooks', icon: Laptop },
+    { name: 'Chromebooks', slug: 'chromebooks', icon: Laptop },
+    { name: '2-in-1 Laptops', slug: '2-in-1-laptops', icon: Laptop },
+  ],
+  'gaming-systems': [
+    { name: 'Custom Gaming PCs', slug: 'custom-gaming-pcs', icon: Cpu },
+    { name: 'Pre-Built Gaming', slug: 'pre-built-gaming', icon: Monitor },
+    { name: 'Streaming Rigs', slug: 'streaming-rigs', icon: Radio },
+    { name: 'VR-Ready PCs', slug: 'vr-ready-pcs', icon: Layers },
+  ],
+  'processors': [
+    { name: 'Intel Core i9', slug: 'intel-i9', icon: Cpu },
+    { name: 'Intel Core i7', slug: 'intel-i7', icon: Cpu },
+    { name: 'Intel Core i5', slug: 'intel-i5', icon: Cpu },
+    { name: 'AMD Ryzen 9', slug: 'amd-ryzen-9', icon: Cpu },
+    { name: 'AMD Ryzen 7', slug: 'amd-ryzen-7', icon: Cpu },
+    { name: 'AMD Ryzen 5', slug: 'amd-ryzen-5', icon: Cpu },
+  ],
+  'graphics-cards': [
+    { name: 'NVIDIA RTX 40 Series', slug: 'rtx-40', icon: Layers },
+    { name: 'NVIDIA RTX 30 Series', slug: 'rtx-30', icon: Layers },
+    { name: 'AMD Radeon RX 7000', slug: 'rx-7000', icon: Layers },
+    { name: 'AMD Radeon RX 6000', slug: 'rx-6000', icon: Layers },
+    { name: 'Professional GPUs', slug: 'professional-gpus', icon: Monitor },
+  ],
+  'memory-ram': [
+    { name: 'DDR5 RAM', slug: 'ddr5', icon: HardDrive },
+    { name: 'DDR4 RAM', slug: 'ddr4', icon: HardDrive },
+    { name: 'Laptop RAM (SO-DIMM)', slug: 'laptop-ram', icon: Laptop },
+    { name: 'ECC Memory', slug: 'ecc-memory', icon: Server },
+  ],
+  'storage': [
+    { name: 'NVMe SSD', slug: 'nvme-ssd', icon: HardDrive },
+    { name: 'SATA SSD', slug: 'sata-ssd', icon: HardDrive },
+    { name: 'HDD', slug: 'hdd', icon: HardDrive },
+    { name: 'External Storage', slug: 'external-storage', icon: Usb },
+    { name: 'NAS Drives', slug: 'nas-drives', icon: Server },
+  ],
+  'monitors': [
+    { name: 'Gaming Monitors', slug: 'gaming-monitors', icon: Tv },
+    { name: '4K Monitors', slug: '4k-monitors', icon: Tv },
+    { name: 'Ultrawide', slug: 'ultrawide', icon: Monitor },
+    { name: 'Office Monitors', slug: 'office-monitors', icon: Monitor },
+    { name: 'Monitor Stands', slug: 'monitor-stands', icon: Monitor },
+  ],
+  'keyboards': [
+    { name: 'Mechanical', slug: 'mechanical-keyboards', icon: Keyboard },
+    { name: 'Wireless', slug: 'wireless-keyboards', icon: Wifi },
+    { name: 'Gaming', slug: 'gaming-keyboards', icon: Gamepad2 },
+    { name: 'Ergonomic', slug: 'ergonomic-keyboards', icon: Keyboard },
+    { name: 'Keycaps & Accessories', slug: 'keycaps', icon: Keyboard },
+  ],
+  'mice': [
+    { name: 'Gaming Mice', slug: 'gaming-mice', icon: Mouse },
+    { name: 'Wireless Mice', slug: 'wireless-mice', icon: Wifi },
+    { name: 'Ergonomic Mice', slug: 'ergonomic-mice', icon: Mouse },
+    { name: 'Mouse Pads', slug: 'mouse-pads', icon: Layers },
+  ],
+  'audio': [
+    { name: 'Gaming Headsets', slug: 'gaming-headsets', icon: Headphones },
+    { name: 'Speakers', slug: 'speakers', icon: Speaker },
+    { name: 'Microphones', slug: 'microphones', icon: Mic },
+    { name: 'Sound Cards', slug: 'sound-cards', icon: Volume2 },
+    { name: 'Earbuds', slug: 'earbuds', icon: Headphones },
+  ],
+  'networking': [
+    { name: 'Routers', slug: 'routers', icon: Router },
+    { name: 'Switches', slug: 'switches', icon: Server },
+    { name: 'Network Adapters', slug: 'network-adapters', icon: Plug },
+    { name: 'Access Points', slug: 'access-points', icon: Wifi },
+    { name: 'Network Cables', slug: 'network-cables', icon: Cable },
+    { name: 'Modems', slug: 'modems', icon: Radio },
+  ],
+};
 
 function AnimatedSection({ children, className = '' }) {
   const ref = useRef(null);
@@ -31,6 +121,10 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [hoveredCategorySlug, setHoveredCategorySlug] = useState(null);
+  const hoverTimeoutRef = useRef(null);
+  const navigate = useNavigate();
   const { t } = useLangStore();
 
   const heroSlides = [
@@ -66,16 +160,7 @@ const Home = () => {
     },
   ];
 
-  const categoryCards = [
-    { name: t('nav.desktops'), icon: '🖥️', desc: 'Gaming PCs & Rigs', path: '/products?category=kompyuterlar', color: 'from-orange-500/20 to-transparent' },
-    { name: t('nav.laptops'), icon: '💻', desc: 'ROG, Legion, MSI', path: '/products?category=noutbuklar', color: 'from-blue-500/20 to-transparent' },
-    { name: t('nav.components'), icon: '🎮', desc: 'RTX 4090, RX 7900 XTX', path: '/products?category=komponentlar', color: 'from-purple-500/20 to-transparent' },
-    { name: t('nav.accessories'), icon: '⌨️', desc: 'Keyboards, Mice, Headsets', path: '/products', color: 'from-green-500/20 to-transparent' },
-    { name: 'Monitors', icon: '🖱️', desc: '1440p, 4K, 165Hz+', path: '/products', color: 'from-red-500/20 to-transparent' },
-    { name: 'Headsets', icon: '🎧', desc: 'Gaming headsets, wireless', path: '/products', color: 'from-yellow-500/20 to-transparent' },
-    { name: 'New Arrivals', icon: '⚡', desc: 'Latest releases', path: '/new-arrivals', color: 'from-cyan-500/20 to-transparent' },
-    { name: 'On Sale', icon: '🔖', desc: 'Up to 30% off', path: '/sale', color: 'from-pink-500/20 to-transparent' },
-  ];
+
 
   const statsData = [
     { labelKey: 'home.stats.products', value: '500+', icon: Package },
@@ -104,6 +189,41 @@ const Home = () => {
     };
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/products/categories');
+        const data = Array.isArray(response.data) ? response.data : response.data.categories || [];
+        setCategories(data);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCategoryEnter = (slug) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoveredCategorySlug(slug);
+  };
+
+  const handleCategoryLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredCategorySlug(null);
+    }, 250);
+  };
+
+  const handleSubcategoryClick = (categoryId) => {
+    setHoveredCategorySlug(null);
+    navigate(`/products?category=${categoryId}`);
+  };
 
   const slide = heroSlides[currentSlide];
 
@@ -270,29 +390,99 @@ const Home = () => {
             <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-1">{t('home.categoriesSub')}</p>
             <h2 className="text-white font-black text-3xl">{t('home.categories')}</h2>
           </div>
-          <Link to="/products" className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm font-bold transition-colors group">
+          <Link to="/categories" className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm font-bold transition-colors group">
             {t('home.viewAll')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {categoryCards.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.06 }}
-              whileHover={{ scale: 1.04, y: -4 }}
-            >
-              <Link
-                to={cat.path}
-                className={`block bg-zinc-900 border border-zinc-800 hover:border-orange-500/40 rounded-2xl p-5 transition-all duration-300 bg-gradient-to-br ${cat.color}`}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map((category, index) => {
+            const subs = subcategoriesMap[category.slug] || [];
+            const isHovered = hoveredCategorySlug === category.slug;
+
+            return (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                className="relative"
+                onMouseEnter={() => handleCategoryEnter(category.slug)}
+                onMouseLeave={handleCategoryLeave}
               >
-                <span className="text-3xl mb-3 block">{cat.icon}</span>
-                <h3 className="text-white font-bold text-sm mb-1">{cat.name}</h3>
-                <p className="text-zinc-400 text-xs">{cat.desc}</p>
-              </Link>
-            </motion.div>
-          ))}
+                <Link
+                  to={`/products?category=${category.id}`}
+                  className={`block w-full p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
+                    isHovered
+                      ? 'border-orange-500 bg-zinc-900 shadow-lg shadow-orange-500/10'
+                      : 'border-zinc-800 bg-zinc-900 hover:border-orange-500/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className={`font-semibold text-sm md:text-base ${
+                      isHovered ? 'text-orange-400' : 'text-white'
+                    }`}>
+                      {category.name}
+                    </h3>
+                    <ChevronRight
+                      size={18}
+                      className={`transition-all flex-shrink-0 ${
+                        isHovered
+                          ? 'text-orange-400 translate-x-1'
+                          : 'text-zinc-500'
+                      }`}
+                    />
+                  </div>
+                  {category.description && (
+                    <p className="text-xs text-zinc-400 line-clamp-2">{category.description}</p>
+                  )}
+                  {subs.length > 0 && (
+                    <div className="mt-2 text-xs text-orange-400 font-medium">
+                      {subs.length} {t('categories.subcategories')}
+                    </div>
+                  )}
+                </Link>
+
+                {/* Subcategories Dropdown */}
+                <AnimatePresence>
+                  {isHovered && subs.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 left-0 w-full min-w-[220px] mt-1 bg-zinc-900 border border-orange-500/40 rounded-2xl shadow-2xl shadow-black/50"
+                      onMouseEnter={() => handleCategoryEnter(category.slug)}
+                      onMouseLeave={handleCategoryLeave}
+                    >
+                      <div className="p-3">
+                        <div className="text-xs font-bold text-orange-400 mb-2 px-2 pb-2 border-b border-zinc-800 uppercase tracking-wider">
+                          {category.name}
+                        </div>
+                        <div className="space-y-0.5 max-h-72 overflow-y-auto">
+                          {subs.map((sub) => {
+                            const Icon = sub.icon;
+                            return (
+                              <button
+                                key={sub.slug}
+                                onClick={(e) => { e.preventDefault(); handleSubcategoryClick(category.id); }}
+                                className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors group/sub text-left"
+                              >
+                                <Icon className="h-4 w-4 text-zinc-500 group-hover/sub:text-orange-400 transition-colors flex-shrink-0" />
+                                <span className="text-sm text-zinc-300 group-hover/sub:text-orange-400 transition-colors">
+                                  {sub.name}
+                                </span>
+                                <ChevronRight className="h-3 w-3 text-zinc-700 group-hover/sub:text-orange-400 ml-auto transition-colors" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
       </AnimatedSection>
 

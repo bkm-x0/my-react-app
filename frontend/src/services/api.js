@@ -84,4 +84,14 @@ export const adminAPI = {
   deleteUser: (id) => api.delete(`/users/${id}`)
 };
 
+export const supplierAPI = {
+  getSuppliers: (params) => api.get('/suppliers', { params }),
+  getSupplier: (id) => api.get(`/suppliers/${id}`),
+  getSupplierProducts: (id, params) => api.get(`/suppliers/${id}/products`, { params }),
+  createSupplier: (data) => api.post('/suppliers', data),
+  updateSupplier: (id, data) => api.put(`/suppliers/${id}`, data),
+  deleteSupplier: (id) => api.delete(`/suppliers/${id}`),
+  getAllAdmin: (params) => api.get('/suppliers/admin/all', { params })
+};
+
 export default api;

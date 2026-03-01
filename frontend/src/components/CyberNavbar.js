@@ -42,6 +42,7 @@ const CyberNavbar = () => {
       ]
     },
     { label: t('nav.categories'), path: '/categories' },
+    { label: t('nav.suppliers'), path: '/suppliers' },
     { label: t('nav.about'), path: '/about' },
     { label: t('nav.contact'), path: '/contact' },
   ];

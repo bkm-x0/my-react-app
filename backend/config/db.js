@@ -79,6 +79,30 @@ class Database {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
 
+      // Suppliers table
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS suppliers (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(200) NOT NULL,
+          slug VARCHAR(200) UNIQUE NOT NULL,
+          description TEXT,
+          logo VARCHAR(255) DEFAULT '',
+          email VARCHAR(100) DEFAULT '',
+          phone VARCHAR(50) DEFAULT '',
+          website VARCHAR(255) DEFAULT '',
+          address VARCHAR(500) DEFAULT '',
+          city VARCHAR(100) DEFAULT '',
+          country VARCHAR(100) DEFAULT '',
+          rating DECIMAL(3, 2) DEFAULT 0.00,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_slug (slug),
+          INDEX idx_is_active (is_active),
+          INDEX idx_country (country)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
       // Products table
       await connection.execute(`
         CREATE TABLE IF NOT EXISTS products (
@@ -88,6 +112,7 @@ class Database {
           description TEXT NOT NULL,
           price DECIMAL(10, 2) NOT NULL,
           category_id INT,
+          supplier_id INT DEFAULT NULL,
           stock INT NOT NULL DEFAULT 0,
           sku VARCHAR(50) UNIQUE NOT NULL,
           features JSON,
@@ -99,8 +124,10 @@ class Database {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
           FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+          FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
           INDEX idx_slug (slug),
           INDEX idx_category (category_id),
+          INDEX idx_supplier (supplier_id),
           INDEX idx_sku (sku),
           INDEX idx_is_featured (is_featured),
           INDEX idx_is_active (is_active),
@@ -142,6 +169,18 @@ class Database {
           INDEX idx_product_id (product_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
+
+      // Add supplier_id to products if not exists (migration for existing DBs)
+      try {
+        await connection.execute(`
+          ALTER TABLE products ADD COLUMN supplier_id INT DEFAULT NULL,
+          ADD FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+          ADD INDEX idx_supplier (supplier_id)
+        `);
+        console.log('✅ Added supplier_id to products table');
+      } catch (e) {
+        // Column already exists - ignore
+      }
 
       console.log('✅ Tables created/verified successfully');
       

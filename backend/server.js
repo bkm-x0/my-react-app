@@ -30,6 +30,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/stats', require('./routes/stats'));
+app.use('/api/suppliers', require('./routes/suppliers'));
 
 // Test routes
 app.get('/api/test', (req, res) => {

@@ -89,6 +89,7 @@ const Footer = () => {
                 { key: 'footer.trackOrder', path: '/track-order' },
                 { key: 'footer.newArrivals', path: '/new-arrivals' },
                 { key: 'footer.onSale', path: '/sale' },
+                { key: 'nav.suppliers', path: '/suppliers' },
               ].map(item => (
                 <li key={item.key}>
                   <Link to={item.path} className="text-zinc-400 hover:text-orange-400 text-sm transition-colors">
