@@ -346,8 +346,14 @@ const createProduct = async (req, res) => {
       price: productData.price,
       stock: productData.stock,
       categoryId: productData.categoryId,
+      supplierId: productData.supplierId || null,
       image: productData.image ? 'yes' : 'no'
     });
+
+    // Handle supplierId
+    if (productData.supplierId) {
+      productData.supplierId = parseInt(productData.supplierId) || null;
+    }
 
     const createdProduct = await Product.create(productData);
     
@@ -389,6 +395,11 @@ const updateProduct = async (req, res) => {
 
     const productData = { ...req.body };
     console.log('\n📝 [UPDATE PRODUCT] Updating product ID:', req.params.id);
+
+    // Handle supplierId
+    if (productData.supplierId !== undefined) {
+      productData.supplierId = productData.supplierId ? parseInt(productData.supplierId) : null;
+    }
 
     // Map category to categoryId if provided
     if (productData.category && !productData.categoryId) {

@@ -12,14 +12,15 @@ class Product {
     const specifications = productData.specifications ? JSON.stringify(productData.specifications) : JSON.stringify({});
 
     const [result] = await pool.execute(`
-      INSERT INTO products (name, slug, description, price, category_id, stock, sku, features, specifications, image, rating, is_featured, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (name, slug, description, price, category_id, supplier_id, stock, sku, features, specifications, image, rating, is_featured, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       productData.name,
       productData.slug || productData.name.toLowerCase().replace(/\s+/g, '-'),
       description,
       productData.price,
       productData.categoryId || 1,
+      productData.supplierId || null,
       productData.stock || 0,
       productData.sku,
       features,
@@ -38,9 +39,11 @@ class Product {
       SELECT 
         p.*,
         c.name as category_name,
-        c.slug as category_slug
+        c.slug as category_slug,
+        s.name as supplier_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
       WHERE p.id = ?
     `, [id]);
     
@@ -75,9 +78,11 @@ class Product {
       SELECT 
         p.*,
         c.name as category_name,
-        c.slug as category_slug
+        c.slug as category_slug,
+        s.name as supplier_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
       WHERE p.slug = ?
     `, [slug]);
     
@@ -128,9 +133,11 @@ class Product {
       SELECT 
         p.*,
         c.name as category_name,
-        c.slug as category_slug
+        c.slug as category_slug,
+        s.name as supplier_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
       WHERE p.is_active = ?
     `;
     
@@ -278,6 +285,11 @@ class Product {
     if (updateData.isActive !== undefined) {
       fields.push('is_active = ?');
       values.push(updateData.isActive ? 1 : 0);
+    }
+
+    if (updateData.supplierId !== undefined) {
+      fields.push('supplier_id = ?');
+      values.push(updateData.supplierId || null);
     }
     
     if (fields.length === 0) return null;

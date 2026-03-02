@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Star, ArrowLeft, Shield, Truck, Check, Zap, Loader2, MessageSquare, Send, User } from 'lucide-react';
+import { ShoppingCart, Heart, Star, ArrowLeft, Shield, Truck, Check, Zap, Loader2, MessageSquare, Send, User, Building2 } from 'lucide-react';
 import useCartStore from './store/cartStore';
 import useAuthStore from './store/authStore';
 import { productAPI } from '../services/api';
@@ -224,6 +224,17 @@ const ProductDetail = () => {
           >
             <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-2">{categoryName}</p>
             <h1 className="text-white font-black text-2xl sm:text-3xl mb-3">{product.name}</h1>
+
+            {/* Supplier */}
+            {product.supplier_name && (
+              <Link
+                to={`/suppliers/${product.supplier_id}`}
+                className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-orange-400 transition-colors text-sm mb-3 group"
+              >
+                <Building2 className="w-4 h-4 text-orange-400" />
+                <span className="group-hover:underline">{product.supplier_name}</span>
+              </Link>
+            )}
 
             {/* Rating */}
             <div className="flex items-center gap-3 mb-4">

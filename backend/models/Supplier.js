@@ -4,19 +4,31 @@ const { pool } = require('../config/db');
 class Supplier {
   static async create(supplierData) {
     const [result] = await pool.execute(`
-      INSERT INTO suppliers (name, slug, description, logo, email, phone, website, address, city, country, rating, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO suppliers (
+        name, slug, description, logo, contact_person, contact_first_name, contact_last_name,
+        email, phone, mobile, website, address, street, city, country,
+        commercial_register, tax_number, currency, opening_balance, rating, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       supplierData.name,
       supplierData.slug,
       supplierData.description || '',
       supplierData.logo || '',
+      supplierData.contact_person || '',
+      supplierData.contact_first_name || '',
+      supplierData.contact_last_name || '',
       supplierData.email || '',
       supplierData.phone || '',
+      supplierData.mobile || '',
       supplierData.website || '',
       supplierData.address || '',
+      supplierData.street || '',
       supplierData.city || '',
       supplierData.country || '',
+      supplierData.commercial_register || '',
+      supplierData.tax_number || '',
+      supplierData.currency || 'USD',
+      supplierData.opening_balance || 0,
       supplierData.rating || 0,
       supplierData.isActive !== undefined ? (supplierData.isActive ? 1 : 0) : 1
     ]);
@@ -111,12 +123,21 @@ class Supplier {
       slug: 'slug',
       description: 'description',
       logo: 'logo',
+      contact_person: 'contact_person',
+      contact_first_name: 'contact_first_name',
+      contact_last_name: 'contact_last_name',
       email: 'email',
       phone: 'phone',
+      mobile: 'mobile',
       website: 'website',
       address: 'address',
+      street: 'street',
       city: 'city',
       country: 'country',
+      commercial_register: 'commercial_register',
+      tax_number: 'tax_number',
+      currency: 'currency',
+      opening_balance: 'opening_balance',
       rating: 'rating',
     };
 

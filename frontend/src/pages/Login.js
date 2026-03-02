@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Zap, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Zap, Mail, Lock, ArrowRight, Loader2, Home } from 'lucide-react';
 import useAuthStore from './store/authStore';
 import useLangStore from './store/langStore';
 
@@ -43,6 +43,22 @@ const Login = () => {
       <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-orange-600/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md px-4">
+        {/* Home Button */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4"
+        >
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-orange-400 transition-colors text-sm font-bold group"
+          >
+            <Home className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            {t('nav.home')}
+          </Link>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -128,7 +144,7 @@ const Login = () => {
                 <span className="text-zinc-400 text-sm">{t('login.remember')}</span>
               </label>
               <button type="button" className="text-orange-400 hover:text-orange-300 text-sm transition-colors">
-                Parolni unutdingizmi?
+                {t('login.forgot')}
               </button>
             </div>
 

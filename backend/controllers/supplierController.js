@@ -70,7 +70,11 @@ const getSupplierProducts = async (req, res) => {
 // @access  Private/Admin
 const createSupplier = async (req, res) => {
   try {
-    const { name, description, logo, email, phone, website, address, city, country } = req.body;
+    const {
+      name, description, logo, contact_person, contact_first_name, contact_last_name,
+      email, phone, mobile, website, address, street, city, country,
+      commercial_register, tax_number, currency, opening_balance
+    } = req.body;
 
     if (!name) {
       return res.status(400).json({ success: false, message: 'Supplier name is required' });
@@ -86,16 +90,11 @@ const createSupplier = async (req, res) => {
     }
 
     const supplier = await Supplier.create({
-      name,
-      slug,
-      description,
-      logo,
-      email,
-      phone,
-      website,
-      address,
-      city,
-      country
+      name, slug, description, logo,
+      contact_person, contact_first_name, contact_last_name,
+      email, phone, mobile, website,
+      address, street, city, country,
+      commercial_register, tax_number, currency, opening_balance
     });
 
     res.status(201).json({ success: true, supplier });

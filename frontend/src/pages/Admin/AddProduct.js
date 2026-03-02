@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2 } from 'lucide-react';
-import { productAPI } from '../../services/api';
+import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2, Building2 } from 'lucide-react';
+import { productAPI, supplierAPI } from '../../services/api';
+import useLangStore from '../store/langStore';
 
 const inputClasses = "w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder:text-zinc-600";
 
@@ -9,9 +10,11 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id);
+  const { t } = useLangStore();
   const [loading, setLoading] = useState(false);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [error, setError] = useState('');
+  const [suppliers, setSuppliers] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -25,11 +28,23 @@ const AddProduct = () => {
     specifications: {},
     tags: [],
     isFeatured: false,
-    image: null
+    image: null,
+    supplierId: ''
   });
 
   // Fetch existing product data for edit mode
   useEffect(() => {
+    // Fetch suppliers list
+    const fetchSuppliers = async () => {
+      try {
+        const { data } = await supplierAPI.getSuppliers({ limit: 100 });
+        setSuppliers(data.suppliers || []);
+      } catch (err) {
+        console.error('Error fetching suppliers:', err);
+      }
+    };
+    fetchSuppliers();
+
     if (!isEditMode) return;
     const fetchProduct = async () => {
       setLoadingProduct(true);
@@ -49,7 +64,8 @@ const AddProduct = () => {
           specifications: data.specifications || {},
           tags: data.tags || [],
           isFeatured: data.is_featured || data.isFeatured || false,
-          image: data.image ? (data.image.startsWith('http') ? data.image : `${imgBase}${data.image}`) : null
+          image: data.image ? (data.image.startsWith('http') ? data.image : `${imgBase}${data.image}`) : null,
+          supplierId: data.supplier_id ? String(data.supplier_id) : ''
         });
       } catch (err) {
         setError('Failed to load product data: ' + (err.response?.data?.message || err.message));
@@ -105,7 +121,8 @@ const AddProduct = () => {
         category: formData.category,
         sku: formData.sku,
         isFeatured: formData.isFeatured,
-        features: formData.features.filter(f => f.trim() !== '')
+        features: formData.features.filter(f => f.trim() !== ''),
+        supplierId: formData.supplierId ? parseInt(formData.supplierId) : null
       };
 
       if (formData.image && formData.image.startsWith('data:')) {
@@ -450,6 +467,24 @@ const AddProduct = () => {
                         <option key={category.value} value={category.value}>
                           {category.label}
                         </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold mb-2 text-orange-400">
+                      <Building2 className="w-4 h-4 inline mr-1" />
+                      {t('addProduct.supplier') || 'SUPPLIER'}
+                    </label>
+                    <select
+                      name="supplierId"
+                      value={formData.supplierId}
+                      onChange={handleChange}
+                      className={inputClasses}
+                    >
+                      <option value="">{t('addProduct.noSupplier') || '-- No Supplier --'}</option>
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
                     </select>
                   </div>

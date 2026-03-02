@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import AdminLogin from './pages/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AddProduct from './pages/Admin/AddProduct';
+import AddSupplier from './pages/Admin/AddSupplier';
 import Support from './pages/Support';
 import TrackOrder from './pages/TrackOrder';
 import NewArrivals from './pages/NewArrivals';
@@ -116,6 +117,12 @@ function App() {
         } />
         <Route path="/admin/products/edit/:id" element={
           <ProtectedRoute adminOnly><AddProduct /></ProtectedRoute>
+        } />
+        <Route path="/admin/suppliers/new" element={
+          <ProtectedRoute adminOnly><AddSupplier /></ProtectedRoute>
+        } />
+        <Route path="/admin/suppliers/edit/:id" element={
+          <ProtectedRoute adminOnly><AddSupplier /></ProtectedRoute>
         } />
       </Routes>
     </Router>

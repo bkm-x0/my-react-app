@@ -3,19 +3,21 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, Users, ShoppingCart, DollarSign,
-  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw
+  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw, Building2
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { adminAPI } from '../../services/api';
 import ProductsManager from './ProductsManager';
 import OrdersManager from './OrdersManager';
 import UsersManager from './UsersManager';
+import SuppliersManager from './SuppliersManager';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'orders', label: 'Orders', icon: ShoppingCart },
   { id: 'users', label: 'Users', icon: Users },
+  { id: 'suppliers', label: 'Suppliers', icon: Building2 },
 ];
 
 const StatCard = ({ label, value, icon: Icon, color = 'orange', sub, onClick }) => (
@@ -206,6 +208,9 @@ const Dashboard = () => {
                       <button onClick={() => setActiveTab('users')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
                         <Users className="w-4 h-4" /> Manage Users
                       </button>
+                      <button onClick={() => setActiveTab('suppliers')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
+                        <Building2 className="w-4 h-4" /> Manage Suppliers
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -295,6 +300,7 @@ const Dashboard = () => {
         {activeTab === 'products' && <ProductsManager />}
         {activeTab === 'orders' && <OrdersManager />}
         {activeTab === 'users' && <UsersManager />}
+        {activeTab === 'suppliers' && <SuppliersManager />}
       </div>
     </div>
   );

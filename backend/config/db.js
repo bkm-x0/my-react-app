@@ -87,12 +87,21 @@ class Database {
           slug VARCHAR(200) UNIQUE NOT NULL,
           description TEXT,
           logo VARCHAR(255) DEFAULT '',
+          contact_person VARCHAR(200) DEFAULT '',
+          contact_first_name VARCHAR(100) DEFAULT '',
+          contact_last_name VARCHAR(100) DEFAULT '',
           email VARCHAR(100) DEFAULT '',
           phone VARCHAR(50) DEFAULT '',
+          mobile VARCHAR(50) DEFAULT '',
           website VARCHAR(255) DEFAULT '',
           address VARCHAR(500) DEFAULT '',
+          street VARCHAR(200) DEFAULT '',
           city VARCHAR(100) DEFAULT '',
           country VARCHAR(100) DEFAULT '',
+          commercial_register VARCHAR(100) DEFAULT '',
+          tax_number VARCHAR(100) DEFAULT '',
+          currency VARCHAR(10) DEFAULT 'USD',
+          opening_balance DECIMAL(12, 2) DEFAULT 0.00,
           rating DECIMAL(3, 2) DEFAULT 0.00,
           is_active BOOLEAN DEFAULT TRUE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -180,6 +189,24 @@ class Database {
         console.log('✅ Added supplier_id to products table');
       } catch (e) {
         // Column already exists - ignore
+      }
+
+      // Add new supplier columns (migration for existing DBs)
+      const newSupplierCols = [
+        { col: 'contact_person', def: "VARCHAR(200) DEFAULT ''" },
+        { col: 'contact_first_name', def: "VARCHAR(100) DEFAULT ''" },
+        { col: 'contact_last_name', def: "VARCHAR(100) DEFAULT ''" },
+        { col: 'mobile', def: "VARCHAR(50) DEFAULT ''" },
+        { col: 'street', def: "VARCHAR(200) DEFAULT ''" },
+        { col: 'commercial_register', def: "VARCHAR(100) DEFAULT ''" },
+        { col: 'tax_number', def: "VARCHAR(100) DEFAULT ''" },
+        { col: 'currency', def: "VARCHAR(10) DEFAULT 'USD'" },
+        { col: 'opening_balance', def: "DECIMAL(12, 2) DEFAULT 0.00" },
+      ];
+      for (const { col, def } of newSupplierCols) {
+        try {
+          await connection.execute(`ALTER TABLE suppliers ADD COLUMN ${col} ${def}`);
+        } catch (e) { /* already exists */ }
       }
 
       console.log('✅ Tables created/verified successfully');
