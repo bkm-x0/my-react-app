@@ -325,12 +325,19 @@ Animations & No & Minimal & Framer Motion \\
 \section{Use Cases}
 
 \subsection{Use Case Diagram Description}
-The system supports three primary actors:
+The PC Store use-case model supports three primary actors:
 \begin{enumerate}[noitemsep]
-  \item \textbf{Guest} -- Can browse products, view suppliers, register, and login.
-  \item \textbf{Authenticated User} -- Can manage cart, place orders, write reviews, and manage profile.
-  \item \textbf{Admin} -- Can manage all resources (products, orders, users, suppliers) via the dashboard.
+  \item \textbf{Visitor (Guest)} -- Non-authenticated user who can browse/search products, view product details, register, and login.
+  \item \textbf{Client} -- Authenticated user who can manage cart, checkout, place orders, track order status, view order history, and update profile.
+  \item \textbf{Administrator} -- Inherits client capabilities and additionally manages products, categories, orders, clients, and reports.
 \end{enumerate}
+
+The following UML relationships are modeled in the diagram:
+\begin{itemize}[noitemsep]
+  \item \textbf{<<include>>:} \textit{Place Order} includes \textit{Manage Cart} and \textit{Login} (when authentication is required).
+  \item \textbf{<<extend>>:} \textit{View Order History} extends \textit{Login}.
+  \item \textbf{Generalization:} \textit{Administrator} is a specialization of \textit{Client}.
+\end{itemize}
 
 \begin{table}[H]
 \centering
@@ -340,17 +347,21 @@ The system supports three primary actors:
 \hline
 \textbf{ID} & \textbf{Actor} & \textbf{Use Case} \\
 \hline
-UC-01 & Guest & Register a new account \\
-UC-02 & Guest & Browse and search products \\
-UC-03 & User & Add product to shopping cart \\
-UC-04 & User & Place an order (checkout) \\
-UC-05 & User & Submit a product review \\
-UC-06 & User & View order history \\
-UC-07 & Admin & Add/Edit/Delete products \\
-UC-08 & Admin & Manage orders (view, confirm, reject) \\
-UC-09 & Admin & Manage users (view, edit, delete) \\
-UC-10 & Admin & Manage suppliers (CRUD, toggle active) \\
-UC-11 & Any & Switch language (EN/AR) \\
+UC-01 & Visitor & Consult product catalog \\
+UC-02 & Visitor & Search product by name/category \\
+UC-03 & Visitor & View product details (price/specifications) \\
+UC-04 & Visitor & Register account \\
+UC-05 & Visitor/Client & Login \\
+UC-06 & Client & Manage cart (add/update/remove items) \\
+UC-07 & Client & Place order (checkout) \\
+UC-08 & Client & View order history \\
+UC-09 & Client & Track order status \\
+UC-10 & Client & Update profile (address/password) \\
+UC-11 & Administrator & Manage products (create/update/delete) \\
+UC-12 & Administrator & Manage categories \\
+UC-13 & Administrator & Manage orders (status/details) \\
+UC-14 & Administrator & Manage clients (view/block) \\
+UC-15 & Administrator & View reports (sales/stock) \\
 \hline
 \end{tabularx}
 \end{table}
@@ -360,58 +371,7 @@ Figure~\ref{fig:usecase} illustrates the use case diagram showing the three acto
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
-  actor/.style={font=\small\bfseries, align=center},
-  usecase/.style={draw, ellipse, minimum width=3.2cm, minimum height=0.9cm, font=\small, align=center, fill=orange!8},
-  sysbox/.style={draw, rounded corners=6pt, minimum width=9cm, minimum height=14cm, dashed, gray!60},
-]
-  % System boundary
-  \node[sysbox, label={[font=\bfseries\large, primaryorange]above:CyberStore System}] (sys) at (4.5,0) {};
-
-  % Actors (stick figures via labels)
-  \node[actor] at (-2.2, 4.8) {\tikz{\draw (0,0.4) circle(0.15); \draw (0,0.25) -- (0,-0.1); \draw (-0.2,0.15) -- (0.2,0.15); \draw (0,-0.1) -- (-0.15,-0.35); \draw (0,-0.1) -- (0.15,-0.35);}};
-  \node[actor] at (-2.2, 3.8) {Guest};
-
-  \node[actor] at (-2.2, -0.2) {\tikz{\draw (0,0.4) circle(0.15); \draw (0,0.25) -- (0,-0.1); \draw (-0.2,0.15) -- (0.2,0.15); \draw (0,-0.1) -- (-0.15,-0.35); \draw (0,-0.1) -- (0.15,-0.35);}};
-  \node[actor] at (-2.2, -0.8) {User};
-
-  \node[actor] at (11.2, 1.5) {\tikz{\draw (0,0.4) circle(0.15); \draw (0,0.25) -- (0,-0.1); \draw (-0.2,0.15) -- (0.2,0.15); \draw (0,-0.1) -- (-0.15,-0.35); \draw (0,-0.1) -- (0.15,-0.35);}};
-  \node[actor] at (11.2, 0.9) {Admin};
-
-  % Use cases
-  \node[usecase] (uc1) at (4.5, 5.5) {Register};
-  \node[usecase] (uc2) at (4.5, 4.2) {Login};
-  \node[usecase] (uc3) at (4.5, 2.9) {Browse Products};
-  \node[usecase] (uc4) at (4.5, 1.6) {View Suppliers};
-  \node[usecase] (uc5) at (4.5, 0.3) {Add to Cart};
-  \node[usecase] (uc6) at (4.5, -1.0) {Place Order};
-  \node[usecase] (uc7) at (4.5, -2.3) {Submit Review};
-  \node[usecase] (uc8) at (4.5, -3.6) {View Order History};
-  \node[usecase] (uc9) at (4.5, -4.9) {Manage Products};
-  \node[usecase] (uc10) at (4.5, -6.2) {Manage Orders};
-  \node[usecase] (uc11) at (4.5, -7.5) {Manage Users};
-  \node[usecase] (uc12) at (4.5, -8.8) {Manage Suppliers};
-
-  % Guest connections
-  \draw[->] (-1.5, 4.5) -- (uc1.west);
-  \draw[->] (-1.5, 4.5) -- (uc2.west);
-  \draw[->] (-1.5, 4.5) -- (uc3.west);
-  \draw[->] (-1.5, 4.5) -- (uc4.west);
-
-  % User connections
-  \draw[->] (-1.5, -0.5) -- (uc3.west);
-  \draw[->] (-1.5, -0.5) -- (uc5.west);
-  \draw[->] (-1.5, -0.5) -- (uc6.west);
-  \draw[->] (-1.5, -0.5) -- (uc7.west);
-  \draw[->] (-1.5, -0.5) -- (uc8.west);
-
-  % Admin connections
-  \draw[->] (10.5, 1.2) -- (uc9.east);
-  \draw[->] (10.5, 1.2) -- (uc10.east);
-  \draw[->] (10.5, 1.2) -- (uc11.east);
-  \draw[->] (10.5, 1.2) -- (uc12.east);
-
-\end{tikzpicture}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{diagrams/usecase.png}
 \caption{Use Case Diagram}
 \label{fig:usecase}
 \end{figure}
@@ -496,155 +456,105 @@ Figure~\ref{fig:classdiagram} shows the main backend model classes with their at
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{
-\begin{tikzpicture}[
-  rel/.style={->, thick, >=stealth, draw=gray!70},
-  drel/.style={->, thick, >=stealth, dashed, draw=gray!60},
-  lbl/.style={font=\scriptsize\bfseries, fill=white, inner sep=1pt},
-]
-
-% ---- Row 1: User  |  Product  |  Category ----
-\umlclass{User}{0}{0}{User}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ username: VARCHAR(50)}\\
-  \texttt{+ email: VARCHAR(100)}\\
-  \texttt{- password: VARCHAR}\\
-  \texttt{+ role: ENUM(user,admin)}\\
-  \texttt{+ balance: DECIMAL}\\
-  \texttt{+ is\_active: BOOLEAN}\\
-  \texttt{+ created\_at: TIMESTAMP}
-}{%
-  \texttt{+ findByEmail(email)}\\
-  \texttt{+ create(data)}\\
-  \texttt{+ findAll(page)}\\
-  \texttt{+ update(id, data)}\\
-  \texttt{+ delete(id)}
-}
-
-\umlclass{Product}{7}{0}{Product}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ name: VARCHAR(200)}\\
-  \texttt{+ slug: VARCHAR \ [UNIQUE]}\\
-  \texttt{+ price: DECIMAL(10,2)}\\
-  \texttt{+ stock: INT}\\
-  \texttt{+ sku: VARCHAR(50) [UNIQUE]}\\
-  \texttt{+ rating: DECIMAL(3,2)}\\
-  \texttt{+ category\_id: INT \ [FK]}\\
-  \texttt{+ supplier\_id: INT \ [FK]}\\
-  \texttt{+ is\_featured: BOOLEAN}\\
-  \texttt{+ is\_active: BOOLEAN}
-}{%
-  \texttt{+ findAll(filters)}\\
-  \texttt{+ findById(id)}\\
-  \texttt{+ findBySlug(slug)}\\
-  \texttt{+ create(data)}\\
-  \texttt{+ update(id, data)}\\
-  \texttt{+ delete(id)}
-}
-
-\umlclass{Category}{14}{0}{Category}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ name: VARCHAR(100)}\\
-  \texttt{+ slug: VARCHAR \ [UNIQUE]}\\
-  \texttt{+ description: TEXT}\\
-  \texttt{+ icon: VARCHAR(50)}\\
-  \texttt{+ is\_active: BOOLEAN}
-}{%
-  \texttt{+ findAll()}\\
-  \texttt{+ findById(id)}\\
-  \texttt{+ findBySlug(slug)}\\
-  \texttt{+ create(data)}\\
-  \texttt{+ update(id, data)}
-}
-
-% ---- Row 2: Order  |  Review  |  Supplier ----
-\umlclass{Order}{0}{-9}{Order}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ user\_id: INT \ [FK]}\\
-  \texttt{+ total\_amount: DECIMAL}\\
-  \texttt{+ status: VARCHAR(20)}\\
-  \texttt{+ shipping\_address: TEXT}\\
-  \texttt{+ payment\_method: VARCHAR}\\
-  \texttt{+ created\_at: TIMESTAMP}
-}{%
-  \texttt{+ create(data)}\\
-  \texttt{+ findByUser(userId)}\\
-  \texttt{+ findAll(filters)}\\
-  \texttt{+ updateStatus(id, status)}
-}
-
-\umlclass{Review}{7}{-9}{Review}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ product\_id: INT \ [FK]}\\
-  \texttt{+ user\_id: INT \ [FK]}\\
-  \texttt{+ rating: INT \ (1--5)}\\
-  \texttt{+ comment: TEXT}\\
-  \texttt{+ created\_at: TIMESTAMP}
-}{%
-  \texttt{+ create(data)}\\
-  \texttt{+ findByProduct(id)}\\
-  \texttt{+ findByUser(id)}\\
-  \texttt{+ delete(id)}
-}
-
-\umlclass{Supplier}{14}{-9}{Supplier}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ name: VARCHAR(200)}\\
-  \texttt{+ slug: VARCHAR \ [UNIQUE]}\\
-  \texttt{+ email: VARCHAR(100)}\\
-  \texttt{+ phone: VARCHAR(50)}\\
-  \texttt{+ city: VARCHAR(100)}\\
-  \texttt{+ country: VARCHAR(100)}\\
-  \texttt{+ rating: DECIMAL(3,2)}\\
-  \texttt{+ is\_active: BOOLEAN}
-}{%
-  \texttt{+ findAll(filters)}\\
-  \texttt{+ findById(id)}\\
-  \texttt{+ create(data)}\\
-  \texttt{+ update(id, data)}\\
-  \texttt{+ delete(id)}
-}
-
-% ---- Row 3 (centre): OrderItem ----
-\umlclass{OrderItem}{3.5}{-18}{OrderItem}{%
-  \texttt{+ id: INT \ \ [PK]}\\
-  \texttt{+ order\_id: INT \ [FK]}\\
-  \texttt{+ product\_id: INT \ [FK]}\\
-  \texttt{+ quantity: INT}\\
-  \texttt{+ price: DECIMAL(10,2)}
-}{%
-  \texttt{+ create(data)}\\
-  \texttt{+ findByOrder(orderId)}
-}
-
-% ========== RELATIONSHIPS ==========
-
-% Product ---N:1---> Category
-\draw[rel] (Product.east) -- node[lbl, above] {N:1} node[lbl, below] {category} (Category.west);
-
-% Product ---N:1---> Supplier
-\draw[rel] (Product.south east) -- ++(0,-1.2) -- ++(2.5,0) |- node[lbl, near end, right] {N:1} (Supplier.west);
-
-% User ---1:N---> Order
-\draw[rel] (User.south) -- ++(0,-0.8) -- ++(-2.3,0) |- node[lbl, near end, left] {1:N} (Order.north west);
-
-% User ---1:N---> Review
-\draw[drel] (User.south east) -- ++(0,-0.8) ++ (0,0) -- ++(1,0) |- node[lbl, near end, right] {writes 1:N} (Review.north east);
-
-% Order ---1:N---> OrderItem
-\draw[rel] (Order.south) -- ++(0,-0.5) -- ++(-2,0) |- node[lbl, near end, left] {1:N} (OrderItem.north west);
-
-% Product ---1:N---> Review
-\draw[rel] (Product.south) -- ++(0,-0.5) -- ++(0.3,0) |- node[lbl, near end, right] {1:N} (Review.north);
-
-% Product ---1:N---> OrderItem
-\draw[drel] (Product.south west) -- ++(0,-1.5) -- ++(-2.2,0) |- node[lbl, near end, left] {1:N} (OrderItem.north);
-
-\end{tikzpicture}
-}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{diagrams/class.png}
 \caption{Class Diagram -- Backend Models and Relationships}
 \label{fig:classdiagram}
 \end{figure}
+
+
+\section{Activity Diagram}
+Figure~\ref{fig:activity} presents the activity diagram illustrating the complete customer purchase flow, from browsing products through checkout to order confirmation.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.55\textwidth}{!}{
+\begin{tikzpicture}[
+  start/.style={circle, fill=black, minimum size=5mm},
+  finish/.style={circle, draw=black, line width=1.5pt, minimum size=8mm, path picture={\fill[black] (path picture bounding box.center) circle(2.5mm);}},
+  action/.style={draw, rounded corners=6pt, minimum width=3.2cm, minimum height=0.7cm, fill=orange!10, font=\small, align=center},
+  decision/.style={draw, diamond, aspect=2.5, fill=yellow!10, font=\scriptsize, align=center, inner sep=2pt},
+  arr/.style={->, thick, >=stealth},
+]
+  \node[start] (s) at (0,0) {};
+  \node[action] (browse) at (0,-1.5) {Browse Products};
+  \node[decision] (found) at (0,-3.5) {Product found?};
+  \node[action] (search) at (5.5,-3.5) {Search / Filter};
+  \node[action] (view) at (0,-5.5) {View Product Details};
+  \node[decision] (wantadd) at (0,-7.5) {Add to Cart?};
+  \node[action] (addcart) at (0,-9.5) {Add to Cart};
+  \node[decision] (cont) at (0,-11.5) {Continue shopping?};
+  \node[action] (checkout) at (0,-13.5) {Go to Checkout};
+  \node[decision] (auth) at (0,-15.5) {Logged in?};
+  \node[action] (login) at (5.5,-15.5) {Login / Register};
+  \node[action] (ship) at (0,-17.5) {Enter Shipping \& Payment};
+  \node[action] (place) at (0,-19.5) {Confirm \& Place Order};
+  \node[action] (done) at (0,-21.5) {Order Confirmed};
+  \node[finish] (e) at (0,-23) {};
+
+  \draw[arr] (s) -- (browse);
+  \draw[arr] (browse) -- (found);
+  \draw[arr] (found) -- node[right, font=\scriptsize] {Yes} (view);
+  \draw[arr] (found) -- node[above, font=\scriptsize] {No} (search);
+  \draw[arr] (search) |- (browse);
+  \draw[arr] (view) -- (wantadd);
+  \draw[arr] (wantadd) -- node[right, font=\scriptsize] {Yes} (addcart);
+  \draw[arr] (wantadd.west) -- node[near start, above, font=\scriptsize] {No} ++(-2.5,0) |- (browse.west);
+  \draw[arr] (addcart) -- (cont);
+  \draw[arr] (cont.west) -- node[near start, above, font=\scriptsize] {Yes} ++(-3.5,0) |- (browse.west);
+  \draw[arr] (cont) -- node[right, font=\scriptsize] {No} (checkout);
+  \draw[arr] (checkout) -- (auth);
+  \draw[arr] (auth) -- node[right, font=\scriptsize] {Yes} (ship);
+  \draw[arr] (auth) -- node[above, font=\scriptsize] {No} (login);
+  \draw[arr] (login) |- (ship);
+  \draw[arr] (ship) -- (place);
+  \draw[arr] (place) -- (done);
+  \draw[arr] (done) -- (e);
+\end{tikzpicture}
+}
+\caption{Activity Diagram -- Customer Purchase Flow}
+\label{fig:activity}
+\end{figure}
+
+
+\section{State Diagram -- Order Lifecycle}
+Figure~\ref{fig:state-order} shows the state transitions of an order throughout its lifecycle. An order begins in the \textbf{Pending} state upon creation and can be confirmed, rejected, or cancelled. Confirmed orders proceed through processing, shipping, and delivery.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  state/.style={draw, rounded corners=8pt, minimum width=2.4cm, minimum height=0.8cm, fill=orange!10, font=\small\bfseries, align=center},
+  start/.style={circle, fill=black, minimum size=5mm},
+  finish/.style={circle, draw=black, line width=1.5pt, minimum size=7mm, path picture={\fill[black] (path picture bounding box.center) circle(2mm);}},
+  arr/.style={->, thick, >=stealth},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1pt},
+]
+  \node[start] (s) at (-3,0) {};
+  \node[state] (pending) at (0,0) {Pending};
+  \node[state] (confirmed) at (4,0) {Confirmed};
+  \node[state] (processing) at (8,0) {Processing};
+  \node[state] (shipped) at (12,0) {Shipped};
+  \node[state] (delivered) at (12,-2.8) {Delivered};
+  \node[state, fill=red!10] (rejected) at (4,-2.8) {Rejected};
+  \node[state, fill=red!10] (cancelled) at (0,-2.8) {Cancelled};
+  \node[finish] (e1) at (12,-4.5) {};
+  \node[finish] (e2) at (4,-4.5) {};
+  \node[finish] (e3) at (0,-4.5) {};
+
+  \draw[arr] (s) -- (pending);
+  \draw[arr] (pending) -- node[lbl, above] {Admin confirms} (confirmed);
+  \draw[arr] (confirmed) -- node[lbl, above] {Start processing} (processing);
+  \draw[arr] (processing) -- node[lbl, above] {Ship order} (shipped);
+  \draw[arr] (shipped) -- node[lbl, right] {Delivered} (delivered);
+  \draw[arr] (pending) -- node[lbl, right] {Admin rejects} (rejected);
+  \draw[arr] (pending) -- node[lbl, right] {User cancels} (cancelled);
+  \draw[arr] (delivered) -- (e1);
+  \draw[arr] (rejected) -- (e2);
+  \draw[arr] (cancelled) -- (e3);
+\end{tikzpicture}
+\caption{State Diagram -- Order Lifecycle}
+\label{fig:state-order}
+\end{figure}
+
 
 \section{Directory Structure}
 \begin{lstlisting}[language={}, caption={Project Directory Structure}]
@@ -956,8 +866,18 @@ The backend exposes a RESTful API at \texttt{http://localhost:5000/api/}. All en
 \section{Sequence Diagrams}
 The following sequence diagrams illustrate key interaction flows.
 
-\subsection{User Authentication Flow}
-Figure~\ref{fig:seq-auth} shows the login and JWT authentication sequence.
+\subsection{Main Sequence Diagram}
+Figure~\ref{fig:seq-auth} presents the main purchase sequence for the PC Store workflow.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{diagrams/sequence.png}
+\caption{Sequence Diagram -- PC Store Main Flow}
+\label{fig:seq-auth}
+\end{figure}
+
+\subsection{User Registration Flow}
+Figure~\ref{fig:seq-register} shows the complete user registration sequence, including input validation, duplicate check, password hashing, and JWT token generation.
 
 \begin{figure}[H]
 \centering
@@ -968,44 +888,48 @@ Figure~\ref{fig:seq-auth} shows the login and JWT authentication sequence.
   msg/.style={->, thick, >=stealth},
   ret/.style={->, thick, >=stealth, dashed},
   note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+  alt/.style={draw, dashed, fill=red!5, rounded corners=2pt, font=\scriptsize, align=left},
 ]
   % Participants
   \node[participant] (client) at (0,0) {React Client};
-  \node[participant] (api) at (5,0) {Express API};
-  \node[participant] (auth) at (10,0) {Auth MW};
-  \node[participant] (db) at (15,0) {MySQL DB};
+  \node[participant] (api) at (5.5,0) {Express API};
+  \node[participant] (db) at (11.5,0) {MySQL DB};
 
   % Lifelines
-  \draw[lifeline] (0,-0.5) -- (0,-12);
-  \draw[lifeline] (5,-0.5) -- (5,-12);
-  \draw[lifeline] (10,-0.5) -- (10,-12);
-  \draw[lifeline] (15,-0.5) -- (15,-12);
+  \draw[lifeline] (0,-0.5) -- (0,-14);
+  \draw[lifeline] (5.5,-0.5) -- (5.5,-14);
+  \draw[lifeline] (11.5,-0.5) -- (11.5,-14);
 
-  % Login sequence
-  \node[left, font=\scriptsize\itshape, gray] at (-0.5,-1.2) {Login};
-  \draw[msg] (0,-1.5) -- node[above, font=\scriptsize] {POST /api/auth/login} node[below, font=\scriptsize] {\{email, password\}} (5,-1.5);
-  \draw[msg] (5,-2.3) -- node[above, font=\scriptsize] {SELECT * FROM users} node[below, font=\scriptsize] {WHERE email = ?} (15,-2.3);
-  \draw[ret] (15,-3.1) -- node[above, font=\scriptsize] {User record} (5,-3.1);
+  % Registration sequence
+  \draw[msg] (0,-1.5) -- node[above, font=\scriptsize] {POST /api/auth/register} node[below, font=\scriptsize] {\{username, email, password\}} (5.5,-1.5);
 
-  \node[note] at (7.5,-3.8) {bcrypt.compare(password, hash)};
+  \node[note] at (5.5,-2.5) {Validate input fields};
 
-  \draw[ret] (5,-4.5) -- node[above, font=\scriptsize] {200 OK} node[below, font=\scriptsize] {\{token: JWT, user\}} (0,-4.5);
+  \draw[msg] (5.5,-3.5) -- node[above, font=\scriptsize] {SELECT * FROM users} node[below, font=\scriptsize] {WHERE email = ?} (11.5,-3.5);
+  \draw[ret] (11.5,-4.3) -- node[above, font=\scriptsize] {No existing user} (5.5,-4.3);
 
-  \node[note] at (-0.8,-5.2) {Store token\\in localStorage};
+  \node[note] at (5.5,-5.2) {bcrypt.hash(password, salt)};
 
-  % Authenticated request
-  \node[left, font=\scriptsize\itshape, gray] at (-0.5,-6.0) {Protected};
-  \draw[msg] (0,-6.5) -- node[above, font=\scriptsize] {GET /api/orders} node[below, font=\scriptsize] {Authorization: Bearer JWT} (5,-6.5);
-  \draw[msg] (5,-7.3) -- node[above, font=\scriptsize] {verify(token)} (10,-7.3);
-  \draw[ret] (10,-8.0) -- node[above, font=\scriptsize] {decoded \{userId, role\}} (5,-8.0);
-  \draw[msg] (5,-8.7) -- node[above, font=\scriptsize] {SELECT * FROM orders} node[below, font=\scriptsize] {WHERE user\_id = ?} (15,-8.7);
-  \draw[ret] (15,-9.5) -- node[above, font=\scriptsize] {Order records} (5,-9.5);
-  \draw[ret] (5,-10.3) -- node[above, font=\scriptsize] {200 OK \{orders: [...]\}} (0,-10.3);
+  \draw[msg] (5.5,-6.2) -- node[above, font=\scriptsize] {INSERT INTO users} node[below, font=\scriptsize] {(username, email, password\_hash)} (11.5,-6.2);
+  \draw[ret] (11.5,-7.0) -- node[above, font=\scriptsize] {insertId} (5.5,-7.0);
+
+  \node[note] at (5.5,-7.8) {jwt.sign(\{userId: id\})};
+
+  \draw[ret] (5.5,-8.8) -- node[above, font=\scriptsize] {201 Created} node[below, font=\scriptsize] {\{token: JWT, user\}} (0,-8.8);
+
+  \node[note] at (0,-9.8) {Store token in\\localStorage};
+
+  % Alt: email exists
+  \node[alt, minimum width=9cm] at (5.5,-12) {
+    \textbf{alt} [email already exists]:\\
+    API returns 400 \{message: ``Email already registered''\}\\
+    Client displays error notification
+  };
 
 \end{tikzpicture}
 }
-\caption{Sequence Diagram -- User Authentication Flow}
-\label{fig:seq-auth}
+\caption{Sequence Diagram -- User Registration Flow}
+\label{fig:seq-register}
 \end{figure}
 
 \subsection{Order Placement Flow}
@@ -1069,6 +993,130 @@ Figure~\ref{fig:seq-order} shows the checkout and order creation sequence.
 }
 \caption{Sequence Diagram -- Order Placement Flow}
 \label{fig:seq-order}
+\end{figure}
+
+\subsection{Product Review Submission}
+Figure~\ref{fig:seq-review} shows the sequence for an authenticated user submitting a product review, including authentication verification, review creation, and product rating recalculation.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  lifeline/.style={dashed, gray!50},
+  msg/.style={->, thick, >=stealth},
+  ret/.style={->, thick, >=stealth, dashed},
+  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+]
+  % Participants
+  \node[participant] (client) at (0,0) {React Client};
+  \node[participant] (api) at (5,0) {Express API};
+  \node[participant] (auth) at (10,0) {Auth MW};
+  \node[participant] (db) at (15,0) {MySQL DB};
+
+  % Lifelines
+  \draw[lifeline] (0,-0.5) -- (0,-15);
+  \draw[lifeline] (5,-0.5) -- (5,-15);
+  \draw[lifeline] (10,-0.5) -- (10,-15);
+  \draw[lifeline] (15,-0.5) -- (15,-15);
+
+  % Review submission
+  \draw[msg] (0,-1.5) -- node[above, font=\scriptsize] {POST /api/products/:id/reviews} node[below, font=\scriptsize] {\{rating, comment\} + Bearer JWT} (5,-1.5);
+
+  \draw[msg] (5,-2.5) -- node[above, font=\scriptsize] {verify(token)} (10,-2.5);
+  \draw[ret] (10,-3.2) -- node[above, font=\scriptsize] {\{userId\}} (5,-3.2);
+
+  \draw[msg] (5,-4.2) -- node[above, font=\scriptsize] {SELECT * FROM products} node[below, font=\scriptsize] {WHERE id = ?} (15,-4.2);
+  \draw[ret] (15,-5.0) -- node[above, font=\scriptsize] {Product exists} (5,-5.0);
+
+  \draw[msg] (5,-6.0) -- node[above, font=\scriptsize] {INSERT INTO reviews} node[below, font=\scriptsize] {(product\_id, user\_id, rating, comment)} (15,-6.0);
+  \draw[ret] (15,-6.8) -- node[above, font=\scriptsize] {review\_id} (5,-6.8);
+
+  \node[note] at (10,-7.6) {Recalculate average rating};
+
+  \draw[msg] (5,-8.5) -- node[above, font=\scriptsize] {SELECT AVG(rating)} node[below, font=\scriptsize] {FROM reviews WHERE product\_id = ?} (15,-8.5);
+  \draw[ret] (15,-9.3) -- node[above, font=\scriptsize] {avgRating} (5,-9.3);
+
+  \draw[msg] (5,-10.2) -- node[above, font=\scriptsize] {UPDATE products SET} node[below, font=\scriptsize] {rating = avgRating} (15,-10.2);
+  \draw[ret] (15,-10.9) -- node[above, font=\scriptsize] {OK} (5,-10.9);
+
+  \draw[msg] (5,-11.8) -- node[above, font=\scriptsize] {SELECT r.*, u.username} node[below, font=\scriptsize] {FROM reviews r JOIN users u} (15,-11.8);
+  \draw[ret] (15,-12.5) -- node[above, font=\scriptsize] {Review with username} (5,-12.5);
+
+  \draw[ret] (5,-13.3) -- node[above, font=\scriptsize] {201 Created \{review\}} (0,-13.3);
+
+  \node[note] at (0,-14.2) {Update review list\\and rating display};
+
+\end{tikzpicture}
+}
+\caption{Sequence Diagram -- Product Review Submission}
+\label{fig:seq-review}
+\end{figure}
+
+\subsection{Admin Product Management}
+Figure~\ref{fig:seq-admin} shows the sequence for an admin user creating a new product through the dashboard, including both authentication and authorization checks.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  lifeline/.style={dashed, gray!50},
+  msg/.style={->, thick, >=stealth},
+  ret/.style={->, thick, >=stealth, dashed},
+  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+]
+  % Participants
+  \node[participant] (admin) at (0,0) {Admin Client};
+  \node[participant] (api) at (5,0) {Express API};
+  \node[participant] (auth) at (10,0) {Auth + Admin MW};
+  \node[participant] (db) at (15,0) {MySQL DB};
+
+  % Lifelines
+  \draw[lifeline] (0,-0.5) -- (0,-17);
+  \draw[lifeline] (5,-0.5) -- (5,-17);
+  \draw[lifeline] (10,-0.5) -- (10,-17);
+  \draw[lifeline] (15,-0.5) -- (15,-17);
+
+  % Load form data
+  \node[left, font=\scriptsize\itshape, gray] at (-0.5,-1.0) {Load Form};
+  \draw[msg] (0,-1.5) -- node[above, font=\scriptsize] {GET /api/products/categories} (5,-1.5);
+  \draw[msg] (5,-2.2) -- node[above, font=\scriptsize] {SELECT * FROM categories} (15,-2.2);
+  \draw[ret] (15,-2.8) -- node[above, font=\scriptsize] {Categories list} (5,-2.8);
+  \draw[ret] (5,-3.4) -- node[above, font=\scriptsize] {200 OK \{categories\}} (0,-3.4);
+
+  % Create product
+  \node[left, font=\scriptsize\itshape, gray] at (-0.5,-4.2) {Create};
+  \draw[msg] (0,-4.7) -- node[above, font=\scriptsize] {POST /api/products} node[below, font=\scriptsize] {\{name, price, sku, ...\} + Bearer JWT} (5,-4.7);
+
+  \draw[msg] (5,-5.7) -- node[above, font=\scriptsize] {verify(token)} (10,-5.7);
+  \draw[ret] (10,-6.3) -- node[above, font=\scriptsize] {\{userId, role: admin\}} (5,-6.3);
+
+  \node[note] at (10,-7.0) {Check role === `admin'};
+
+  \draw[msg] (5,-7.9) -- node[above, font=\scriptsize] {Validate product data} (5.1,-7.9);
+
+  \draw[msg] (5,-8.8) -- node[above, font=\scriptsize] {INSERT INTO products} node[below, font=\scriptsize] {(name, slug, price, sku, category\_id, ...)} (15,-8.8);
+  \draw[ret] (15,-9.6) -- node[above, font=\scriptsize] {insertId} (5,-9.6);
+
+  \draw[msg] (5,-10.5) -- node[above, font=\scriptsize] {SELECT p.*, c.name, s.name} node[below, font=\scriptsize] {FROM products p JOIN ...} (15,-10.5);
+  \draw[ret] (15,-11.3) -- node[above, font=\scriptsize] {Full product record} (5,-11.3);
+
+  \draw[ret] (5,-12.2) -- node[above, font=\scriptsize] {201 Created \{product\}} (0,-12.2);
+
+  \node[note] at (0,-13.0) {Show success toast\\Redirect to products list};
+
+  % Refresh list
+  \node[left, font=\scriptsize\itshape, gray] at (-0.5,-14.0) {Refresh};
+  \draw[msg] (0,-14.5) -- node[above, font=\scriptsize] {GET /api/products?limit=10} (5,-14.5);
+  \draw[msg] (5,-15.2) -- node[above, font=\scriptsize] {SELECT * FROM products} (15,-15.2);
+  \draw[ret] (15,-15.8) -- node[above, font=\scriptsize] {Products list} (5,-15.8);
+  \draw[ret] (5,-16.4) -- node[above, font=\scriptsize] {200 OK \{products\}} (0,-16.4);
+
+\end{tikzpicture}
+}
+\caption{Sequence Diagram -- Admin Product Creation}
+\label{fig:seq-admin}
 \end{figure}
 
 \section{API Endpoints}
