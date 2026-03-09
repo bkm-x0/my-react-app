@@ -16,6 +16,27 @@ Full-stack e-commerce application built with React and Node.js/Express.
 
 ---
 
+## Quick Start (Windows PowerShell)
+
+If you've already completed the setup above, you can start the app quickly:
+
+```powershell
+.\start-dev.ps1
+```
+
+Or right-click `start-dev.ps1` and choose **"Run with PowerShell"**.
+
+This script starts both the backend and frontend servers simultaneously.
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:5000 |
+
+Press `Ctrl+C` to stop all services.
+
+---
+
 ## 📖 Installation Guide
 
 ### Prerequisites
@@ -162,6 +183,25 @@ my-react-app/
 ---
 
 ## 📖 دليل التثبيت بالعربية
+
+### تشغيل سريع (Windows PowerShell)
+
+إذا أكملت الإعداد مسبقاً، يمكنك تشغيل التطبيق بسرعة:
+
+```powershell
+.\start-dev.ps1
+```
+
+أو انقر بزر الماوس الأيمن على `start-dev.ps1` واختر **"Run with PowerShell"**.
+
+هذا السكربت يشغّل الباك اند والفرونت اند معاً.
+
+| الخدمة | الرابط |
+|--------|--------|
+| الواجهة الأمامية | http://localhost:3000 |
+| الباك اند | http://localhost:5000 |
+
+اضغط `Ctrl+C` لإيقاف جميع الخدمات.
 
 ### المتطلبات
 
