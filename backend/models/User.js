@@ -78,6 +78,31 @@ class User {
       fields.push('is_active = ?');
       values.push(updateData.isActive ? 1 : 0);
     }
+
+    if (updateData.isEmailVerified !== undefined) {
+      fields.push('is_email_verified = ?');
+      values.push(updateData.isEmailVerified ? 1 : 0);
+    }
+
+    if (updateData.emailVerifyToken !== undefined) {
+      fields.push('email_verify_token = ?');
+      values.push(updateData.emailVerifyToken);
+    }
+
+    if (updateData.emailVerifyExpires !== undefined) {
+      fields.push('email_verify_expires = ?');
+      values.push(updateData.emailVerifyExpires);
+    }
+
+    if (updateData.resetPasswordToken !== undefined) {
+      fields.push('reset_password_token = ?');
+      values.push(updateData.resetPasswordToken);
+    }
+
+    if (updateData.resetPasswordExpires !== undefined) {
+      fields.push('reset_password_expires = ?');
+      values.push(updateData.resetPasswordExpires);
+    }
     
     if (fields.length === 0) return null;
     
@@ -90,6 +115,22 @@ class User {
 
   static async comparePassword(candidatePassword, hashedPassword) {
     return await bcrypt.compare(candidatePassword, hashedPassword);
+  }
+
+  static async findByEmailVerifyToken(token) {
+    const [users] = await pool.execute(
+      'SELECT * FROM users WHERE email_verify_token = ?',
+      [token]
+    );
+    return users[0] || null;
+  }
+
+  static async findByResetToken(token) {
+    const [users] = await pool.execute(
+      'SELECT * FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW()',
+      [token]
+    );
+    return users[0] || null;
   }
 
   static async findAll(limit = 100, offset = 0) {
@@ -110,6 +151,12 @@ class User {
   static async count() {
     const [[result]] = await pool.execute('SELECT COUNT(*) as count FROM users');
     return result.count;
+  }
+
+  static async delete(id) {
+    // orders & reviews have ON DELETE SET NULL – MySQL handles FK cleanup automatically
+    const [result] = await pool.execute('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 }
 

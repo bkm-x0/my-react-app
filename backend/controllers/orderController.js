@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const PDFDocument = require('pdfkit');
-const nodemailer = require('nodemailer');
+const { sendInvoiceEmail } = require('../config/email');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -224,28 +224,15 @@ const getOrderStats = async (req, res) => {
   }
 };
 
-// @desc    Get order invoice (PDF)
-// @route   GET /api/orders/:id/invoice
-// @access  Private
-const getInvoice = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-
-    // Check if user is authorized
-    if (order.user_id !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'Not authorized' });
-    }
-
-    // Generate PDF
+// Generate PDF invoice buffer (reused by getInvoice and sendInvoice)
+function generateInvoicePDF(order) {
+  return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${order.id}.pdf"`);
+    const chunks = [];
 
-    doc.pipe(res);
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
     // Header
     doc.fontSize(24).font('Helvetica-Bold').text('INVOICE', { align: 'center' });
@@ -266,12 +253,8 @@ const getInvoice = async (req, res) => {
     doc.fontSize(12).font('Helvetica-Bold').text('ORDER ITEMS');
     doc.moveDown(0.5);
 
-    // Table headers
     const tableTop = doc.y;
-    const col1 = 50;
-    const col2 = 250;
-    const col3 = 350;
-    const col4 = 450;
+    const col1 = 50, col2 = 250, col3 = 350, col4 = 450;
 
     doc.fontSize(10).font('Helvetica-Bold');
     doc.text('Product', col1, tableTop);
@@ -282,7 +265,6 @@ const getInvoice = async (req, res) => {
     doc.lineWidth(0.5);
     doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
-    // Table rows
     let y = tableTop + 25;
     doc.fontSize(10).font('Helvetica');
 
@@ -299,7 +281,6 @@ const getInvoice = async (req, res) => {
     doc.moveTo(50, y).lineTo(550, y).stroke();
     y += 10;
 
-    // Totals
     doc.fontSize(10).font('Helvetica');
     doc.text('Subtotal:', col2, y);
     doc.text(`${(order.total_amount || 0).toLocaleString()}₡`, col4, y);
@@ -316,6 +297,29 @@ const getInvoice = async (req, res) => {
     doc.text(`Status: ${order.status}`, { align: 'center' });
 
     doc.end();
+  });
+}
+
+// @desc    Get order invoice (PDF)
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+const getInvoice = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    const pdfBuffer = await generateInvoicePDF(order);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${order.id}.pdf"`);
+    res.send(pdfBuffer);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error generating invoice' });
@@ -333,41 +337,20 @@ const sendInvoice = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Check if user is authorized
     if (order.user_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    // Configure email service (use environment variables in production)
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER || 'noreply@cyberstore.com',
-        pass: process.env.EMAIL_PASS || 'demo_password'
-      }
-    });
+    if (!order.user_email) {
+      return res.status(400).json({ message: 'No email address on file for this order' });
+    }
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@cyberstore.com',
-      to: order.user_email || req.user.email,
-      subject: `Invoice for Order #${order.id}`,
-      html: `
-        <h2>Order Confirmation</h2>
-        <p>Thank you for your purchase!</p>
-        <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Status:</strong> ${order.status}</p>
-        <p><strong>Total Amount:</strong> ${order.total_amount}₡</p>
-        <p>Your invoice is attached to this email.</p>
-        <p>Track your order at: <a href="http://localhost:3000/track-order">http://localhost:3000/track-order</a></p>
-      `
-    };
-
-    // Send email
-    await transporter.sendMail(mailOptions);
+    const pdfBuffer = await generateInvoicePDF(order);
+    await sendInvoiceEmail(order, pdfBuffer);
 
     res.json({ message: 'Invoice sent successfully' });
   } catch (error) {
-    console.error(error);
+    console.error('[ORDER] Failed to email invoice:', error);
     res.status(500).json({ message: 'Error sending invoice' });
   }
 };
@@ -379,7 +362,7 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }

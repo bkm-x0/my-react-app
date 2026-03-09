@@ -1,105 +1,19 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useRef, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Zap, Shield, Truck, Headphones,
-  Star, ChevronRight, TrendingUp, Award, Users, Package,
-  Monitor, Laptop, Gamepad2, Cpu, Layers, HardDrive,
-  Tv, Keyboard, Mouse, Wifi,
-  Router, Cable, Server, Radio, Plug, Usb,
-  Mic, Volume2, Speaker
+  Star, ChevronRight, ChevronDown, TrendingUp, Award, Users, Package,
 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import api from '../services/api';
 import useLangStore from './store/langStore';
 
-const brands = ['ASUS ROG', 'MSI', 'Corsair', 'Razer', 'Logitech', 'HyperX', 'SteelSeries', 'NZXT', 'Lian Li', 'Samsung', 'NVIDIA', 'AMD', 'Intel'];
-
-const subcategoriesMap = {
-  'desktops': [
-    { name: 'Gaming Desktops', slug: 'gaming-desktops', icon: Gamepad2 },
-    { name: 'Workstations', slug: 'workstations', icon: Monitor },
-    { name: 'Office PCs', slug: 'office-pcs', icon: Monitor },
-    { name: 'Mini PCs', slug: 'mini-pcs', icon: Cpu },
-    { name: 'All-in-One', slug: 'all-in-one', icon: Tv },
-  ],
-  'laptops': [
-    { name: 'Gaming Laptops', slug: 'gaming-laptops', icon: Gamepad2 },
-    { name: 'Business Laptops', slug: 'business-laptops', icon: Laptop },
-    { name: 'Ultrabooks', slug: 'ultrabooks', icon: Laptop },
-    { name: 'Chromebooks', slug: 'chromebooks', icon: Laptop },
-    { name: '2-in-1 Laptops', slug: '2-in-1-laptops', icon: Laptop },
-  ],
-  'gaming-systems': [
-    { name: 'Custom Gaming PCs', slug: 'custom-gaming-pcs', icon: Cpu },
-    { name: 'Pre-Built Gaming', slug: 'pre-built-gaming', icon: Monitor },
-    { name: 'Streaming Rigs', slug: 'streaming-rigs', icon: Radio },
-    { name: 'VR-Ready PCs', slug: 'vr-ready-pcs', icon: Layers },
-  ],
-  'processors': [
-    { name: 'Intel Core i9', slug: 'intel-i9', icon: Cpu },
-    { name: 'Intel Core i7', slug: 'intel-i7', icon: Cpu },
-    { name: 'Intel Core i5', slug: 'intel-i5', icon: Cpu },
-    { name: 'AMD Ryzen 9', slug: 'amd-ryzen-9', icon: Cpu },
-    { name: 'AMD Ryzen 7', slug: 'amd-ryzen-7', icon: Cpu },
-    { name: 'AMD Ryzen 5', slug: 'amd-ryzen-5', icon: Cpu },
-  ],
-  'graphics-cards': [
-    { name: 'NVIDIA RTX 40 Series', slug: 'rtx-40', icon: Layers },
-    { name: 'NVIDIA RTX 30 Series', slug: 'rtx-30', icon: Layers },
-    { name: 'AMD Radeon RX 7000', slug: 'rx-7000', icon: Layers },
-    { name: 'AMD Radeon RX 6000', slug: 'rx-6000', icon: Layers },
-    { name: 'Professional GPUs', slug: 'professional-gpus', icon: Monitor },
-  ],
-  'memory-ram': [
-    { name: 'DDR5 RAM', slug: 'ddr5', icon: HardDrive },
-    { name: 'DDR4 RAM', slug: 'ddr4', icon: HardDrive },
-    { name: 'Laptop RAM (SO-DIMM)', slug: 'laptop-ram', icon: Laptop },
-    { name: 'ECC Memory', slug: 'ecc-memory', icon: Server },
-  ],
-  'storage': [
-    { name: 'NVMe SSD', slug: 'nvme-ssd', icon: HardDrive },
-    { name: 'SATA SSD', slug: 'sata-ssd', icon: HardDrive },
-    { name: 'HDD', slug: 'hdd', icon: HardDrive },
-    { name: 'External Storage', slug: 'external-storage', icon: Usb },
-    { name: 'NAS Drives', slug: 'nas-drives', icon: Server },
-  ],
-  'monitors': [
-    { name: 'Gaming Monitors', slug: 'gaming-monitors', icon: Tv },
-    { name: '4K Monitors', slug: '4k-monitors', icon: Tv },
-    { name: 'Ultrawide', slug: 'ultrawide', icon: Monitor },
-    { name: 'Office Monitors', slug: 'office-monitors', icon: Monitor },
-    { name: 'Monitor Stands', slug: 'monitor-stands', icon: Monitor },
-  ],
-  'keyboards': [
-    { name: 'Mechanical', slug: 'mechanical-keyboards', icon: Keyboard },
-    { name: 'Wireless', slug: 'wireless-keyboards', icon: Wifi },
-    { name: 'Gaming', slug: 'gaming-keyboards', icon: Gamepad2 },
-    { name: 'Ergonomic', slug: 'ergonomic-keyboards', icon: Keyboard },
-    { name: 'Keycaps & Accessories', slug: 'keycaps', icon: Keyboard },
-  ],
-  'mice': [
-    { name: 'Gaming Mice', slug: 'gaming-mice', icon: Mouse },
-    { name: 'Wireless Mice', slug: 'wireless-mice', icon: Wifi },
-    { name: 'Ergonomic Mice', slug: 'ergonomic-mice', icon: Mouse },
-    { name: 'Mouse Pads', slug: 'mouse-pads', icon: Layers },
-  ],
-  'audio': [
-    { name: 'Gaming Headsets', slug: 'gaming-headsets', icon: Headphones },
-    { name: 'Speakers', slug: 'speakers', icon: Speaker },
-    { name: 'Microphones', slug: 'microphones', icon: Mic },
-    { name: 'Sound Cards', slug: 'sound-cards', icon: Volume2 },
-    { name: 'Earbuds', slug: 'earbuds', icon: Headphones },
-  ],
-  'networking': [
-    { name: 'Routers', slug: 'routers', icon: Router },
-    { name: 'Switches', slug: 'switches', icon: Server },
-    { name: 'Network Adapters', slug: 'network-adapters', icon: Plug },
-    { name: 'Access Points', slug: 'access-points', icon: Wifi },
-    { name: 'Network Cables', slug: 'network-cables', icon: Cable },
-    { name: 'Modems', slug: 'modems', icon: Radio },
-  ],
-};
+const brands = [
+  'ASUS ROG', 'MSI', 'Corsair', 'Razer', 'Logitech',
+  'HyperX', 'SteelSeries', 'NZXT', 'Lian Li', 'Samsung',
+  'NVIDIA', 'AMD', 'Intel',
+];
 
 function AnimatedSection({ children, className = '' }) {
   const ref = useRef(null);
@@ -121,11 +35,23 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [hoveredCategorySlug, setHoveredCategorySlug] = useState(null);
-  const hoverTimeoutRef = useRef(null);
-  const navigate = useNavigate();
+  const [showBrands, setShowBrands] = useState(false);
+  const [tickerPaused, setTickerPaused] = useState(false);
   const { t } = useLangStore();
+
+  const touchStartX = useRef(null);
+
+  const prevSlide = () => setCurrentSlide(s => (s - 1 + heroSlides.length) % heroSlides.length);
+  const nextSlide = () => setCurrentSlide(s => (s + 1) % heroSlides.length);
+
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (delta < -50) nextSlide();
+    else if (delta > 50) prevSlide();
+    touchStartX.current = null;
+  };
 
   const heroSlides = [
     {
@@ -160,8 +86,6 @@ const Home = () => {
     },
   ];
 
-
-
   const statsData = [
     { labelKey: 'home.stats.products', value: '500+', icon: Package },
     { labelKey: 'home.stats.customers', value: '12,000+', icon: Users },
@@ -190,47 +114,21 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get('/products/categories');
-        const data = Array.isArray(response.data) ? response.data : response.data.categories || [];
-        setCategories(data);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    };
-  }, []);
-
-  const handleCategoryEnter = (slug) => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    setHoveredCategorySlug(slug);
-  };
-
-  const handleCategoryLeave = () => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredCategorySlug(null);
-    }, 250);
-  };
-
-  const handleSubcategoryClick = (categoryId) => {
-    setHoveredCategorySlug(null);
-    navigate(`/products?category=${categoryId}`);
-  };
-
   const slide = heroSlides[currentSlide];
 
   return (
     <div className="bg-zinc-950 min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <motion.section
+        className="relative min-h-screen flex items-center overflow-hidden"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onPanEnd={(e, info) => {
+          if (info.offset.x < -50) nextSlide();
+          else if (info.offset.x > 50) prevSlide();
+        }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -316,11 +214,12 @@ const Home = () => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="absolute bottom-8 left-4 sm:left-6 flex gap-2">
+          <div className="absolute bottom-8 left-4 sm:left-6 flex items-center gap-2">
             {heroSlides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentSlide(i)}
+                aria-label={`Go to slide ${i + 1}`}
                 className={`h-1 rounded-full transition-all duration-300 ${
                   i === currentSlide ? 'bg-orange-500 w-8' : 'bg-zinc-600 w-3 hover:bg-zinc-400'
                 }`}
@@ -337,7 +236,7 @@ const Home = () => {
           <span className="text-zinc-500 text-xs tracking-widest rotate-90 mb-2">SCROLL</span>
           <div className="w-px h-12 bg-gradient-to-b from-zinc-500 to-transparent" />
         </motion.div>
-      </section>
+      </motion.section>
 
       {/* Stats */}
       <AnimatedSection>
@@ -367,123 +266,104 @@ const Home = () => {
         </div>
       </AnimatedSection>
 
-      {/* Brands ticker */}
-      <AnimatedSection className="mt-16 overflow-hidden">
-        <p className="text-center text-zinc-500 text-xs font-bold uppercase tracking-widest mb-6">{t('home.brands')}</p>
-        <div className="relative">
-          <div className="flex gap-10 animate-[ticker_20s_linear_infinite]" style={{ width: 'max-content' }}>
-            {[...brands, ...brands].map((brand, i) => (
-              <span key={i} className="text-zinc-600 hover:text-zinc-300 font-black text-lg transition-colors shrink-0 cursor-default">
-                {brand}
-              </span>
-            ))}
-          </div>
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
-        </div>
-      </AnimatedSection>
-
-      {/* Categories */}
-      <AnimatedSection className="mt-20 max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="text-orange-500 text-xs font-bold uppercase tracking-widest mb-1">{t('home.categoriesSub')}</p>
-            <h2 className="text-white font-black text-3xl">{t('home.categories')}</h2>
-          </div>
-          <Link to="/categories" className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm font-bold transition-colors group">
-            {t('home.viewAll')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {categories.map((category, index) => {
-            const subs = subcategoriesMap[category.slug] || [];
-            const isHovered = hoveredCategorySlug === category.slug;
-
-            return (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="relative"
-                onMouseEnter={() => handleCategoryEnter(category.slug)}
-                onMouseLeave={handleCategoryLeave}
-              >
-                <Link
-                  to={`/products?category=${category.id}`}
-                  className={`block w-full p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
-                    isHovered
-                      ? 'border-orange-500 bg-zinc-900 shadow-lg shadow-orange-500/10'
-                      : 'border-zinc-800 bg-zinc-900 hover:border-orange-500/30'
-                  }`}
+      {/* Brands Section — ticker + expandable grid */}
+      <AnimatedSection className="mt-16">
+        {/* Clickable ticker bar */}
+        <button
+          onClick={() => setShowBrands(s => !s)}
+          aria-expanded={showBrands}
+          className="w-full group focus:outline-none"
+        >
+          <p className="text-center text-zinc-500 text-xs font-bold uppercase tracking-widest mb-6 group-hover:text-orange-400 transition-colors">
+            {t('home.brands') || 'Our Brands'}
+          </p>
+          <div
+            className="relative overflow-hidden"
+            onMouseEnter={() => setTickerPaused(true)}
+            onMouseLeave={() => setTickerPaused(false)}
+          >
+            <div
+              className="flex gap-10"
+              style={{
+                width: 'max-content',
+                animation: 'ticker 20s linear infinite',
+                animationPlayState: tickerPaused ? 'paused' : 'running',
+              }}
+            >
+              {[...brands, ...brands].map((brand, i) => (
+                <span
+                  key={i}
+                  className="text-zinc-500 group-hover:text-zinc-300 font-black text-lg transition-colors shrink-0"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className={`font-semibold text-sm md:text-base ${
-                      isHovered ? 'text-orange-400' : 'text-white'
-                    }`}>
-                      {category.name}
-                    </h3>
-                    <ChevronRight
-                      size={18}
-                      className={`transition-all flex-shrink-0 ${
-                        isHovered
-                          ? 'text-orange-400 translate-x-1'
-                          : 'text-zinc-500'
-                      }`}
-                    />
-                  </div>
-                  {category.description && (
-                    <p className="text-xs text-zinc-400 line-clamp-2">{category.description}</p>
-                  )}
-                  {subs.length > 0 && (
-                    <div className="mt-2 text-xs text-orange-400 font-medium">
-                      {subs.length} {t('categories.subcategories')}
-                    </div>
-                  )}
-                </Link>
+                  {brand}
+                </span>
+              ))}
+            </div>
+            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-zinc-950 to-transparent pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none" />
+          </div>
 
-                {/* Subcategories Dropdown */}
-                <AnimatePresence>
-                  {isHovered && subs.length > 0 && (
+          {/* Expand indicator */}
+          <div className="flex justify-center mt-5">
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-zinc-700 group-hover:border-orange-500/50 text-zinc-400 group-hover:text-orange-400 text-xs font-bold transition-all">
+              {showBrands ? 'Hide Brands' : 'View All Brands'}
+              <motion.span
+                animate={{ rotate: showBrands ? 180 : 0 }}
+                transition={{ duration: 0.25 }}
+                className="inline-flex"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </motion.span>
+            </span>
+          </div>
+        </button>
+
+        {/* Expandable brands grid */}
+        <AnimatePresence>
+          {showBrands && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {brands.map((brand, i) => (
                     <motion.div
-                      initial={{ opacity: 0, y: -8 }}
+                      key={brand}
+                      initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute z-50 left-0 w-full min-w-[220px] mt-1 bg-zinc-900 border border-orange-500/40 rounded-2xl shadow-2xl shadow-black/50"
-                      onMouseEnter={() => handleCategoryEnter(category.slug)}
-                      onMouseLeave={handleCategoryLeave}
+                      transition={{ delay: i * 0.04 }}
                     >
-                      <div className="p-3">
-                        <div className="text-xs font-bold text-orange-400 mb-2 px-2 pb-2 border-b border-zinc-800 uppercase tracking-wider">
-                          {category.name}
-                        </div>
-                        <div className="space-y-0.5 max-h-72 overflow-y-auto">
-                          {subs.map((sub) => {
-                            const Icon = sub.icon;
-                            return (
-                              <button
-                                key={sub.slug}
-                                onClick={(e) => { e.preventDefault(); handleSubcategoryClick(category.id); }}
-                                className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors group/sub text-left"
-                              >
-                                <Icon className="h-4 w-4 text-zinc-500 group-hover/sub:text-orange-400 transition-colors flex-shrink-0" />
-                                <span className="text-sm text-zinc-300 group-hover/sub:text-orange-400 transition-colors">
-                                  {sub.name}
-                                </span>
-                                <ChevronRight className="h-3 w-3 text-zinc-700 group-hover/sub:text-orange-400 ml-auto transition-colors" />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      <Link
+                        to={`/products?search=${encodeURIComponent(brand)}`}
+                        onClick={() => setShowBrands(false)}
+                      >
+                        <motion.div
+                          whileHover={{ y: -4, boxShadow: '0 0 20px rgba(249,115,22,0.12)' }}
+                          whileTap={{ scale: 0.97 }}
+                          className="bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 rounded-2xl p-5 text-center cursor-pointer transition-colors duration-300 group"
+                        >
+                          <div className="w-10 h-10 bg-orange-500/10 group-hover:bg-orange-500/20 rounded-xl flex items-center justify-center mx-auto mb-3 transition-colors">
+                            <Award className="w-5 h-5 text-orange-400" />
+                          </div>
+                          <p className="text-zinc-300 group-hover:text-orange-400 font-bold text-sm transition-colors">
+                            {brand}
+                          </p>
+                          <p className="text-zinc-600 group-hover:text-orange-500/60 text-xs mt-1 transition-colors flex items-center justify-center gap-0.5">
+                            View products <ChevronRight className="w-3 h-3" />
+                          </p>
+                        </motion.div>
+                      </Link>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </AnimatedSection>
 
       {/* Featured Products */}

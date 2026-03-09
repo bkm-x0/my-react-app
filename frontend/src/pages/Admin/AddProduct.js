@@ -125,8 +125,8 @@ const AddProduct = () => {
         supplierId: formData.supplierId ? parseInt(formData.supplierId) : null
       };
 
-      if (formData.image && formData.image.startsWith('data:')) {
-        productData.image = formData.image;
+      if (formData.image) {
+        productData.image = formData.image;  // base64 or URL
       }
 
       console.log(`${isEditMode ? 'Updating' : 'Sending'} product data:`, productData);
@@ -183,6 +183,13 @@ const AddProduct = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleImageUrl = (e) => {
+    const url = e.target.value.trim();
+    setFormData(prev => ({ ...prev, image: url || null }));
+  };
+
+  const clearImage = () => setFormData(prev => ({ ...prev, image: null }));
 
   const addFeature = () => {
     setFormData(prev => ({
@@ -425,15 +432,36 @@ const AddProduct = () => {
                 </h2>
 
                 <div className="space-y-4">
-                  {formData.image && (
+                  {/* Preview */}
+                  {formData.image ? (
                     <div className="relative">
-                      <img src={formData.image} alt="Product preview" className="w-full h-48 object-cover rounded-xl border border-zinc-700" />
+                      <img
+                        src={formData.image}
+                        alt="Product preview"
+                        className="w-full h-48 object-cover rounded-xl border border-zinc-700"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors"
+                        title="Remove image"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-48 bg-zinc-800 rounded-xl border border-zinc-700 flex items-center justify-center">
+                      <span className="text-zinc-600 text-sm">No image selected</span>
                     </div>
                   )}
+
+                  {/* File Upload */}
                   <label className="block">
                     <div className="border-2 border-dashed border-zinc-700 rounded-xl p-4 text-center cursor-pointer hover:border-orange-500 transition-colors">
                       <Upload className="h-8 w-8 mx-auto text-orange-400 mb-2" />
-                      <p className="text-sm text-zinc-400">Click to upload image</p>
+                      <p className="text-sm text-zinc-400">Click to upload image file</p>
+                      <p className="text-xs text-zinc-600 mt-1">PNG, JPG, WEBP up to 5MB</p>
                     </div>
                     <input
                       type="file"
@@ -442,6 +470,25 @@ const AddProduct = () => {
                       className="hidden"
                     />
                   </label>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-zinc-700" />
+                    <span className="text-zinc-500 text-xs">OR</span>
+                    <div className="flex-1 h-px bg-zinc-700" />
+                  </div>
+
+                  {/* URL Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 mb-1">IMAGE URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      value={formData.image && formData.image.startsWith('http') ? formData.image : ''}
+                      onChange={handleImageUrl}
+                      className={inputClasses}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -519,40 +566,6 @@ const AddProduct = () => {
                 </div>
               </div>
 
-              {/* Images Card */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <h2 className="text-2xl font-bold mb-6 text-orange-400">
-                  PRODUCT IMAGES
-                </h2>
-
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center">
-                    <Upload className="h-12 w-12 text-orange-400 mx-auto mb-4" />
-                    <div className="font-bold text-white mb-2">UPLOAD IMAGES</div>
-                    <p className="text-sm text-zinc-400 mb-4">
-                      Drag & drop or click to upload
-                    </p>
-                    <button
-                      type="button"
-                      className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold rounded-xl px-4 py-2 transition-colors"
-                    >
-                      BROWSE FILES
-                    </button>
-                  </div>
-
-                  <div className="text-sm text-zinc-400">
-                    <div className="flex items-center mb-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></div>
-                      <span>Recommended size: 800x600px</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></div>
-                      <span>Max file size: 5MB</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Preview Card */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6 text-orange-400">
@@ -560,7 +573,18 @@ const AddProduct = () => {
                 </h2>
 
                 <div className="p-4 bg-zinc-800 border border-zinc-700 rounded-xl">
-                  <div className="h-40 bg-zinc-700 rounded-xl mb-4"></div>
+                  {formData.image ? (
+                    <img
+                      src={formData.image}
+                      alt="preview"
+                      className="w-full h-40 object-cover rounded-xl mb-4"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="h-40 bg-zinc-700 rounded-xl mb-4 flex items-center justify-center">
+                      <span className="text-zinc-500 text-xs">No image</span>
+                    </div>
+                  )}
                   <div className="font-bold text-white mb-2">
                     {formData.name || 'Product Name'}
                   </div>

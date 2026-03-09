@@ -3,10 +3,14 @@ import { create } from 'zustand';
 
 const API_BASE = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000/api`;
 
+// If token exists in storage, start as loading=true so ProtectedRoute waits
+const _storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+
 const useAuthStore = create((set, get) => ({
   user: null,
-  token: localStorage.getItem('token') || null,
+  token: _storedToken || null,
   isAuthenticated: false,
+  initialized: false,   // becomes true after initializeAuth finishes
   loading: false,
   error: null,
   
@@ -51,11 +55,13 @@ const useAuthStore = create((set, get) => ({
       
       if (!response.ok) {
         const errorMsg = data.error || data.message || 'Login failed';
+        const err = new Error(errorMsg);
+        err.emailNotVerified = data.emailNotVerified || false;
         set({ 
           loading: false, 
           error: { message: errorMsg, code: 'LOGIN_ERROR' } 
         });
-        throw new Error(errorMsg);
+        throw err;
       }
       
       // Store token if received
@@ -150,23 +156,10 @@ const useAuthStore = create((set, get) => ({
         throw new Error(data.message || 'Registration failed');
       }
       
-      // Store token if received
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        
-        // Extract user data (excluding token)
-        const { token, ...user } = data;
-        
-        set({
-          user: user,
-          token: data.token,
-          isAuthenticated: true,
-          loading: false,
-          error: null
-        });
-      } else {
-        throw new Error('No token received from server');
-      }
+      // Server no longer returns a token on register (email verification required)
+      // Just return the data for the component to handle
+      set({ loading: false, error: null });
+      return data;
       
     } catch (error) {
       console.error('Register error:', error);
@@ -196,14 +189,15 @@ const useAuthStore = create((set, get) => ({
   
   initializeAuth: async () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    
+
     if (!token) {
+      set({ initialized: true, loading: false });
       return;
     }
-    
+
+    set({ loading: true });
+
     try {
-      set({ loading: true });
-      
       const response = await fetch(`${API_BASE}/auth/profile`, {
         method: 'GET',
         headers: {
@@ -211,39 +205,37 @@ const useAuthStore = create((set, get) => ({
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
-        
         set({
           user: userData,
           token: token,
           isAuthenticated: true,
+          initialized: true,
           loading: false,
           error: null
         });
       } else {
-        // Token is invalid, clear it
+        // Token is invalid or expired, clear it
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          initialized: true,
           loading: false,
           error: null
         });
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
-      localStorage.removeItem('token');
-      sessionStorage.removeItem('token');
+      // Network error – keep token, don't log out (might be offline)
       set({
-        user: null,
-        token: null,
-        isAuthenticated: false,
+        isAuthenticated: !!token,
+        initialized: true,
         loading: false,
-        error: null
       });
     }
   },

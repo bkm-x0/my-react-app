@@ -335,6 +335,9 @@ const createProduct = async (req, res) => {
         console.error('📋 [IMAGE] Stack:', imageError.stack);
         productData.image = null;
       }
+    } else if (productData.image && (productData.image.startsWith('http://') || productData.image.startsWith('https://'))) {
+      // Keep external URL as-is
+      console.log('🔗 [IMAGE] Using external URL:', productData.image.substring(0, 80));
     } else {
       productData.image = null;
       console.log('ℹ️  [IMAGE] No image provided');
@@ -460,6 +463,9 @@ const updateProduct = async (req, res) => {
         console.error('❌ [IMAGE] Error saving image:', imageError.message);
         delete productData.image;
       }
+    } else if (productData.image && (productData.image.startsWith('http://') || productData.image.startsWith('https://'))) {
+      // Keep external URL as-is
+      console.log('🔗 [IMAGE] Using external URL:', productData.image.substring(0, 80));
     }
 
     const updatedProduct = await Product.update(req.params.id, productData);

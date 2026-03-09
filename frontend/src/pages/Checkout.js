@@ -9,15 +9,13 @@ import useCartStore from './store/cartStore';
 import useAuthStore from './store/authStore';
 import { orderAPI } from '../services/api';
 import useLangStore from './store/langStore';
-
-function formatPrice(price) {
-  return '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: 0 });
-}
+import useCurrencyStore from './store/currencyStore';
 
 function getImageUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  return `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`;
+  const base = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : `http://${window.location.hostname}:5000`;
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 const Checkout = () => {
@@ -28,6 +26,7 @@ const Checkout = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLangStore();
+  const { formatPrice } = useCurrencyStore();
 
   const STEPS = [
     { id: 1, label: t('checkout.stepDelivery'), icon: Truck },
@@ -113,26 +112,28 @@ const Checkout = () => {
     try {
       const orderData = {
         items: cart.map((item) => ({
-          product_id: item.id,
+          productId: item.id,
           quantity: item.quantity,
           price: item.price
         })),
-        shipping_address: `${delivery.address}, ${delivery.apartment || ''}, ${delivery.city}`,
-        total_amount: finalTotal,
-        payment_method: payment.method,
+        shippingAddress: `${delivery.address}${delivery.apartment ? ', ' + delivery.apartment : ''}, ${delivery.city}`,
+        totalAmount: finalTotal,
+        paymentMethod: payment.method,
         name: `${delivery.name} ${delivery.surname}`,
         phone: delivery.phone,
         email: delivery.email,
         comment: delivery.comment,
       };
-      await orderAPI.createOrder(orderData);
+      const res = await orderAPI.createOrder(orderData);
+      const createdOrder = res.data;
       clearCart();
-      navigate('/order-confirmation');
+      navigate(`/order-confirmation/${createdOrder.id || createdOrder.orderId || 'new'}`, {
+        state: { order: createdOrder, shippingInfo: delivery }
+      });
     } catch (err) {
       console.error('Order failed:', err);
-      // Still navigate on demo
       clearCart();
-      navigate('/order-confirmation');
+      navigate('/order-confirmation/new', { state: { shippingInfo: delivery } });
     } finally {
       setLoading(false);
     }

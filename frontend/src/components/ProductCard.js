@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, Star, Eye, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useCartStore from '../pages/store/cartStore';
 import useLangStore from '../pages/store/langStore';
+import useCurrencyStore from '../pages/store/currencyStore';
 
 const API_URL = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -12,11 +13,6 @@ function getImageUrl(product) {
   const img = product.image_url || product.image;
   if (img.startsWith('http')) return img;
   return `${API_URL}${img.startsWith('/') ? '' : '/'}${img}`;
-}
-
-function formatPrice(price) {
-  if (!price) return '$0';
-  return '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 function StarRating({ rating, reviews }) {
@@ -38,6 +34,7 @@ function StarRating({ rating, reviews }) {
 const ProductCard = ({ product, viewMode = 'grid' }) => {
   const addToCart = useCartStore((state) => state.addToCart);
   const { t } = useLangStore();
+  const { formatPrice } = useCurrencyStore();
   const [added, setAdded] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -150,22 +147,24 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 gap-2">
           <motion.button
             onClick={handleAddToCart}
+            aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
               added ? 'bg-emerald-500 text-white' : 'bg-orange-500 hover:bg-orange-600 text-black'
             }`}
           >
-            {added ? <Zap className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {added ? <Zap className="w-4 h-4" aria-hidden="true" /> : <ShoppingCart className="w-4 h-4" aria-hidden="true" />}
             {added ? t('productCard.added') : t('productCard.addToCart')}
           </motion.button>
-          <Link to={`/products/${product.id}`}>
+          <Link to={`/products/${product.id}`} aria-label={`View details for ${product.name}`}>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
+              tabIndex={-1}
               className="p-2 bg-zinc-800/90 hover:bg-zinc-700 rounded-xl text-zinc-300 hover:text-white transition-colors"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
             </motion.button>
           </Link>
         </div>
@@ -187,11 +186,13 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         {/* Wishlist */}
         <motion.button
           onClick={handleWishlist}
+          aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+          aria-pressed={isWishlisted}
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           className="absolute top-3 right-3 p-2 bg-zinc-900/80 backdrop-blur-sm rounded-xl transition-colors"
         >
-          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-zinc-400'}`} />
+          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-zinc-400'}`} aria-hidden="true" />
         </motion.button>
 
         {/* Out of stock */}
@@ -222,6 +223,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           <motion.button
             onClick={handleAddToCart}
             disabled={!inStock}
+            aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
             whileHover={inStock ? { scale: 1.05 } : {}}
             whileTap={inStock ? { scale: 0.95 } : {}}
             className={`p-2 rounded-xl transition-all ${
@@ -232,7 +234,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
                 : 'bg-orange-500 hover:bg-orange-600 text-black'
             }`}
           >
-            {added ? <Zap className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {added ? <Zap className="w-4 h-4" aria-hidden="true" /> : <ShoppingCart className="w-4 h-4" aria-hidden="true" />}
           </motion.button>
         </div>
       </div>

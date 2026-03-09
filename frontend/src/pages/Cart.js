@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Tag, ArrowLeft, Package } from 'lucide-react';
 import useCartStore from './store/cartStore';
 import useLangStore from './store/langStore';
+import useCurrencyStore from './store/currencyStore';
 
 const API_URL = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -12,11 +13,6 @@ function getImageUrl(item) {
   if (!img) return null;
   if (img.startsWith('http')) return img;
   return `${API_URL}${img.startsWith('/') ? '' : '/'}${img}`;
-}
-
-function formatPrice(price) {
-  if (!price) return '$0';
-  return '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 const Cart = () => {
@@ -34,6 +30,7 @@ const Cart = () => {
   const cartTotal = getTotalPrice();
   const cartCount = getTotalItems();
   const { t } = useLangStore();
+  const { formatPrice, convert } = useCurrencyStore();
 
   const handlePromo = () => {
     if (!promoInput.trim()) { setPromoError(t('cart.promoPlaceholder')); return; }
@@ -235,7 +232,7 @@ const Cart = () => {
                   </span>
                 </div>
                 {shipping === 0 && (
-                  <p className="text-zinc-500 text-xs">✓ $1000 dan yuqori buyurtmalarda bepul yetkazib berish</p>
+                  <p className="text-zinc-500 text-xs">✓ {t('cart.freeShippingNote') || `Free shipping on orders over ${formatPrice(1000)}`}</p>
                 )}
                 <div className="border-t border-zinc-800 pt-3 flex justify-between">
                   <span className="text-white font-bold">{t('cart.total')}</span>

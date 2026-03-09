@@ -12,6 +12,9 @@ import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import AdminLogin from './pages/Admin/AdminLogin';
 import AdminDashboard from './pages/Admin/Dashboard';
@@ -31,17 +34,29 @@ import SupplierDetail from './pages/SupplierDetail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, initialized } = useAuthStore();
   const isAdmin = useAuthStore((state) => state.isAdmin());
-  
+
+  // Wait until auth initialization is complete before redirecting
+  if (!initialized) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4" role="status" aria-live="polite">
+          <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+          <span className="text-zinc-400 text-sm">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
-  
+
   if (adminOnly && !isAdmin) {
     return <Navigate to="/" />;
   }
-  
+
   return children;
 };
 
@@ -53,9 +68,9 @@ const Layout = ({ children }) => {
   return (
     <>
       <CyberNavbar />
-      <div className="min-h-screen bg-zinc-950">
+      <main id="main-content" className="min-h-screen bg-zinc-950">
         {children}
-      </div>
+      </main>
       {!hideFooter && <Footer />}
     </>
   );
@@ -74,6 +89,10 @@ function App() {
   
   return (
     <Router>
+      {/* Skip-to-content for keyboard users */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Routes>
         {/* Public Routes with Layout */}
         <Route path="/" element={<Layout><Home /></Layout>} />
@@ -99,6 +118,9 @@ function App() {
         <Route path="/order-confirmation/:orderId" element={
           <ProtectedRoute><Layout><OrderConfirmation /></Layout></ProtectedRoute>
         } />
+        <Route path="/order-confirmation" element={
+          <ProtectedRoute><Layout><OrderConfirmation /></Layout></ProtectedRoute>
+        } />
         <Route path="/profile" element={
           <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
         } />
@@ -106,6 +128,9 @@ function App() {
         {/* Auth Routes (no navbar/footer) */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
         {/* Admin Routes */}

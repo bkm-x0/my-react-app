@@ -12,6 +12,7 @@ const Register = () => {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [registered, setRegistered] = useState(false);
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
   const { t } = useLangStore();
@@ -34,12 +35,12 @@ const Register = () => {
     e.preventDefault();
     setError('');
     if (!form.name || !form.email || !form.password) { setError(t('common.required')); return; }
-    if (form.password !== form.confirmPassword) { setError(t('common.error')); return; }
+    if (form.password !== form.confirmPassword) { setError(t('register.passMismatch') || 'Passwords do not match'); return; }
     if (!agreed) { setError(t('common.required')); return; }
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password);
-      navigate('/');
+      await register({ username: form.name, email: form.email, password: form.password });
+      setRegistered(true);
     } catch (err) {
       setError(err.message || t('common.error'));
     } finally {
@@ -85,6 +86,20 @@ const Register = () => {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 shadow-2xl shadow-black/50"
         >
+          {registered ? (
+            <div className="text-center py-4">
+              <Check className="w-14 h-14 text-emerald-400 mx-auto mb-4" />
+              <h2 className="text-white font-black text-2xl mb-2">Check Your Email!</h2>
+              <p className="text-zinc-400 text-sm mb-2">
+                We've sent a verification link to{' '}
+                <strong className="text-white">{form.email}</strong>.
+              </p>
+              <p className="text-zinc-500 text-xs mb-6">Click the link in the email to activate your account. Check your spam folder if you don't see it.</p>
+              <Link to="/login" className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl text-sm transition-colors">
+                Go to Login →
+              </Link>
+            </div>
+          ) : (<>
           {/* Logo */}
           <div className="text-center mb-6">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 200 }} className="inline-flex items-center gap-2 mb-3">
@@ -104,12 +119,12 @@ const Register = () => {
           </div>
 
           {error && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl">
+            <motion.div id="register-error" role="alert" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl">
               {error}
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-describedby={error ? 'register-error' : undefined} noValidate>
             {fields.map(f => (
               <motion.div key={f.key} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: f.delay }}>
                 <label className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 block">{f.label}</label>
@@ -189,8 +204,9 @@ const Register = () => {
             <label className="flex items-start gap-2 cursor-pointer mt-2">
               <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="w-4 h-4 accent-orange-500 mt-0.5" />
               <span className="text-zinc-400 text-sm">
-                <span className="text-orange-400 hover:text-orange-300 cursor-pointer">{t('register.termsLink')}</span> {t('register.and')}{' '}
-                <span className="text-orange-400 hover:text-orange-300 cursor-pointer">{t('register.privacyLink')}</span>
+                <a href="#" className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline">{t('register.termsLink')}</a>{' '}
+                {t('register.and')}{' '}
+                <a href="#" className="text-orange-400 hover:text-orange-300 underline-offset-2 hover:underline">{t('register.privacyLink')}</a>
               </span>
             </label>
 
@@ -215,6 +231,7 @@ const Register = () => {
               {t('register.signIn')}
             </Link>
           </p>
+          </>)}
         </motion.div>
       </div>
     </div>

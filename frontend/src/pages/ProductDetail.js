@@ -7,6 +7,7 @@ import useAuthStore from './store/authStore';
 import { productAPI } from '../services/api';
 import ProductCard from '../components/ProductCard';
 import useLangStore from './store/langStore';
+import useCurrencyStore from './store/currencyStore';
 
 const API_URL = process.env.REACT_APP_API_URL || `http://${window.location.hostname}:5000`;
 
@@ -15,11 +16,6 @@ function getImageUrl(product) {
   const img = product.image_url || product.image;
   if (img.startsWith('http')) return img;
   return `${API_URL}${img.startsWith('/') ? '' : '/'}${img}`;
-}
-
-function formatPrice(price) {
-  if (!price) return '$0';
-  return '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 const ProductDetail = () => {
@@ -33,6 +29,7 @@ const ProductDetail = () => {
   const [qty, setQty] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const { t } = useLangStore();
+  const { formatPrice } = useCurrencyStore();
 
   // Reviews state
   const [reviews, setReviews] = useState([]);

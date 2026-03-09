@@ -123,19 +123,25 @@ const updateUser = async (req, res) => {
 // @access  Private/Admin
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    // Prevent admin from deleting themselves
+    if (parseInt(req.params.id) === req.user.id) {
+      return res.status(400).json({ message: 'You cannot delete your own account' });
+    }
 
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Soft delete
-    await User.update(req.params.id, { isActive: false });
+    const deleted = await User.delete(req.params.id);
+    if (!deleted) {
+      return res.status(500).json({ message: 'Failed to delete user' });
+    }
 
-    res.json({ message: 'User deactivated' });
+    res.json({ message: `User "${user.username}" deleted successfully` });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('[DELETE USER]', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 

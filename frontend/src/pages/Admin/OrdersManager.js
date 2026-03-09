@@ -16,7 +16,7 @@ const statusColors = {
   confirmed: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', icon: CheckCircle }
 };
 
-const statusOptions = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
+const statusOptions = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
 
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);

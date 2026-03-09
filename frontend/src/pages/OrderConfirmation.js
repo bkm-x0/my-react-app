@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import api from '../services/api';
 import useAuthStore from './store/authStore';
 import useLangStore from './store/langStore';
+import useCurrencyStore from './store/currencyStore';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -16,16 +17,18 @@ const OrderConfirmation = () => {
   const location = useLocation();
   const { token } = useAuthStore();
   const [order, setOrder] = useState(location.state?.order || null);
-  const [loading, setLoading] = useState(!order);
+  const [loading, setLoading] = useState(!location.state?.order && orderId && orderId !== 'new');
   const [error, setError] = useState('');
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const { t } = useLangStore();
+  const { formatPrice } = useCurrencyStore();
 
   useEffect(() => {
-    if (!order) {
+    // Don't fetch if we already have order data, or if orderId is 'new'/missing
+    if (!order && orderId && orderId !== 'new') {
       fetchOrder();
     }
-  }, [orderId, order]);
+  }, [orderId]);
 
   const fetchOrder = async () => {
     setLoading(true);
@@ -33,7 +36,7 @@ const OrderConfirmation = () => {
       const response = await api.get(`/orders/${orderId}`);
       setOrder(response.data);
     } catch (err) {
-      setError(t('orderConfirmation.failedLoad'));
+      setError(t('orderConfirmation.failedLoad') || 'Failed to load order details.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -93,6 +96,42 @@ const OrderConfirmation = () => {
             {t('orderConfirmation.returnHome')}
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  // No order data at all – show a generic success screen
+  if (!order) {
+    return (
+      <div className="bg-zinc-950 min-h-screen pt-20 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center bg-zinc-900 border border-zinc-800 rounded-2xl p-12 max-w-lg mx-4"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 mb-6 mx-auto">
+            <CheckCircle className="h-12 w-12 text-emerald-400" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-3">
+            Order <span className="text-orange-400">Placed!</span>
+          </h1>
+          <p className="text-zinc-400 mb-2">Thank you for your order. We will contact you shortly to confirm.</p>
+          {orderId && orderId !== 'new' && (
+            <p className="text-zinc-500 text-sm font-mono mb-6">
+              Order ID: <span className="text-orange-400 font-bold">#{orderId}</span>
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+            <Link to="/" className="inline-block bg-orange-500 hover:bg-orange-600 text-black font-bold rounded-xl px-6 py-3 transition-colors">
+              <Home className="w-4 h-4 inline mr-2" />
+              Return Home
+            </Link>
+            <Link to="/profile" className="inline-block bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl px-6 py-3 transition-colors border border-zinc-700">
+              <Package className="w-4 h-4 inline mr-2" />
+              My Orders
+            </Link>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -191,7 +230,7 @@ const OrderConfirmation = () => {
                       <div className="text-right">
                         <p className="text-zinc-400 text-sm">{t('orderConfirmation.qty')}: {item.quantity}</p>
                         <p className="font-bold text-orange-400">
-                          ${(item.price * item.quantity).toLocaleString()}
+                          {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -233,11 +272,11 @@ const OrderConfirmation = () => {
                 <div className="space-y-3 text-sm mb-4">
                   <div className="flex justify-between">
                     <span className="text-zinc-400">{t('orderConfirmation.subtotal')}</span>
-                    <span className="text-white">${(order?.total_amount || 0).toLocaleString()}</span>
+                    <span className="text-white">{formatPrice(order?.total_amount || 0)}</span>
                   </div>
                   <div className="flex justify-between border-t border-zinc-800 pt-3">
                     <span className="font-bold text-white">{t('orderConfirmation.total')}</span>
-                    <span className="text-orange-400 font-bold">${(order?.total_amount || 0).toLocaleString()}</span>
+                    <span className="text-orange-400 font-bold">{formatPrice(order?.total_amount || 0)}</span>
                   </div>
                 </div>
               </motion.div>

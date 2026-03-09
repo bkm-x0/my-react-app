@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Zap, Mail, Lock, ArrowRight, Loader2, Home } from 'lucide-react';
+import { Eye, EyeOff, Zap, Mail, Lock, ArrowRight, Loader2, Home, AlertCircle } from 'lucide-react';
 import useAuthStore from './store/authStore';
 import useLangStore from './store/langStore';
+import { authAPI } from '../services/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,9 @@ const Login = () => {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
   const { t } = useLangStore();
@@ -18,15 +22,33 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!email || !password) { setError("Barcha maydonlarni to'ldiring"); return; }
+    setEmailNotVerified(false);
+    setResendMsg('');
+    if (!email || !password) { setError(t('common.required')); return; }
     setLoading(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err) {
+      if (err.emailNotVerified) {
+        setEmailNotVerified(true);
+      }
       setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    setResendMsg('');
+    try {
+      const res = await authAPI.resendVerification(email);
+      setResendMsg(res.data.message);
+    } catch (err) {
+      setResendMsg(err.response?.data?.message || 'Failed to send, try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -80,7 +102,7 @@ const Login = () => {
                 </div>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-white font-black text-2xl tracking-tight">K PC</span>
+                <span className="text-white font-black text-2xl tracking-tight">Cyber</span>
                 <span className="text-orange-500 text-xs font-bold tracking-widest uppercase">Store</span>
               </div>
             </motion.div>
@@ -91,15 +113,34 @@ const Login = () => {
           {/* Error */}
           {error && (
             <motion.div
+              id="login-error"
+              role="alert"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl"
             >
               {error}
+              {emailNotVerified && (
+                <div className="mt-3 border-t border-red-500/20 pt-3">
+                  <div className="flex items-center gap-2 text-zinc-300 text-xs mb-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-orange-400" />
+                    Didn't receive the email?
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                    className="text-orange-400 hover:text-orange-300 text-xs font-bold underline disabled:opacity-50"
+                  >
+                    {resending ? 'Sending…' : 'Resend verification email'}
+                  </button>
+                  {resendMsg && <p className="text-emerald-400 text-xs mt-1">{resendMsg}</p>}
+                </div>
+              )}
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-describedby={error ? 'login-error' : undefined} noValidate>
             {/* Email */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
               <label className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-2 block">{t('login.email')}</label>
@@ -143,9 +184,9 @@ const Login = () => {
                 <input type="checkbox" className="w-4 h-4 accent-orange-500" />
                 <span className="text-zinc-400 text-sm">{t('login.remember')}</span>
               </label>
-              <button type="button" className="text-orange-400 hover:text-orange-300 text-sm transition-colors">
-                {t('login.forgot')}
-              </button>
+              <Link to="/forgot-password" className="text-orange-400 hover:text-orange-300 text-sm transition-colors">
+                {t('login.forgot') || 'Forgot password?'}
+              </Link>
             </div>
 
             <motion.button
