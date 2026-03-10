@@ -35,22 +35,27 @@
 }
 
 % ======================== COLORS ========================
-\definecolor{primaryorange}{HTML}{F97316}
-\definecolor{darkbg}{HTML}{09090B}
-\definecolor{codebg}{HTML}{1C1C1C}
-\definecolor{codetext}{HTML}{E5E7EB}
-\definecolor{commentgreen}{HTML}{6A9955}
-\definecolor{keywordblue}{HTML}{569CD6}
-\definecolor{stringorange}{HTML}{CE9178}
+\definecolor{primary}{HTML}{1A5276}
+\definecolor{secondary}{HTML}{2E86C1}
+\definecolor{accent}{HTML}{17A589}
+\definecolor{darkbg}{HTML}{1C2833}
+\definecolor{codebg}{HTML}{F4F6F7}
+\definecolor{codetext}{HTML}{2C3E50}
+\definecolor{commentgreen}{HTML}{27AE60}
+\definecolor{keywordblue}{HTML}{2874A6}
+\definecolor{stringorange}{HTML}{CA6F1E}
+\definecolor{tableheader}{HTML}{1A5276}
+\definecolor{tablerow}{HTML}{EBF5FB}
+\definecolor{lightgray}{HTML}{F2F3F4}
 
 % ======================== HYPERREF ========================
 \hypersetup{
   colorlinks=true,
-  linkcolor=primaryorange,
-  urlcolor=primaryorange,
-  citecolor=primaryorange,
+  linkcolor=primary,
+  urlcolor=secondary,
+  citecolor=accent,
   pdfauthor={CyberStore Team},
-  pdftitle={CyberStore E-Commerce Platform - Final Project Report},
+  pdftitle={CyberStore E-Commerce Platform - Final Project },
   pdfsubject={Software Engineering Final Project},
 }
 
@@ -62,15 +67,17 @@
   commentstyle=\color{commentgreen}\itshape,
   stringstyle=\color{stringorange},
   breaklines=true,
-  frame=single,
-  rulecolor=\color{gray!40},
+  frame=leftline,
+  framesep=6pt,
+  framerule=3pt,
+  rulecolor=\color{secondary},
   numbers=left,
   numberstyle=\tiny\color{gray},
   numbersep=8pt,
   tabsize=2,
   showstringspaces=false,
   captionpos=b,
-  xleftmargin=1.5em,
+  xleftmargin=2em,
   framexleftmargin=1.5em,
 }
 
@@ -87,17 +94,29 @@
 % ======================== HEADERS & FOOTERS ========================
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\textcolor{gray}{CyberStore -- Final Project Report}}
-\fancyhead[R]{\small\textcolor{gray}{\leftmark}}
-\fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0pt}
+\fancyhead[L]{\small\textcolor{primary}{\textbf{CyberStore} -- Final Project}}
+\fancyhead[R]{\small\textcolor{primary}{\leftmark}}
+\fancyfoot[C]{\textcolor{primary}{\thepage}}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{primary}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{lightgray}\leaders\hrule height \footrulewidth\hfill}}
 
 % ======================== CHAPTER TITLE FORMAT ========================
-\titleformat{\chapter}[display]
-  {\normalfont\huge\bfseries\color{primaryorange}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
-\titlespacing*{\chapter}{0pt}{-20pt}{30pt}
+\titleformat{\chapter}
+  {\normalfont\Large\bfseries\color{primary}}
+  {\colorbox{primary}{\textcolor{white}{\;\chaptertitlename\ \thechapter\;}}}{10pt}{}
+\titlespacing*{\chapter}{0pt}{10pt}{14pt}
+
+% ======================== SECTION TITLE FORMAT ========================
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primary}}
+  {\textcolor{secondary}{\thesection}\quad}{0pt}{}
+  [\vspace{2pt}{\color{secondary}\titlerule[1.5pt]}]
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{secondary}}
+  {\textcolor{accent}{\thesubsection}\quad}{0pt}{}
 
 % ======================== DOCUMENT ========================
 \begin{document}
@@ -105,38 +124,50 @@
 % ======================= TITLE PAGE =======================
 \begin{titlepage}
   \begin{center}
-    \vspace*{1cm}
+    \vspace*{0.5cm}
 
-    {\Large\textsc{University Name}}\\[0.3cm]
-    {\large Faculty of Computer Science \& Information Technology}\\[0.3cm]
-    {\large Department of Software Engineering}\\[1.5cm]
+    % University header
+    {\Large\textsc{\textcolor{primary}{University Name}}}\\[0.3cm]
+    {\large\textcolor{secondary}{Faculty of Computer Science \& Information Technology}}\\[0.2cm]
+    {\large\textcolor{secondary}{Department of Software Engineering}}\\[1.2cm]
 
-    \rule{\linewidth}{0.5pt}\\[0.6cm]
-    {\Huge\bfseries\textcolor{primaryorange}{CyberStore}}\\[0.3cm]
-    {\LARGE\bfseries Full-Stack E-Commerce Platform}\\[0.2cm]
-    \rule{\linewidth}{0.5pt}\\[2cm]
+    % Colored title block
+    \begin{tikzpicture}
+      \node[fill=primary, rounded corners=10pt, minimum width=14cm, minimum height=4.5cm, inner sep=0pt] (box) {};
+      \node[text=white, font=\Huge\bfseries] at ([yshift=0.8cm]box.center) {CyberStore};
+      \node[text=white!85, font=\LARGE] at ([yshift=-0.3cm]box.center) {Full-Stack E-Commerce Platform};
+      \node[text=accent, font=\large\itshape] at ([yshift=-1.3cm]box.center) {A Modern Web Application for Gaming Hardware};
+    \end{tikzpicture}
 
-    {\Large\textbf{Final Year Graduation Project Report}}\\[0.5cm]
-    {\large Last Cycle -- Academic Year 2025/2026}\\[2cm]
+    \vspace{1.5cm}
 
-    \begin{minipage}{0.45\textwidth}
+    {\Large\textbf{\textcolor{primary}{Final Year Graduation Project Report}}}\\[0.5cm]
+    {\large\textcolor{secondary}{Last Cycle -- Academic Year 2025/2026}}\\[2cm]
+
+    % Author and supervisor boxes
+    \begin{minipage}{0.42\textwidth}
       \begin{flushleft}
-        \textbf{Prepared by:}\\[0.3cm]
+        \colorbox{tablerow}{\parbox{\dimexpr\linewidth-2\fboxsep}{\vspace{0.4cm}
+        \textcolor{primary}{\textbf{Prepared by:}}\\[0.3cm]
         Student Name\\
         Student ID: XXXXXXXXX
+        \vspace{0.4cm}}}
       \end{flushleft}
     \end{minipage}
     \hfill
-    \begin{minipage}{0.45\textwidth}
+    \begin{minipage}{0.42\textwidth}
       \begin{flushright}
-        \textbf{Supervised by:}\\[0.3cm]
+        \colorbox{tablerow}{\parbox{\dimexpr\linewidth-2\fboxsep}{\vspace{0.4cm}
+        \textcolor{primary}{\textbf{Supervised by:}}\\[0.3cm]
         Dr.~Supervisor Name\\
-        Department of Software Engineering
+        Department of computer science
+        \vspace{0.4cm}}}
       \end{flushright}
     \end{minipage}
 
     \vfill
-    {\large March 2026}
+    {\color{primary}\rule{0.4\linewidth}{1pt}}\\[0.4cm]
+    {\large\textcolor{primary}{March 2026}}
   \end{center}
 \end{titlepage}
 
@@ -218,26 +249,22 @@ This report is organized as follows:
 % ======================= CHAPTER 2: LITERATURE REVIEW =======================
 \chapter{Literature Review and Related Work}
 
-\section{E-Commerce Systems}
-Electronic commerce (e-commerce) has revolutionized the retail industry by enabling businesses and consumers to conduct transactions over the internet. Modern e-commerce platforms such as Shopify, WooCommerce, and Amazon use sophisticated architectures with microservices, CDNs, and advanced search capabilities.
+\section{Overview}
+This chapter reviews the key concepts and technologies relevant to the development of CyberStore, and compares the project with existing e-commerce solutions.
 
-Key requirements for a successful e-commerce platform include:
-\begin{itemize}[noitemsep]
-  \item Secure user authentication and authorization
-  \item Product catalog with search and filtering
-  \item Shopping cart and checkout workflows
-  \item Order management and tracking
-  \item Responsive design for mobile and desktop
-  \item Performance optimization and scalability
-\end{itemize}
+\section{Key Concepts}
 
-\section{Single-Page Applications (SPA)}
-Single-Page Applications load a single HTML page and dynamically update content as the user interacts with the application. React.js, developed by Meta (Facebook), is one of the most widely adopted libraries for building SPAs. Its component-based architecture, virtual DOM, and rich ecosystem make it ideal for building complex, interactive user interfaces.
+\subsection{E-Commerce Platforms}
+E-commerce platforms enable online transactions between businesses and consumers. Successful platforms require secure authentication, product catalogs with search capabilities, shopping cart workflows, order management, and responsive design. Examples include Shopify, WooCommerce, and Amazon.
 
-\section{RESTful API Architecture}
-REST (Representational State Transfer) is an architectural style for designing networked applications. RESTful APIs use HTTP methods (GET, POST, PUT, DELETE) to perform CRUD operations on resources identified by URIs. Express.js is the de facto standard for building RESTful APIs in the Node.js ecosystem due to its minimalistic, unopinionated design.
+\subsection{React.js and Single-Page Applications}
+React.js, developed by Meta, is a component-based JavaScript library for building single-page applications (SPAs). SPAs load one HTML page and dynamically update content without full page reloads, resulting in faster and more interactive user experiences.
 
-\section{Related Work}
+\subsection{RESTful APIs with Express.js}
+REST (Representational State Transfer) uses standard HTTP methods (GET, POST, PUT, DELETE) to perform CRUD operations on resources. Express.js is the most widely used Node.js framework for building RESTful APIs due to its simplicity and flexibility.
+
+\section{Comparison with Related Work}
+
 \begin{table}[H]
 \centering
 \caption{Comparison with Related E-Commerce Projects}
@@ -264,6 +291,8 @@ Animations & No & Minimal & Framer Motion \\
 \hline
 \end{tabularx}
 \end{table}
+
+CyberStore differentiates itself through full bilingual support with RTL layout, built-in supplier management, and a modern animated UI using Framer Motion---features not commonly found together in similar academic projects.
 
 
 % ======================= CHAPTER 3: REQUIREMENTS =======================
@@ -395,9 +424,9 @@ CyberStore follows a \textbf{three-tier architecture}:
   box/.style={draw, rounded corners=8pt, minimum width=5cm, minimum height=1.2cm, font=\bfseries, text=white, align=center},
   arrow/.style={->, thick, >=stealth}
 ]
-  \node[box, fill=primaryorange] (fe) at (0,4) {Presentation Tier\\React.js + Tailwind CSS};
-  \node[box, fill=gray!70!black] (be) at (0,2) {Application Tier\\Node.js + Express.js};
-  \node[box, fill=blue!60!black] (db) at (0,0) {Data Tier\\MySQL 8.x};
+  \node[box, fill=secondary] (fe) at (0,4) {Presentation Tier\\React.js + Tailwind CSS};
+  \node[box, fill=primary] (be) at (0,2) {Application Tier\\Node.js + Express.js};
+  \node[box, fill=accent!80!black] (db) at (0,0) {Data Tier\\MySQL 8.x};
 
   \draw[arrow] (fe) -- node[right, font=\small] {REST API (JSON)} (be);
   \draw[arrow] (be) -- node[right, font=\small] {SQL Queries (mysql2)} (db);
@@ -436,7 +465,7 @@ Figure~\ref{fig:classdiagram} shows the main backend model classes with their at
 \newcommand{\umlclass}[6]{%
   \node[
     draw=gray!60, thick, rectangle split, rectangle split parts=3,
-    rectangle split part fill={orange!25, white, blue!6},
+    rectangle split part fill={primary!20, white, secondary!6},
     rounded corners=4pt,
     font=\small,
     minimum width=4.8cm,
@@ -459,100 +488,6 @@ Figure~\ref{fig:classdiagram} shows the main backend model classes with their at
 \includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{diagrams/class.png}
 \caption{Class Diagram -- Backend Models and Relationships}
 \label{fig:classdiagram}
-\end{figure}
-
-
-\section{Activity Diagram}
-Figure~\ref{fig:activity} presents the activity diagram illustrating the complete customer purchase flow, from browsing products through checkout to order confirmation.
-
-\begin{figure}[H]
-\centering
-\resizebox{0.55\textwidth}{!}{
-\begin{tikzpicture}[
-  start/.style={circle, fill=black, minimum size=5mm},
-  finish/.style={circle, draw=black, line width=1.5pt, minimum size=8mm, path picture={\fill[black] (path picture bounding box.center) circle(2.5mm);}},
-  action/.style={draw, rounded corners=6pt, minimum width=3.2cm, minimum height=0.7cm, fill=orange!10, font=\small, align=center},
-  decision/.style={draw, diamond, aspect=2.5, fill=yellow!10, font=\scriptsize, align=center, inner sep=2pt},
-  arr/.style={->, thick, >=stealth},
-]
-  \node[start] (s) at (0,0) {};
-  \node[action] (browse) at (0,-1.5) {Browse Products};
-  \node[decision] (found) at (0,-3.5) {Product found?};
-  \node[action] (search) at (5.5,-3.5) {Search / Filter};
-  \node[action] (view) at (0,-5.5) {View Product Details};
-  \node[decision] (wantadd) at (0,-7.5) {Add to Cart?};
-  \node[action] (addcart) at (0,-9.5) {Add to Cart};
-  \node[decision] (cont) at (0,-11.5) {Continue shopping?};
-  \node[action] (checkout) at (0,-13.5) {Go to Checkout};
-  \node[decision] (auth) at (0,-15.5) {Logged in?};
-  \node[action] (login) at (5.5,-15.5) {Login / Register};
-  \node[action] (ship) at (0,-17.5) {Enter Shipping \& Payment};
-  \node[action] (place) at (0,-19.5) {Confirm \& Place Order};
-  \node[action] (done) at (0,-21.5) {Order Confirmed};
-  \node[finish] (e) at (0,-23) {};
-
-  \draw[arr] (s) -- (browse);
-  \draw[arr] (browse) -- (found);
-  \draw[arr] (found) -- node[right, font=\scriptsize] {Yes} (view);
-  \draw[arr] (found) -- node[above, font=\scriptsize] {No} (search);
-  \draw[arr] (search) |- (browse);
-  \draw[arr] (view) -- (wantadd);
-  \draw[arr] (wantadd) -- node[right, font=\scriptsize] {Yes} (addcart);
-  \draw[arr] (wantadd.west) -- node[near start, above, font=\scriptsize] {No} ++(-2.5,0) |- (browse.west);
-  \draw[arr] (addcart) -- (cont);
-  \draw[arr] (cont.west) -- node[near start, above, font=\scriptsize] {Yes} ++(-3.5,0) |- (browse.west);
-  \draw[arr] (cont) -- node[right, font=\scriptsize] {No} (checkout);
-  \draw[arr] (checkout) -- (auth);
-  \draw[arr] (auth) -- node[right, font=\scriptsize] {Yes} (ship);
-  \draw[arr] (auth) -- node[above, font=\scriptsize] {No} (login);
-  \draw[arr] (login) |- (ship);
-  \draw[arr] (ship) -- (place);
-  \draw[arr] (place) -- (done);
-  \draw[arr] (done) -- (e);
-\end{tikzpicture}
-}
-\caption{Activity Diagram -- Customer Purchase Flow}
-\label{fig:activity}
-\end{figure}
-
-
-\section{State Diagram -- Order Lifecycle}
-Figure~\ref{fig:state-order} shows the state transitions of an order throughout its lifecycle. An order begins in the \textbf{Pending} state upon creation and can be confirmed, rejected, or cancelled. Confirmed orders proceed through processing, shipping, and delivery.
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-  state/.style={draw, rounded corners=8pt, minimum width=2.4cm, minimum height=0.8cm, fill=orange!10, font=\small\bfseries, align=center},
-  start/.style={circle, fill=black, minimum size=5mm},
-  finish/.style={circle, draw=black, line width=1.5pt, minimum size=7mm, path picture={\fill[black] (path picture bounding box.center) circle(2mm);}},
-  arr/.style={->, thick, >=stealth},
-  lbl/.style={font=\scriptsize, fill=white, inner sep=1pt},
-]
-  \node[start] (s) at (-3,0) {};
-  \node[state] (pending) at (0,0) {Pending};
-  \node[state] (confirmed) at (4,0) {Confirmed};
-  \node[state] (processing) at (8,0) {Processing};
-  \node[state] (shipped) at (12,0) {Shipped};
-  \node[state] (delivered) at (12,-2.8) {Delivered};
-  \node[state, fill=red!10] (rejected) at (4,-2.8) {Rejected};
-  \node[state, fill=red!10] (cancelled) at (0,-2.8) {Cancelled};
-  \node[finish] (e1) at (12,-4.5) {};
-  \node[finish] (e2) at (4,-4.5) {};
-  \node[finish] (e3) at (0,-4.5) {};
-
-  \draw[arr] (s) -- (pending);
-  \draw[arr] (pending) -- node[lbl, above] {Admin confirms} (confirmed);
-  \draw[arr] (confirmed) -- node[lbl, above] {Start processing} (processing);
-  \draw[arr] (processing) -- node[lbl, above] {Ship order} (shipped);
-  \draw[arr] (shipped) -- node[lbl, right] {Delivered} (delivered);
-  \draw[arr] (pending) -- node[lbl, right] {Admin rejects} (rejected);
-  \draw[arr] (pending) -- node[lbl, right] {User cancels} (cancelled);
-  \draw[arr] (delivered) -- (e1);
-  \draw[arr] (rejected) -- (e2);
-  \draw[arr] (cancelled) -- (e3);
-\end{tikzpicture}
-\caption{State Diagram -- Order Lifecycle}
-\label{fig:state-order}
 \end{figure}
 
 
@@ -883,11 +818,11 @@ Figure~\ref{fig:seq-register} shows the complete user registration sequence, inc
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
-  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=primary!15, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
   lifeline/.style={dashed, gray!50},
-  msg/.style={->, thick, >=stealth},
-  ret/.style={->, thick, >=stealth, dashed},
-  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+  msg/.style={->, thick, >=stealth, secondary},
+  ret/.style={->, thick, >=stealth, dashed, accent!80!black},
+  note/.style={draw, fill=secondary!8, font=\scriptsize, rounded corners=2pt, align=left},
   alt/.style={draw, dashed, fill=red!5, rounded corners=2pt, font=\scriptsize, align=left},
 ]
   % Participants
@@ -939,12 +874,12 @@ Figure~\ref{fig:seq-order} shows the checkout and order creation sequence.
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
-  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=primary!15, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
   lifeline/.style={dashed, gray!50},
-  msg/.style={->, thick, >=stealth},
-  ret/.style={->, thick, >=stealth, dashed},
-  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
-  activation/.style={draw, fill=orange!5, minimum width=0.4cm},
+  msg/.style={->, thick, >=stealth, secondary},
+  ret/.style={->, thick, >=stealth, dashed, accent!80!black},
+  note/.style={draw, fill=secondary!8, font=\scriptsize, rounded corners=2pt, align=left},
+  activation/.style={draw, fill=secondary!5, minimum width=0.4cm},
 ]
   % Participants
   \node[participant] (client) at (0,0) {React Client};
@@ -1002,11 +937,11 @@ Figure~\ref{fig:seq-review} shows the sequence for an authenticated user submitt
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
-  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=primary!15, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
   lifeline/.style={dashed, gray!50},
-  msg/.style={->, thick, >=stealth},
-  ret/.style={->, thick, >=stealth, dashed},
-  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+  msg/.style={->, thick, >=stealth, secondary},
+  ret/.style={->, thick, >=stealth, dashed, accent!80!black},
+  note/.style={draw, fill=secondary!8, font=\scriptsize, rounded corners=2pt, align=left},
 ]
   % Participants
   \node[participant] (client) at (0,0) {React Client};
@@ -1060,11 +995,11 @@ Figure~\ref{fig:seq-admin} shows the sequence for an admin user creating a new p
 \centering
 \resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
-  participant/.style={draw, rectangle, rounded corners=3pt, fill=orange!10, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
+  participant/.style={draw, rectangle, rounded corners=3pt, fill=primary!15, minimum width=2.2cm, minimum height=0.7cm, font=\small\bfseries},
   lifeline/.style={dashed, gray!50},
-  msg/.style={->, thick, >=stealth},
-  ret/.style={->, thick, >=stealth, dashed},
-  note/.style={draw, fill=yellow!10, font=\scriptsize, rounded corners=2pt, align=left},
+  msg/.style={->, thick, >=stealth, secondary},
+  ret/.style={->, thick, >=stealth, dashed, accent!80!black},
+  note/.style={draw, fill=secondary!8, font=\scriptsize, rounded corners=2pt, align=left},
 ]
   % Participants
   \node[participant] (admin) at (0,0) {Admin Client};
