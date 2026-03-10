@@ -35,18 +35,20 @@
 }
 
 % ======================== COLORS ========================
-\definecolor{primary}{HTML}{1A5276}
-\definecolor{secondary}{HTML}{2E86C1}
-\definecolor{accent}{HTML}{17A589}
-\definecolor{darkbg}{HTML}{1C2833}
-\definecolor{codebg}{HTML}{F4F6F7}
-\definecolor{codetext}{HTML}{2C3E50}
-\definecolor{commentgreen}{HTML}{27AE60}
-\definecolor{keywordblue}{HTML}{2874A6}
-\definecolor{stringorange}{HTML}{CA6F1E}
-\definecolor{tableheader}{HTML}{1A5276}
-\definecolor{tablerow}{HTML}{EBF5FB}
-\definecolor{lightgray}{HTML}{F2F3F4}
+\definecolor{primary}{HTML}{1B365D}      % Deep academic navy
+\definecolor{secondary}{HTML}{2F4858}    % Blue slate
+\definecolor{accent}{HTML}{B86E3C}       % Warm copper accent
+\definecolor{tertiary}{HTML}{7D8790}     % Cool gray
+\definecolor{darkbg}{HTML}{0F1E2E}       % Deep background tone
+\definecolor{codebg}{HTML}{F7F4EE}       % Warm paper
+\definecolor{codetext}{HTML}{1F2933}     % High-contrast text
+\definecolor{commentgreen}{HTML}{2D7C5A} % Muted green for comments
+\definecolor{keywordblue}{HTML}{2D5F9A}  % Steel blue keywords
+\definecolor{stringorange}{HTML}{A35A2A} % Burnt orange strings
+\definecolor{tableheader}{HTML}{1B365D}  % Header tone
+\definecolor{tablerow}{HTML}{F7F4EE}     % Row tone
+\definecolor{lightgray}{HTML}{CAD1D8}    % Divider gray
+\definecolor{professionalgray}{HTML}{ECE7DE} % Warm neutral panel
 
 % ======================== HYPERREF ========================
 \hypersetup{
@@ -62,23 +64,25 @@
 % ======================== CODE LISTINGS ========================
 \lstset{
   backgroundcolor=\color{codebg},
-  basicstyle=\ttfamily\small\color{codetext},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
   keywordstyle=\color{keywordblue}\bfseries,
   commentstyle=\color{commentgreen}\itshape,
   stringstyle=\color{stringorange},
   breaklines=true,
   frame=leftline,
-  framesep=6pt,
-  framerule=3pt,
-  rulecolor=\color{secondary},
+  framesep=8pt,
+  framerule=2pt,
+  rulecolor=\color{primary},
   numbers=left,
-  numberstyle=\tiny\color{gray},
-  numbersep=8pt,
+  numberstyle=\tiny\color{tertiary},
+  numbersep=10pt,
   tabsize=2,
   showstringspaces=false,
   captionpos=b,
   xleftmargin=2em,
   framexleftmargin=1.5em,
+  aboveskip=8pt,
+  belowskip=8pt,
 }
 
 \lstdefinelanguage{JavaScript}{
@@ -94,29 +98,40 @@
 % ======================== HEADERS & FOOTERS ========================
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\textcolor{primary}{\textbf{CyberStore} -- Final Project}}
-\fancyhead[R]{\small\textcolor{primary}{\leftmark}}
-\fancyfoot[C]{\textcolor{primary}{\thepage}}
-\renewcommand{\headrulewidth}{0.8pt}
+\fancyhead[L]{\small\textcolor{primary}{\textsc{CyberStore}} \textcolor{tertiary}{\textbar} \small\textcolor{secondary}{Final Project Report}}
+\fancyhead[R]{\small\textcolor{secondary}{\nouppercase{\leftmark}}}
+\fancyfoot[C]{\textcolor{primary}{\textbf{\thepage}}}
+\renewcommand{\headrulewidth}{0.9pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{primary}\leaders\hrule height \headrulewidth\hfill}}
-\renewcommand{\footrulewidth}{0.4pt}
-\renewcommand{\footrule}{\hbox to\headwidth{\color{lightgray}\leaders\hrule height \footrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
 
 % ======================== CHAPTER TITLE FORMAT ========================
-\titleformat{\chapter}
-  {\normalfont\Large\bfseries\color{primary}}
-  {\colorbox{primary}{\textcolor{white}{\;\chaptertitlename\ \thechapter\;}}}{10pt}{}
-\titlespacing*{\chapter}{0pt}{10pt}{14pt}
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{primary}}
+  {\filleft\fontsize{50}{54}\selectfont\textcolor{primary!18}{\thechapter}}
+  {0pt}
+  {\raggedright\Huge}
+  [\vspace{4pt}{\color{accent}\rule{\textwidth}{1.2pt}}]
+\titlespacing*{\chapter}{0pt}{6pt}{16pt}
 
 % ======================== SECTION TITLE FORMAT ========================
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{primary}}
-  {\textcolor{secondary}{\thesection}\quad}{0pt}{}
-  [\vspace{2pt}{\color{secondary}\titlerule[1.5pt]}]
+  {\textcolor{accent}{\thesection}}{8pt}{}
+  [\vspace{2pt}{\color{accent}\titlerule[0.9pt]}]
 
 \titleformat{\subsection}
-  {\normalfont\large\bfseries\color{secondary}}
-  {\textcolor{accent}{\thesubsection}\quad}{0pt}{}
+  {\normalfont\normalsize\bfseries\color{secondary}}
+  {\textcolor{tertiary}{\thesubsection}}{6pt}{}
+
+% ======================== TABLE/CAPTION/TOC STYLING ========================
+\captionsetup{labelfont={bf,color=primary},textfont=small}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\cftchapfont}{\bfseries\color{primary}}
+\renewcommand{\cftchappagefont}{\bfseries\color{primary}}
+\renewcommand{\cftsecfont}{\color{secondary}}
+\renewcommand{\cftsecpagefont}{\color{secondary}}
 
 % ======================== DOCUMENT ========================
 \begin{document}
@@ -124,49 +139,45 @@
 % ======================= TITLE PAGE =======================
 \begin{titlepage}
   \begin{center}
-    \vspace*{0.5cm}
+    \vspace*{0.25cm}
+
+    % University logo
+    \includegraphics[height=2.8cm]{logo.png}\\[0.35cm]
 
     % University header
-    {\Large\textsc{\textcolor{primary}{University Name}}}\\[0.3cm]
-    {\large\textcolor{secondary}{Faculty of Computer Science \& Information Technology}}\\[0.2cm]
-    {\large\textcolor{secondary}{Department of Software Engineering}}\\[1.2cm]
+    {\large\textsc{\textcolor{primary}{University Belhadj Bouchaib Ain Temouchent}}}\\[0.15cm]
+    {\normalsize\textcolor{secondary}{Faculty of Computer Science \& Information Technology}}\\[0.1cm]
+    {\normalsize\textcolor{secondary}{Department of Software Engineering}}\\[0.9cm]
 
-    % Colored title block
+    % Main title panel
     \begin{tikzpicture}
-      \node[fill=primary, rounded corners=10pt, minimum width=14cm, minimum height=4.5cm, inner sep=0pt] (box) {};
-      \node[text=white, font=\Huge\bfseries] at ([yshift=0.8cm]box.center) {CyberStore};
-      \node[text=white!85, font=\LARGE] at ([yshift=-0.3cm]box.center) {Full-Stack E-Commerce Platform};
-      \node[text=accent, font=\large\itshape] at ([yshift=-1.3cm]box.center) {A Modern Web Application for Gaming Hardware};
+      \node[fill=primary, rounded corners=10pt, minimum width=14cm, minimum height=4.2cm, inner sep=0pt] (box) {};
+      \draw[accent, line width=1.3pt, rounded corners=10pt] ([xshift=7pt,yshift=7pt]box.south west) rectangle ([xshift=-7pt,yshift=-7pt]box.north east);
+      \node[text=white, font=\fontsize{34}{36}\selectfont\bfseries] at ([yshift=0.9cm]box.center) {CyberStore};
+      \node[text=white!92, font=\Large\bfseries] at ([yshift=-0.1cm]box.center) {E-Commerce Platform};
+      \node[text=white!86, font=\normalsize] at ([yshift=-0.85cm]box.center) {Final Year Graduation Project Report};
+      \node[text=accent, font=\itshape] at ([yshift=-1.45cm]box.center) {Designed and Implemented as a Full-Stack Web System};
     \end{tikzpicture}
 
-    \vspace{1.5cm}
+    \vspace{1cm}
 
-    {\Large\textbf{\textcolor{primary}{Final Year Graduation Project Report}}}\\[0.5cm]
-    {\large\textcolor{secondary}{Last Cycle -- Academic Year 2025/2026}}\\[2cm]
+    \begin{tikzpicture}
+      \node[draw=lightgray, fill=professionalgray, rounded corners=6pt, minimum width=14cm, minimum height=4.2cm] (meta) {};
+      \node[anchor=north west, text=primary, font=\bfseries\normalsize] at ([xshift=0.6cm,yshift=-0.55cm]meta.north west) {Prepared by};
+      \node[anchor=north west, text=secondary, font=\normalsize] at ([xshift=0.6cm,yshift=-1.2cm]meta.north west) {Student Name};
+      \node[anchor=north west, text=tertiary, font=\small] at ([xshift=0.6cm,yshift=-1.7cm]meta.north west) {Student ID: XXXXXXXXX};
 
-    % Author and supervisor boxes
-    \begin{minipage}{0.42\textwidth}
-      \begin{flushleft}
-        \colorbox{tablerow}{\parbox{\dimexpr\linewidth-2\fboxsep}{\vspace{0.4cm}
-        \textcolor{primary}{\textbf{Prepared by:}}\\[0.3cm]
-        Student Name\\
-        Student ID: XXXXXXXXX
-        \vspace{0.4cm}}}
-      \end{flushleft}
-    \end{minipage}
-    \hfill
-    \begin{minipage}{0.42\textwidth}
-      \begin{flushright}
-        \colorbox{tablerow}{\parbox{\dimexpr\linewidth-2\fboxsep}{\vspace{0.4cm}
-        \textcolor{primary}{\textbf{Supervised by:}}\\[0.3cm]
-        Dr.~Supervisor Name\\
-        Department of computer science
-        \vspace{0.4cm}}}
-      \end{flushright}
-    \end{minipage}
+      \node[anchor=north west, text=primary, font=\bfseries\normalsize] at ([xshift=7.3cm,yshift=-0.55cm]meta.north west) {Supervised by};
+      \node[anchor=north west, text=secondary, font=\normalsize] at ([xshift=7.3cm,yshift=-1.2cm]meta.north west) {Dr. Supervisor Name};
+      \node[anchor=north west, text=tertiary, font=\small] at ([xshift=7.3cm,yshift=-1.7cm]meta.north west) {Department of Computer Science};
+
+      \draw[lightgray, line width=0.8pt] ([yshift=-0.35cm]meta.north) -- ([yshift=0.35cm]meta.south);
+      \draw[accent, line width=1pt] ([xshift=0.55cm,yshift=0.7cm]meta.south west) -- ([xshift=-0.55cm,yshift=0.7cm]meta.south east);
+      \node[text=secondary, font=\normalsize] at ([yshift=0.25cm]meta.south) {Academic Year 2025/2026};
+    \end{tikzpicture}
 
     \vfill
-    {\color{primary}\rule{0.4\linewidth}{1pt}}\\[0.4cm]
+    {\color{accent}\rule{0.7\linewidth}{1.3pt}}\\[0.25cm]
     {\large\textcolor{primary}{March 2026}}
   \end{center}
 \end{titlepage}
@@ -187,6 +198,9 @@ This report documents the complete software development lifecycle of the project
 \tableofcontents
 \listoffigures
 \listoftables
+
+% Add some space before chapters
+\newpage
 
 % ======================= CHAPTER 1: INTRODUCTION =======================
 \chapter{Introduction}
@@ -269,7 +283,7 @@ REST (Representational State Transfer) uses standard HTTP methods (GET, POST, PU
 \centering
 \caption{Comparison with Related E-Commerce Projects}
 \label{tab:related}
-\begin{tabularx}{\textwidth}{|l|X|X|X|}
+\begin{tabularx}{\textwidth}{|p{2.5cm}|X|X|X|}
 \hline
 \textbf{Feature} & \textbf{ProShop (MERN)} & \textbf{Shopify Starter} & \textbf{CyberStore (Ours)} \\
 \hline
