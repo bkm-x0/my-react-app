@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.17.1 (MiKTeX 24.1) (format=lualatex 2026.3.13)  14 MAR 2026 01:55
+This is LuaHBTeX, Version 1.17.1 (MiKTeX 24.1) (format=lualatex 2026.3.13)  14 MAR 2026 02:02
  restricted system commands enabled.
 **report.tex
 (./report.tex
@@ -1088,9 +1088,9 @@ File: ppluatex.def 2025/07/23 v0.6g Pdfpages driver for LuaTeX (AM)
 Package: parskip 2021-03-14 v2.0h non-zero parskip adjustments
 )
 Package hyperref Info: Option `colorlinks' set `true' on input line 63.
-No file report.aux.
-
+(./report.aux)
 \openout1 = report.aux
+
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 138.
 LaTeX Font Info:    ... okay on input line 138.
 LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 138.
@@ -1102,6 +1102,7 @@ LaTeX Font Info:    ... okay on input line 138.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 138.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 1
 38.
+
 (C:/Users/GIGABYTE/AppData/Local/Programs/MiKTeX/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
@@ -1236,6 +1237,7 @@ s.cfg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 Package hyperref Info: Link coloring ON on input line 138.
+ (./report.out) (./report.out)
 \@outlinefile=\write4
 
 \openout4 = report.out
@@ -1263,7 +1265,7 @@ ailable
  line 146.
 LaTeX Font Info:    Font shape `TU/SakkalMajalla(0)/b/n' will be
 (Font)              scaled to size 17.27994pt on input line 146.
-<university_logo.jpeg, id=6, 137.97pt x 140.2695pt>
+<university_logo.jpeg, id=322, 137.97pt x 140.2695pt>
 File: university_logo.jpeg Graphic file (type jpg)
 <use university_logo.jpeg>
 Package luatex.def Info: university_logo.jpeg  used on input line 152.
@@ -1277,20 +1279,7 @@ LaTeX Font Info:    External font `cmex10' loaded for size
  [1
 
 {C:/Users/GIGABYTE/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}<./universit
-y_logo.jpeg>]
-No file report.toc.
-\tf@toc=\write5
-
-\openout5 = report.toc
-No file report.lof.
-\tf@lof=\write6
-
-\openout6 = report.lof
-No file report.lot.
-\tf@lot=\write7
-
-\openout7 = report.lot
-
+y_logo.jpeg>] (./report.toc
 warning  (pdf backend): ignoring duplicate destination with the name 'page.1'
 [1
 
@@ -1302,7 +1291,27 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[2]
+[2])
+\tf@toc=\write5
+
+\openout5 = report.toc
+ (./report.lof)
+\tf@lof=\write6
+
+\openout6 = report.lof
+ (./report.lot [3])
+\tf@lot=\write7
+
+\openout7 = report.lot
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+
+[4]
 Chapter 1.
 
 Overfull \hbox (0.66516pt too wide) in paragraph at lines 227--228
@@ -1310,7 +1319,7 @@ Overfull \hbox (0.66516pt too wide) in paragraph at lines 227--228
 ess.js REST-ful API, backed
  []
 
-[3
+[5
 
 ]
 
@@ -1320,7 +1329,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[4]
+[6]
 Chapter 2.
 
 Underfull \hbox (badness 10000) in paragraph at lines 322--322
@@ -1342,18 +1351,6 @@ Underfull \hbox (badness 10000) in paragraph at lines 322--322
 []|\TU/lmr/m/n/12 Sup-plier
  []
 
-[5
-
-]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.01996pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.01996pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
-
-[6]
-Chapter 3.
 [7
 
 ]
@@ -1365,22 +1362,24 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [8]
+Chapter 3.
+[9
 
-LaTeX Warning: Reference `fig:usecase' on page 9 undefined on input line 429.
+]
 
-<diagrams/usecase.png, id=85, 720.6925pt x 1465.475pt>
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+
+[10]
+<diagrams/usecase.png, id=499, 720.6925pt x 1465.475pt>
 File: diagrams/usecase.png Graphic file (type png)
 <use diagrams/usecase.png>
 Package luatex.def Info: diagrams/usecase.png  used on input line 433.
 (luatex.def)             Requested size: 269.57722pt x 548.16537pt.
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.01996pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.01996pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
-
-[9]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1388,9 +1387,17 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[10<./diagrams/usecase.png>]
+[11]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+
+[12<./diagrams/usecase.png>]
 Chapter 4.
-[11
+[13
 
 ]
 Overfull \hbox (7.35051pt too wide) in paragraph at lines 487--488
@@ -1398,11 +1405,7 @@ Overfull \hbox (7.35051pt too wide) in paragraph at lines 487--488
 igration (ta-ble cre-ation and schema
  []
 
-
-LaTeX Warning: Reference `fig:classdiagram' on page 12 undefined on input line 
-491.
-
-<diagrams/class.png, id=110, 743.77875pt x 1510.64375pt>
+<diagrams/class.png, id=518, 743.77875pt x 1510.64375pt>
 File: diagrams/class.png Graphic file (type png)
 <use diagrams/class.png>
 Package luatex.def Info: diagrams/class.png  used on input line 518.
@@ -1414,7 +1417,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[12]
+[14]
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
 nput line 525.
 
@@ -1425,7 +1428,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[13<./diagrams/class.png>]
+[15<./diagrams/class.png>]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1433,9 +1436,9 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[14]
+[16]
 Chapter 5.
-[15
+[17
 
 ]
 Overfull \hbox (16.90883pt too wide) in paragraph at lines 596--597
@@ -1458,7 +1461,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[16]
+[18]
 Overfull \hbox (3.24988pt too wide) in paragraph at lines 650--651
 []\TU/lmtt/m/n/12 document.documentElement.dir \TU/lmr/m/n/12 and \TU/lmtt/m/n/
 12 document.documentElement.lang \TU/lmr/m/n/12 are up-
@@ -1471,18 +1474,29 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[17]
+[19]
 Chapter 6.
+
+Overfull \hbox (61.95006pt too wide) in alignment at lines 709--714
+ [][][][] 
+ []
+
+
+Overfull \hbox (61.95006pt too wide) in alignment at lines 714--718
+ [][][][] 
+ []
+
+
+Overfull \hbox (61.95006pt too wide) in alignment at lines 718--720
+ [][][][] 
+ []
+
 
 Overfull \hbox (61.95006pt too wide) in alignment at lines 720--803
  [][][][] 
  []
 
-
-Package longtable Warning: Column widths have changed
-(longtable)                in table 6.1 on input line 803.
-
-[18
+[20
 
 ]
 
@@ -1492,7 +1506,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[19]
+[21]
 Overfull \hbox (38.22522pt too wide) in paragraph at lines 810--811
 []\TU/lmr/bx/n/12 For-eign key in-dexes \TU/lmr/m/n/12 on \TU/lmtt/m/n/12 catego
 ry_id\TU/lmr/m/n/12 , \TU/lmtt/m/n/12 supplier_id\TU/lmr/m/n/12 , \TU/lmtt/m/n/
@@ -1507,60 +1521,24 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[20]
+[22]
 Chapter 7.
-
-LaTeX Warning: Reference `fig:seq-auth' on page 21 undefined on input line 835.
-
-
-<diagrams/sequence.png, id=231, 1270.7475pt x 1050.92625pt>
+<diagrams/sequence.png, id=620, 1270.7475pt x 1050.92625pt>
 File: diagrams/sequence.png Graphic file (type png)
 <use diagrams/sequence.png>
 Package luatex.def Info: diagrams/sequence.png  used on input line 839.
 (luatex.def)             Requested size: 441.02602pt x 364.73479pt.
-[21
+[23
 
 ]
 
-LaTeX Warning: Reference `fig:seq-register' on page 22 undefined on input line 
-845.
-
-
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
 (fancyhdr)                \setlength{\headheight}{24.01996pt}.
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[22<./diagrams/sequence.png>]
-
-LaTeX Warning: Reference `fig:seq-order' on page 23 undefined on input line 901
-.
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.01996pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.01996pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
-
-[23]
-
-LaTeX Warning: Reference `fig:seq-review' on page 24 undefined on input line 96
-4.
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.01996pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.01996pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
-
-[24]
-
-LaTeX Warning: Reference `fig:seq-admin' on page 25 undefined on input line 102
-2.
-
+[24<./diagrams/sequence.png>]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1569,14 +1547,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [25]
-Underfull \hbox (badness 2443) in paragraph at lines 1112--1113
-[]|\TU/lmr/m/n/12 List prod-ucts (pag-i-
- []
-
-
-Package longtable Warning: Column widths have changed
-(longtable)                in table 7.1 on input line 1158.
-
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1593,6 +1563,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [27]
+Underfull \hbox (badness 2443) in paragraph at lines 1112--1113
+[]|\TU/lmr/m/n/12 List prod-ucts (pag-i-
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1601,15 +1575,14 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [28]
-Chapter 8.
 
-Overfull \hbox (3.71535pt too wide) in paragraph at lines 1240--1241
-\TU/lmr/m/n/12 Fea-tures a hero sec-tion with auto-sliding back-ground im-ages, fea-tured prod-ucts carousel,
- []
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
-[29
-
-]
+[29]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.01996pt, for example:
@@ -1618,16 +1591,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [30]
+Chapter 8.
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.01996pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.01996pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+Overfull \hbox (3.71535pt too wide) in paragraph at lines 1240--1241
+\TU/lmr/m/n/12 Fea-tures a hero sec-tion with auto-sliding back-ground im-ages, fea-tured prod-ucts carousel,
+ []
 
-[31]
-Chapter 9.
-[32
+[31
 
 ]
 
@@ -1637,13 +1607,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
+[32]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+
 [33]
-Chapter 10.
-
-Overfull \hbox (26.92259pt too wide) in paragraph at lines 1390--1391
-\TU/lmr/m/n/12 val-ues on TEXT columns, re-quir-ing schema ad-just-ments (e.g., \TU/lmtt/m/n/12 address VARCHAR(500)
- []
-
+Chapter 9.
 [34
 
 ]
@@ -1655,6 +1628,23 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
 
 [35]
+Chapter 10.
+
+Overfull \hbox (26.92259pt too wide) in paragraph at lines 1390--1391
+\TU/lmr/m/n/12 val-ues on TEXT columns, re-quir-ing schema ad-just-ments (e.g., \TU/lmtt/m/n/12 address VARCHAR(500)
+ []
+
+[36
+
+]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.01996pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.01996pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-12.01996pt}.
+
+[37]
 Overfull \hbox (11.31992pt too wide) in paragraph at lines 1417--1418
 []\TU/lmr/m/n/12 Ex-press.js, ``Ex-press -- Node.js Web Ap-pli-ca-tion Frame-wor
 k,'' [][]$\TU/lmtt/m/n/12 https://expressjs.
@@ -1684,43 +1674,26 @@ Overfull \hbox (1.27583pt too wide) in paragraph at lines 1426--1427
 lmtt/m/n/12 https://nodejs.org/en/docs/$[][]\TU/lmr/m/n/12 ,
  []
 
-[36
+[38
 
-]
-
-Package longtable Warning: Table widths have changed. Rerun LaTeX.
-
-(./report.aux)
+] (./report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `report.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `report.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  E3FC252A69420B85195BA1EFBFE6554D;11989.
+Package rerunfilecheck Info: File `report.out' has not changed.
+(rerunfilecheck)             Checksum: E3FC252A69420B85195BA1EFBFE6554D;11989.
 )
 
 Here is how much of LuaTeX's memory you used:
- 30682 strings out of 478640
- 381914,1144653 words of node,token memory allocated
+ 30799 strings out of 478640
+ 381906,1144653 words of node,token memory allocated
  748 words of node memory still in use:
    3 hlist, 1 vlist, 1 rule, 2 glue, 3 kern, 1 glyph, 22 attribute, 97 glue_spec
 , 12 attribute_list, 2 write, 7 pdf_action nodes
-   avail lists: 1:5,2:7121,3:1684,4:9202,5:7176,6:144,7:11965,8:40,9:17808,10:29
+   avail lists: 1:7,2:7121,3:1685,4:9202,5:7176,6:144,7:11965,8:40,9:17808,10:29
 ,11:874
- 49579 multiletter control sequences out of 65536+600000
+ 49664 multiletter control sequences out of 65536+600000
  58 fonts using 8212455 bytes
  84i,13n,89p,1194b,1011s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <//?/c:/users/gigabyte/appdata/local/programs/miktex/fonts/opentype/public/lm/lm
@@ -1743,9 +1716,9 @@ r.otf><//?/c:/users/gigabyte/appdata/local/programs/miktex/fonts/opentype/public
 /lm/lmroman12-bold.otf><C:/WINDOWS/Fonts/majallab.ttf><C:/Users/GIGABYTE/AppData
 /Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/GIGAB
 YTE/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on report.pdf (37 pages, 434478 bytes).
+Output written on report.pdf (39 pages, 486080 bytes).
 
-PDF statistics: 561 PDF objects out of 1000 (max. 8388607)
- 288 named destinations out of 1000 (max. 131072)
- 16 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 920 PDF objects out of 1000 (max. 8388607)
+ 290 named destinations out of 1000 (max. 131072)
+ 648 words of extra memory for PDF output out of 10000 (max. 100000000)
 
