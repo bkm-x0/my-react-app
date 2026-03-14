@@ -1,10 +1,11 @@
-\UseRawInputEncoding
 \documentclass[12pt,a4paper]{report}
 
 % ======================== PACKAGES ========================
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage{fontspec}
 \usepackage[english]{babel}
+\usepackage{luabidi}
+\newfontfamily\arabicfont[Script=Arabic, Scale=1.2]{Sakkal Majalla}
+\newcommand{\arb}[1]{{\arabicfont\RLE{#1}}}
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{xcolor}
@@ -139,46 +140,61 @@
 % ======================= TITLE PAGE =======================
 \begin{titlepage}
   \begin{center}
-    \vspace*{0.25cm}
+    \vspace*{0.2cm}
 
-    % University logo
-    \includegraphics[height=2.8cm]{logo.png}\\[0.35cm]
+    % ---- Republic & Ministry header (Arabic + English) ----
+    {\large\bfseries \arb{الجمهورية الجزائرية الديمقراطية الشعبية}}\\[0.1cm]
+    {\large\bfseries People's Democratic Republic of Algeria}\\[0.2cm]
+    {\large\bfseries \arb{وزارة التعليم العالي والبحث العلمي}}\\[0.1cm]
+    {\large\bfseries Ministry of Higher Education and Scientific Research}\\[0.5cm]
 
-    % University header
-    {\large\textsc{\textcolor{primary}{University Belhadj Bouchaib Ain Temouchent}}}\\[0.15cm]
-    {\normalsize\textcolor{secondary}{Faculty of Computer Science \& Information Technology}}\\[0.1cm]
-    {\normalsize\textcolor{secondary}{Department of computer Science}}\\[0.9cm]
+    % ---- University logo ----
+    \includegraphics[height=3cm]{university_logo.jpeg}\\[0.3cm]
 
-    % Main title panel
-    \begin{tikzpicture}
-      \node[fill=primary, rounded corners=10pt, minimum width=14cm, minimum height=4.2cm, inner sep=0pt] (box) {};
-      \draw[accent, line width=1.3pt, rounded corners=10pt] ([xshift=7pt,yshift=7pt]box.south west) rectangle ([xshift=-7pt,yshift=-7pt]box.north east);
-      \node[text=white, font=\fontsize{34}{36}\selectfont\bfseries] at ([yshift=0.9cm]box.center) {CyberStore};
-      \node[text=white!92, font=\Large\bfseries] at ([yshift=-0.1cm]box.center) {E-Commerce Platform};
-      \node[text=white!86, font=\normalsize] at ([yshift=-0.85cm]box.center) {Final Year Graduation Project Report};
-      \node[text=accent, font=\itshape] at ([yshift=-1.45cm]box.center) {Designed and Implemented as a Full-Stack Web System};
-    \end{tikzpicture}
+    % ---- University / Faculty / Department (Arabic + English) ----
+    {\large\bfseries \arb{جامعة عين تموشنت بلحاج بوشعيب}}\\[0.1cm]
+    {\large\bfseries University --Ain Temouchent-- Belhadj Bouchaib}\\[0.15cm]
+    {\normalsize\bfseries Faculty of Science and Technology}\\[0.1cm]
+    {\normalsize\bfseries Department of Mathematics and Computer Science}\\[0.8cm]
+
+    % ---- PFE heading ----
+    {\LARGE\bfseries Final Year Graduation Project}\\[0.3cm]
+    {\normalsize For obtaining the Bachelor's degree}\\[0.15cm]
+    {\normalsize Domain: Science and Technology}\\[0.1cm]
+    {\normalsize Field: Mathematics and Computer Science}\\[0.1cm]
+    {\normalsize Specialty: Computer Systems}\\[0.6cm]
+
+    % ---- Theme ----
+    {\large Theme}\\[0.4cm]
+
+    % ---- Project title box ----
+    \fbox{\parbox{12cm}{\centering\vspace{0.4cm}
+      {\fontsize{22}{26}\selectfont\bfseries CyberStore}\\[0.2cm]
+      {\Large\bfseries E-Commerce Platform}\\[0.1cm]
+      {\normalsize Full-Stack Web Application}
+    \vspace{0.4cm}}}
 
     \vspace{1cm}
 
-    \begin{tikzpicture}
-      \node[draw=lightgray, fill=professionalgray, rounded corners=6pt, minimum width=14cm, minimum height=4.2cm] (meta) {};
-      \node[anchor=north west, text=primary, font=\bfseries\normalsize] at ([xshift=0.6cm,yshift=-0.55cm]meta.north west) {Prepared by};
-      \node[anchor=north west, text=secondary, font=\normalsize] at ([xshift=0.6cm,yshift=-1.2cm]meta.north west) {Student Name};
-      \node[anchor=north west, text=tertiary, font=\small] at ([xshift=0.6cm,yshift=-1.7cm]meta.north west) {Student ID: XXXXXXXXX};
-
-      \node[anchor=north west, text=primary, font=\bfseries\normalsize] at ([xshift=7.3cm,yshift=-0.55cm]meta.north west) {Supervised by};
-      \node[anchor=north west, text=secondary, font=\normalsize] at ([xshift=7.3cm,yshift=-1.2cm]meta.north west) {Dr. BOUAFIA Zoheir };
-      \node[anchor=north west, text=tertiary, font=\small] at ([xshift=7.3cm,yshift=-1.7cm]meta.north west) {Department of Computer Science};
-
-      \draw[lightgray, line width=0.8pt] ([yshift=-0.35cm]meta.north) -- ([yshift=0.35cm]meta.south);
-      \draw[accent, line width=1pt] ([xshift=0.55cm,yshift=0.7cm]meta.south west) -- ([xshift=-0.55cm,yshift=0.7cm]meta.south east);
-      \node[text=secondary, font=\normalsize] at ([yshift=0.25cm]meta.south) {Academic Year 2025/2026};
-    \end{tikzpicture}
+    % ---- Prepared by / Supervised by ----
+    \begin{minipage}[t]{0.45\textwidth}
+      \raggedright
+      {\large\bfseries Prepared by:}\\[0.3cm]
+      {\normalsize Kouider BENKRAMA}\\[0.1cm]
+      {\normalsize Abderahim BAKHTI}\\[0.1cm]
+      {\normalsize Yacine}\\
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.45\textwidth}
+      \raggedright
+      {\large\bfseries Supervised by:}\\[0.3cm]
+      {\normalsize Mr. BOUAFIA Zoheir}\\
+    \end{minipage}
 
     \vfill
-    {\color{accent}\rule{0.7\linewidth}{1.3pt}}\\[0.25cm]
-    {\large\textcolor{primary}{March 2026}}
+
+    % ---- Academic year ----
+    {\large\bfseries Academic Year: 2025/2026}
   \end{center}
 \end{titlepage}
 
