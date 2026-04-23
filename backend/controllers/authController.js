@@ -43,10 +43,14 @@ const register = async (req, res) => {
       emailVerifyExpires: verifyExpires
     });
 
-    // Send verification email (non-blocking)
-    sendVerificationEmail(user.email, user.username, verifyToken).catch(err =>
-      console.error('[EMAIL] Failed to send verification email:', err.message)
-    );
+    // Send verification email with better error handling
+    try {
+      await sendVerificationEmail(user.email, user.username, verifyToken);
+      console.log('[AUTH] Verification email sent to:', user.email);
+    } catch (emailErr) {
+      console.error('[AUTH] Failed to send verification email to', user.email, ':', emailErr.message);
+      // Don't fail registration, but log the error
+    }
 
     res.status(201).json({
       id: user.id,
@@ -282,13 +286,18 @@ const forgotPassword = async (req, res) => {
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await User.update(user.id, { resetPasswordToken: resetToken, resetPasswordExpires: resetExpires });
 
-    sendPasswordResetEmail(user.email, user.username, resetToken).catch(err =>
-      console.error('[EMAIL] reset email failed:', err.message)
-    );
+    // Send password reset email with better error handling
+    try {
+      await sendPasswordResetEmail(user.email, user.username, resetToken);
+      console.log('[AUTH] Password reset email sent to:', user.email);
+    } catch (emailErr) {
+      console.error('[AUTH] Failed to send password reset email to', user.email, ':', emailErr.message);
+      // Don't fail the request, but log the error for debugging
+    }
 
     res.json({ message: 'If that email exists, a password reset link has been sent.' });
   } catch (error) {
-    console.error(error);
+    console.error('[AUTH] forgotPassword error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
