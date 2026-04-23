@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, Users, ShoppingCart, DollarSign,
-  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw, Building2
+  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw, Building2, Calculator
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { adminAPI } from '../../services/api';
@@ -11,6 +11,7 @@ import ProductsManager from './ProductsManager';
 import OrdersManager from './OrdersManager';
 import UsersManager from './UsersManager';
 import SuppliersManager from './SuppliersManager';
+import TaxManager from './TaxManager';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -18,6 +19,7 @@ const tabs = [
   { id: 'orders', label: 'Orders', icon: ShoppingCart },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'suppliers', label: 'Suppliers', icon: Building2 },
+  { id: 'taxes', label: 'Taxes & Interest', icon: Calculator },
 ];
 
 const StatCard = ({ label, value, icon: Icon, color = 'orange', sub, onClick }) => (
@@ -211,6 +213,9 @@ const Dashboard = () => {
                       <button onClick={() => setActiveTab('suppliers')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
                         <Building2 className="w-4 h-4" /> Manage Suppliers
                       </button>
+                      <button onClick={() => setActiveTab('taxes')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
+                        <Calculator className="w-4 h-4" /> Tax Calculator
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -301,6 +306,7 @@ const Dashboard = () => {
         {activeTab === 'orders' && <OrdersManager />}
         {activeTab === 'users' && <UsersManager />}
         {activeTab === 'suppliers' && <SuppliersManager />}
+        {activeTab === 'taxes' && <TaxManager />}
       </div>
     </div>
   );

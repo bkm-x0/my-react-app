@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2, Building2 } from 'lucide-react';
+import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2, Building2, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { productAPI, supplierAPI } from '../../services/api';
 import useLangStore from '../store/langStore';
 
 const inputClasses = "w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder:text-zinc-600";
+
+// دالة حساب الربح
+const calculateProfit = (costPrice, sellingPrice, taxRate, interestRate) => {
+  if (!costPrice || !sellingPrice) return 0;
+  const cost = parseFloat(costPrice);
+  const selling = parseFloat(sellingPrice);
+  const tax = selling * (taxRate / 100);
+  const interest = cost * (interestRate / 100);
+  const profit = selling - cost - tax - interest;
+  return Math.round(profit * 100) / 100;
+};
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -19,6 +30,7 @@ const AddProduct = () => {
     name: '',
     description: '',
     price: '',
+    costPrice: '',
     category: 'desktops',
     stock: '',
     sku: '',
@@ -29,7 +41,10 @@ const AddProduct = () => {
     tags: [],
     isFeatured: false,
     image: null,
-    supplierId: ''
+    supplierId: '',
+    taxRate: 15,
+    interestRate: 5,
+    profit: 0
   });
 
   // Fetch existing product data for edit mode
@@ -55,6 +70,7 @@ const AddProduct = () => {
           name: data.name || '',
           description: data.description || '',
           price: data.price != null ? String(data.price) : '',
+          costPrice: data.cost_price != null ? String(data.cost_price) : '',
           category: data.category_slug || data.category || data.category_name || 'desktops',
           stock: data.stock != null ? String(data.stock) : '',
           sku: data.sku || '',
@@ -65,7 +81,10 @@ const AddProduct = () => {
           tags: data.tags || [],
           isFeatured: data.is_featured || data.isFeatured || false,
           image: data.image ? (data.image.startsWith('http') ? data.image : `${imgBase}${data.image}`) : null,
-          supplierId: data.supplier_id ? String(data.supplier_id) : ''
+          supplierId: data.supplier_id ? String(data.supplier_id) : '',
+          taxRate: data.tax_rate || 15,
+          interestRate: data.interest_rate || 5,
+          profit: data.profit || 0
         });
       } catch (err) {
         setError('Failed to load product data: ' + (err.response?.data?.message || err.message));
@@ -117,6 +136,10 @@ const AddProduct = () => {
         name: formData.name,
         description: formData.description || 'No description',
         price: parseFloat(formData.price),
+        costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
+        taxRate: parseFloat(formData.taxRate),
+        interestRate: parseFloat(formData.interestRate),
+        profit: formData.profit,
         stock: parseInt(formData.stock),
         category: formData.category,
         sku: formData.sku,
@@ -164,10 +187,22 @@ const AddProduct = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       [name]: type === 'checkbox' ? checked : value
-    }));
+    };
+
+    // حساب الربح تلقائياً عند تغيير الأسعار أو النسب
+    if (['price', 'costPrice', 'taxRate', 'interestRate'].includes(name)) {
+      newFormData.profit = calculateProfit(
+        newFormData.costPrice,
+        newFormData.price,
+        newFormData.taxRate,
+        newFormData.interestRate
+      );
+    }
+
+    setFormData(newFormData);
   };
 
   const handleImageChange = (e) => {
@@ -315,6 +350,24 @@ const AddProduct = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2 text-orange-400">
+                        COST PRICE ($)
+                      </label>
+                      <input
+                        type="number"
+                        name="costPrice"
+                        value={formData.costPrice}
+                        onChange={handleChange}
+                        className={inputClasses}
+                        min="0"
+                        step="0.01"
+                        placeholder="1999.99"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
                         STOCK QUANTITY *
                       </label>
                       <input
@@ -327,6 +380,15 @@ const AddProduct = () => {
                         min="0"
                         placeholder="100"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-green-400 flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4" />
+                        NET PROFIT ($)
+                      </label>
+                      <div className="w-full bg-zinc-700 border border-zinc-600 text-white text-sm px-4 py-3 rounded-xl font-bold">
+                        ${formData.profit || '0.00'}
+                      </div>
                     </div>
                   </div>
 
@@ -566,6 +628,83 @@ const AddProduct = () => {
                 </div>
               </div>
 
+              {/* Taxes & Profit Card - NEW */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-6 text-orange-400 flex items-center gap-2">
+                  <Percent className="w-5 h-5" />
+                  TAXES & PROFIT
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
+                        TAX RATE (%)
+                      </label>
+                      <input
+                        type="number"
+                        name="taxRate"
+                        value={formData.taxRate}
+                        onChange={handleChange}
+                        className={inputClasses}
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="15"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
+                        INTEREST RATE (%)
+                      </label>
+                      <input
+                        type="number"
+                        name="interestRate"
+                        value={formData.interestRate}
+                        onChange={handleChange}
+                        className={inputClasses}
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="5"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profit Display */}
+                  {formData.price && formData.costPrice && (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-emerald-400 font-bold text-sm">PROFIT BREAKDOWN</span>
+                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between text-zinc-300">
+                          <span>Selling Price:</span>
+                          <span className="font-bold">${parseFloat(formData.price).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-300">
+                          <span>Cost Price:</span>
+                          <span className="font-bold text-red-400">-${parseFloat(formData.costPrice).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-300">
+                          <span>Tax ({formData.taxRate}%):</span>
+                          <span className="font-bold text-red-400">-${(parseFloat(formData.price) * formData.taxRate / 100).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-300">
+                          <span>Interest ({formData.interestRate}%):</span>
+                          <span className="font-bold text-red-400">-${(parseFloat(formData.costPrice) * formData.interestRate / 100).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-emerald-500/30 pt-2 mt-2">
+                          <span className="font-bold text-emerald-400">NET PROFIT:</span>
+                          <span className="font-black text-emerald-400 text-lg">${formData.profit || '0.00'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Preview Card */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6 text-orange-400">
@@ -591,9 +730,23 @@ const AddProduct = () => {
                   <div className="text-emerald-400 font-mono mb-2">
                     {formData.price ? `$${formData.price}` : '$0'}
                   </div>
-                  <div className="text-sm text-zinc-400">
+                  <div className="text-sm text-zinc-400 mb-3">
                     {formData.category ? categories.find(c => c.value === formData.category)?.label : 'Category'}
                   </div>
+
+                  {/* Profit Summary */}
+                  {formData.costPrice && (
+                    <div className="border-t border-zinc-700 pt-3 mt-3">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-zinc-400">Cost:</span>
+                        <span className="text-red-400">${parseFloat(formData.costPrice).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold">
+                        <span className="text-emerald-400">Net Profit:</span>
+                        <span className="text-emerald-400">${formData.profit || '0.00'}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
