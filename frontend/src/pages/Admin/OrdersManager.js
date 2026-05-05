@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Search, Loader2, AlertTriangle, Eye, Trash2,
-  ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Truck, Package as PackageIcon
+  ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, Truck, Package as PackageIcon, Printer
 } from 'lucide-react';
 import { orderAPI } from '../../services/api';
+import OrderReceipt from './OrderReceipt';
+import useLangStore from '../store/langStore';
 
 const statusColors = {
   pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', icon: Clock },
@@ -30,6 +32,8 @@ const OrdersManager = () => {
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [printReceipt, setPrintReceipt] = useState(null);
+  const { t } = useLangStore();
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -42,7 +46,7 @@ const OrdersManager = () => {
       setTotalPages(data.pages || 1);
       setTotal(data.total || 0);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load orders');
+      setError(err.response?.data?.message || t('admin.failedLoadOrders'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +73,7 @@ const OrdersManager = () => {
       setDeleteModal(null);
       fetchOrders();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cancel order');
+      setError(err.response?.data?.message || t('admin.failedCancelOrder'));
     } finally {
       setDeleting(false);
     }
@@ -100,8 +104,8 @@ const OrdersManager = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-white font-black text-xl flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-orange-400" />
-          Orders Management
-          <span className="text-zinc-500 text-sm font-normal ml-2">({total} total)</span>
+          {t('admin.ordersManagement')}
+          <span className="text-zinc-500 text-sm font-normal ml-2">({total} {t('admin.total')})</span>
         </h2>
       </div>
 
@@ -117,7 +121,7 @@ const OrdersManager = () => {
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white border border-zinc-700'
             }`}
           >
-            {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+            {s === 'all' ? t('admin.all') : t(`admin.${s}`)}
           </button>
         ))}
       </div>
@@ -135,7 +139,7 @@ const OrdersManager = () => {
       ) : orders.length === 0 ? (
         <div className="text-center py-20">
           <ShoppingCart className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-          <p className="text-zinc-500">No orders found</p>
+          <p className="text-zinc-500">{t('admin.noOrders')}</p>
         </div>
       ) : (
         <>
@@ -145,12 +149,12 @@ const OrdersManager = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800">
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Order</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Customer</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Amount</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Status</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Date</th>
-                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Actions</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.orderNumber')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.customer')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.amount')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.status')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.date')}</th>
+                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -198,15 +202,22 @@ const OrdersManager = () => {
                             <button
                               onClick={() => viewOrder(order.id)}
                               className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                              title="View Details"
+                              title={t('admin.viewDetails')}
                             >
                               <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setPrintReceipt(order)}
+                              className="p-2 bg-zinc-800 hover:bg-blue-500/20 rounded-lg text-zinc-400 hover:text-blue-400 transition-colors"
+                              title={t('admin.printReceipt')}
+                            >
+                              <Printer className="w-4 h-4" />
                             </button>
                             {order.status !== 'cancelled' && order.status !== 'completed' && (
                               <button
                                 onClick={() => setDeleteModal(order)}
                                 className="p-2 bg-zinc-800 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
-                                title="Cancel Order"
+                                title={t('admin.cancelOrder')}
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -261,24 +272,24 @@ const OrdersManager = () => {
               onClick={(e) => e.stopPropagation()}
               className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
             >
-              <h3 className="text-white font-bold text-lg mb-4">Order #{selectedOrder.id}</h3>
+              <h3 className="text-white font-bold text-lg mb-4">{t('admin.orderNumber')} #{selectedOrder.id}</h3>
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-zinc-500 text-sm">Status</span>
+                  <span className="text-zinc-500 text-sm">{t('admin.status')}</span>
                   <span className={`text-sm font-bold ${(statusColors[selectedOrder.status] || statusColors.pending).text}`}>
-                    {(selectedOrder.status || 'pending').charAt(0).toUpperCase() + (selectedOrder.status || 'pending').slice(1)}
+                    {t(`admin.${selectedOrder.status || 'pending'}`)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500 text-sm">Total</span>
+                  <span className="text-zinc-500 text-sm">{t('admin.total')}</span>
                   <span className="text-orange-400 text-sm font-bold">{formatPrice(selectedOrder.total_amount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500 text-sm">Payment</span>
-                  <span className="text-zinc-300 text-sm">{selectedOrder.payment_method || 'N/A'}</span>
+                  <span className="text-zinc-500 text-sm">{t('admin.paymentMethod')}</span>
+                  <span className="text-zinc-300 text-sm">{selectedOrder.payment_method || t('admin.nA')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500 text-sm">Date</span>
+                  <span className="text-zinc-500 text-sm">{t('admin.date')}</span>
                   <span className="text-zinc-300 text-sm">{formatDate(selectedOrder.created_at)}</span>
                 </div>
               </div>
@@ -286,7 +297,7 @@ const OrdersManager = () => {
               {/* Shipping Address */}
               {selectedOrder.shipping_address && (
                 <div className="bg-zinc-800 rounded-xl p-4 mb-4">
-                  <p className="text-zinc-500 text-xs font-bold uppercase mb-2">Shipping Address</p>
+                  <p className="text-zinc-500 text-xs font-bold uppercase mb-2">{t('admin.shippingAddress')}</p>
                   <p className="text-zinc-300 text-sm">
                     {typeof selectedOrder.shipping_address === 'string'
                       ? selectedOrder.shipping_address
@@ -299,7 +310,7 @@ const OrdersManager = () => {
               {/* Items */}
               {selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div>
-                  <p className="text-zinc-500 text-xs font-bold uppercase mb-2">Items ({selectedOrder.items.length})</p>
+                  <p className="text-zinc-500 text-xs font-bold uppercase mb-2">{t('admin.items')} ({selectedOrder.items.length})</p>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-zinc-800 rounded-xl p-3">
@@ -318,7 +329,7 @@ const OrdersManager = () => {
                 onClick={() => setSelectedOrder(null)}
                 className="w-full mt-6 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-colors"
               >
-                Close
+                {t('admin.close')}
               </button>
             </motion.div>
           </motion.div>
@@ -345,9 +356,9 @@ const OrdersManager = () => {
               <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-white font-bold text-lg text-center mb-2">Cancel Order</h3>
+              <h3 className="text-white font-bold text-lg text-center mb-2">{t('admin.cancelOrder')}</h3>
               <p className="text-zinc-400 text-sm text-center mb-6">
-                Are you sure you want to cancel order <span className="text-white font-bold">#{deleteModal.id}</span>?
+                {t('admin.areYouSure')} <span className="text-white font-bold">#{deleteModal.id}</span>?
               </p>
               <div className="flex gap-3">
                 <button
@@ -355,7 +366,7 @@ const OrdersManager = () => {
                   disabled={deleting}
                   className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-colors"
                 >
-                  Keep Order
+                  {t('admin.keepOrder')}
                 </button>
                 <button
                   onClick={() => handleDelete(deleteModal.id)}
@@ -363,11 +374,21 @@ const OrdersManager = () => {
                   className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                  Cancel It
+                  {t('admin.cancelIt')}
                 </button>
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Order Receipt Modal */}
+      <AnimatePresence>
+        {printReceipt && (
+          <OrderReceipt
+            order={printReceipt}
+            onClose={() => setPrintReceipt(null)}
+          />
         )}
       </AnimatePresence>
     </div>

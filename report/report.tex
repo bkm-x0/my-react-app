@@ -137,7 +137,16 @@
 % ======================== DOCUMENT ========================
 \begin{document}
 
-% ======================= TITLE PAGE =======================
+% ======================= PART 1: TOPIC & INTRODUCTION =======================
+\part{Original Topic and Introduction}
+\chapter*{Project Title}
+\addcontentsline{toc}{chapter}{Project Title}
+Design and Implementation of a Computer Hardware Sales Application
+
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+% ...existing code...
 \begin{titlepage}
   \begin{center}
     \vspace*{0.2cm}
@@ -169,7 +178,7 @@
 
     % ---- Project title box ----
     \fbox{\parbox{12cm}{\centering\vspace{0.4cm}
-      {\fontsize{22}{26}\selectfont\bfseries CyberStore}\\[0.2cm]
+      {\fontsize{22}{26}\selectfont\bfseries Design and Implementation of a Computer Hardware Sales Application}\\[0.2cm]
       {\Large\bfseries E-Commerce Platform}\\[0.1cm]
       {\normalsize Full-Stack Web Application}
     \vspace{0.4cm}}}
@@ -215,8 +224,37 @@ This report documents the complete software development lifecycle of the project
 \listoffigures
 \listoftables
 
-% Add some space before chapters
-\newpage
+% ======================= PART 2: DIAGRAMS =======================
+\part{System Diagrams}
+% You can keep or move the following chapters as needed:
+\chapter{System Design and Architecture}
+\chapter{Database Design}
+\chapter{API Design}
+
+% ======================= PART 3: PROJECT SCREENSHOTS =======================
+\part{Project Screenshots}
+\chapter*{Screenshots}
+\addcontentsline{toc}{chapter}{Screenshots}
+% Insert screenshots of the main pages below:
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{screenshots/home.png}
+  \caption{Home Page}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{screenshots/products.png}
+  \caption{Products Page}
+\end{figure}
+
+% Add more screenshots as needed
+
+% ======================= PART 4: CONCLUSION AND FUTURE WORK =======================
+\part{Conclusion and Future Work}
+\chapter*{Conclusion and Future Work}
+\addcontentsline{toc}{chapter}{Conclusion and Future Work}
+% ...existing code...
 
 % ======================= CHAPTER 1: INTRODUCTION =======================
 \chapter{Introduction}

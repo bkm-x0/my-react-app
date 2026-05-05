@@ -1,3 +1,4 @@
+/*
 // test-db.js - Test database connectivity and seed
 const { pool, db } = require('./config/db');
 const path = require('path');
@@ -46,3 +47,4 @@ async function testAndSeed() {
 }
 
 testAndSeed();
+*/

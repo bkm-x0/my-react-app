@@ -3,23 +3,26 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, Users, ShoppingCart, DollarSign,
-  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw, Building2, Calculator
+  TrendingUp, AlertTriangle, Plus, LogOut, ArrowUpRight, Loader2, RefreshCw, Building2, Calculator, BarChart3
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { adminAPI } from '../../services/api';
+import useLangStore from '../store/langStore';
 import ProductsManager from './ProductsManager';
 import OrdersManager from './OrdersManager';
 import UsersManager from './UsersManager';
 import SuppliersManager from './SuppliersManager';
-import TaxManager from './TaxManager';
+
+import Statistics from './Statistics';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'statistics', label: 'Statistics', icon: BarChart3 },
   { id: 'products', label: 'Products', icon: Package },
   { id: 'orders', label: 'Orders', icon: ShoppingCart },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'suppliers', label: 'Suppliers', icon: Building2 },
-  { id: 'taxes', label: 'Taxes & Interest', icon: Calculator },
+  
 ];
 
 const StatCard = ({ label, value, icon: Icon, color = 'orange', sub, onClick }) => (
@@ -59,6 +62,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { logout, user } = useAuthStore();
+  const { t } = useLangStore();
   const navigate = useNavigate();
 
   const setActiveTab = (tab) => {
@@ -102,7 +106,7 @@ const Dashboard = () => {
               <LayoutDashboard className="w-4 h-4 text-black" />
             </div>
             <div>
-              <h1 className="text-white font-black text-lg leading-none">Admin Panel</h1>
+              <h1 className="text-white font-black text-lg leading-none">{t('admin.panel')}</h1>
               <p className="text-zinc-500 text-xs">{user?.name || user?.email}</p>
             </div>
           </div>
@@ -111,13 +115,13 @@ const Dashboard = () => {
               to="/admin/products/new"
               className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-black text-sm font-bold rounded-xl transition-colors"
             >
-              <Plus className="w-4 h-4" /> Add Product
+              <Plus className="w-4 h-4" /> {t('admin.addProduct')}
             </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-colors"
             >
-              <LogOut className="w-4 h-4" /> Logout
+              <LogOut className="w-4 h-4" /> {t('admin.logout')}
             </button>
           </div>
         </div>
@@ -213,9 +217,7 @@ const Dashboard = () => {
                       <button onClick={() => setActiveTab('suppliers')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
                         <Building2 className="w-4 h-4" /> Manage Suppliers
                       </button>
-                      <button onClick={() => setActiveTab('taxes')} className="flex items-center gap-2 text-zinc-300 hover:text-orange-400 text-sm transition-colors">
-                        <Calculator className="w-4 h-4" /> Tax Calculator
-                      </button>
+                      
                     </div>
                   </div>
                 </div>
@@ -302,11 +304,12 @@ const Dashboard = () => {
           </>
         )}
 
+        {activeTab === 'statistics' && <Statistics />}
         {activeTab === 'products' && <ProductsManager />}
         {activeTab === 'orders' && <OrdersManager />}
         {activeTab === 'users' && <UsersManager />}
         {activeTab === 'suppliers' && <SuppliersManager />}
-        {activeTab === 'taxes' && <TaxManager />}
+        
       </div>
     </div>
   );

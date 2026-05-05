@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Eye, ArrowUpDown
 } from 'lucide-react';
 import { productAPI } from '../../services/api';
+import useLangStore from '../store/langStore';
 
 const ProductsManager = () => {
   const [products, setProducts] = useState([]);
@@ -19,6 +20,7 @@ const ProductsManager = () => {
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('newest');
   const [total, setTotal] = useState(0);
+  const { t } = useLangStore();
 
   const categories = ['all', 'desktops', 'laptops', 'components', 'accessories', 'monitors', 'peripherals', 'storage', 'networking'];
 
@@ -34,7 +36,7 @@ const ProductsManager = () => {
       setTotalPages(data.pages || 1);
       setTotal(data.total || (data.products || data).length);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load products');
+      setError(err.response?.data?.message || t('admin.failedLoadProducts'));
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,7 @@ const ProductsManager = () => {
       setDeleteModal(null);
       fetchProducts();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete product');
+      setError(err.response?.data?.message || t('admin.failedDeleteProduct'));
     } finally {
       setDeleting(false);
     }
@@ -78,14 +80,14 @@ const ProductsManager = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-white font-black text-xl flex items-center gap-2">
           <Package className="w-5 h-5 text-orange-400" />
-          Products Management
-          <span className="text-zinc-500 text-sm font-normal ml-2">({total} total)</span>
+          {t('admin.productsManagement')}
+          <span className="text-zinc-500 text-sm font-normal ml-2">({total} {t('admin.total')})</span>
         </h2>
         <Link
           to="/admin/products/new"
           className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-black text-sm font-bold rounded-xl transition-colors"
         >
-          <Plus className="w-4 h-4" /> Add Product
+          <Plus className="w-4 h-4" /> {t('admin.addNewProduct')}
         </Link>
       </div>
 
@@ -97,7 +99,7 @@ const ProductsManager = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products..."
+            placeholder={t('admin.search')}
             className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-orange-500 transition-colors"
           />
         </form>
@@ -135,7 +137,7 @@ const ProductsManager = () => {
       ) : products.length === 0 ? (
         <div className="text-center py-20">
           <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-          <p className="text-zinc-500">No products found</p>
+          <p className="text-zinc-500">{t('admin.noProducts')}</p>
         </div>
       ) : (
         <>
@@ -145,11 +147,11 @@ const ProductsManager = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800">
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Product</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Category</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Price</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Stock</th>
-                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Actions</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.productName')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.category')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.price')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.stock')}</th>
+                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,21 +198,21 @@ const ProductsManager = () => {
                           <Link
                             to={`/products/${product.id}`}
                             className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                            title="View"
+                            title={t('admin.view')}
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
                           <Link
                             to={`/admin/products/edit/${product.id}`}
                             className="p-2 bg-zinc-800 hover:bg-orange-500/20 rounded-lg text-zinc-400 hover:text-orange-400 transition-colors"
-                            title="Edit"
+                            title={t('admin.edit')}
                           >
                             <Edit className="w-4 h-4" />
                           </Link>
                           <button
                             onClick={() => setDeleteModal(product)}
                             className="p-2 bg-zinc-800 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
-                            title="Delete"
+                            title={t('admin.delete')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -266,9 +268,9 @@ const ProductsManager = () => {
               <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-white font-bold text-lg text-center mb-2">Delete Product</h3>
+              <h3 className="text-white font-bold text-lg text-center mb-2">{t('admin.deleteProduct')}</h3>
               <p className="text-zinc-400 text-sm text-center mb-6">
-                Are you sure you want to delete <span className="text-white font-bold">"{deleteModal.name}"</span>? This action cannot be undone.
+                {t('admin.areYouSureDelete')} <span className="text-white font-bold">"{deleteModal.name}"</span>?
               </p>
               <div className="flex gap-3">
                 <button
@@ -276,7 +278,7 @@ const ProductsManager = () => {
                   disabled={deleting}
                   className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-colors"
                 >
-                  Cancel
+                  {t('admin.cancel')}
                 </button>
                 <button
                   onClick={() => handleDelete(deleteModal.id)}
@@ -284,7 +286,7 @@ const ProductsManager = () => {
                   className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  Delete
+                  {t('admin.deleteIt')}
                 </button>
               </div>
             </motion.div>

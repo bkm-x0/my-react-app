@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, User, Menu, X, Search, Zap, ChevronDown, LogOut, Settings } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Search, Zap, ChevronDown, LogOut, Settings, Package } from 'lucide-react';
 import useAuthStore from '../pages/store/authStore';
 import useCartStore from '../pages/store/cartStore';
 import useLangStore from '../pages/store/langStore';
@@ -188,6 +188,18 @@ const CyberNavbar = () => {
                 </motion.button>
               )}
             </AnimatePresence>
+
+            {/* Track Order Button */}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                to="/track-order"
+                aria-label={t('nav.trackOrder')}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-orange-500/40 rounded-lg transition-colors group"
+              >
+                <Package className="w-4 h-4 text-zinc-300 group-hover:text-orange-400 transition-colors" aria-hidden="true" />
+                <span className="text-zinc-300 group-hover:text-white text-sm font-bold transition-colors hidden md:block">{t('nav.trackOrder')}</span>
+              </Link>
+            </motion.div>
 
             {/* Language Switcher */}
             <motion.button

@@ -10,9 +10,11 @@ exports.calculateTaxAndInterest = async (req, res) => {
       costPrice,
       sellingPrice,
       quantity = 1,
-      taxRate = 0.15,
-      interestRate = 0.05
+      taxRate = 15,
+      interestRate = 5
     } = req.body;
+
+    console.log('[TAX-CALC] Input:', { taxRate, interestRate });
 
     if (!costPrice || !sellingPrice) {
       return res.status(400).json({
@@ -21,12 +23,18 @@ exports.calculateTaxAndInterest = async (req, res) => {
       });
     }
 
+    // Convert percentages to decimals (15 → 0.15, 5 → 0.05)
+    const taxRateDecimal = parseFloat(taxRate) / 100;
+    const interestRateDecimal = parseFloat(interestRate) / 100;
+
+    console.log('[TAX-CALC] Converted:', { taxRateDecimal, interestRateDecimal });
+
     const result = TaxCalculator.calculateTaxAndInterest(
       parseFloat(costPrice),
       parseFloat(sellingPrice),
       parseInt(quantity),
-      parseFloat(taxRate),
-      parseFloat(interestRate)
+      taxRateDecimal,
+      interestRateDecimal
     );
 
     res.json({
@@ -47,8 +55,8 @@ exports.calculateSellingPrice = async (req, res) => {
     const {
       costPrice,
       desiredProfit,
-      taxRate = 0.15,
-      interestRate = 0.05
+      taxRate = 15,
+      interestRate = 5
     } = req.body;
 
     if (!costPrice || !desiredProfit) {
@@ -58,11 +66,15 @@ exports.calculateSellingPrice = async (req, res) => {
       });
     }
 
+    // Convert percentages to decimals
+    const taxRateDecimal = parseFloat(taxRate) / 100;
+    const interestRateDecimal = parseFloat(interestRate) / 100;
+
     const sellingPrice = TaxCalculator.calculateSellingPrice(
       parseFloat(costPrice),
       parseFloat(desiredProfit),
-      parseFloat(taxRate),
-      parseFloat(interestRate)
+      taxRateDecimal,
+      interestRateDecimal
     );
 
     res.json({
@@ -88,8 +100,8 @@ exports.calculateByMargin = async (req, res) => {
     const {
       costPrice,
       profitMarginPercent,
-      taxRate = 0.15,
-      interestRate = 0.05
+      taxRate = 15,
+      interestRate = 5
     } = req.body;
 
     if (!costPrice || !profitMarginPercent) {
@@ -99,11 +111,15 @@ exports.calculateByMargin = async (req, res) => {
       });
     }
 
+    // Convert percentages to decimals
+    const taxRateDecimal = parseFloat(taxRate) / 100;
+    const interestRateDecimal = parseFloat(interestRate) / 100;
+
     const result = TaxCalculator.calculateByMargin(
       parseFloat(costPrice),
       parseFloat(profitMarginPercent),
-      parseFloat(taxRate),
-      parseFloat(interestRate)
+      taxRateDecimal,
+      interestRateDecimal
     );
 
     res.json({
@@ -123,8 +139,8 @@ exports.calculateBatch = async (req, res) => {
   try {
     const {
       items,
-      taxRate = 0.15,
-      interestRate = 0.05
+      taxRate = 15,
+      interestRate = 5
     } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -134,10 +150,14 @@ exports.calculateBatch = async (req, res) => {
       });
     }
 
+    // Convert percentages to decimals
+    const taxRateDecimal = parseFloat(taxRate) / 100;
+    const interestRateDecimal = parseFloat(interestRate) / 100;
+
     const result = TaxCalculator.calculateBatch(
       items,
-      parseFloat(taxRate),
-      parseFloat(interestRate)
+      taxRateDecimal,
+      interestRateDecimal
     );
 
     res.json({
@@ -215,8 +235,8 @@ exports.saveTaxRecord = async (req, res) => {
       costPrice,
       sellingPrice,
       quantity,
-      taxRate = 0.15,
-      interestRate = 0.05,
+      taxRate = 15,
+      interestRate = 5,
       notes
     } = req.body;
 
@@ -227,12 +247,16 @@ exports.saveTaxRecord = async (req, res) => {
       });
     }
 
+    // Convert percentages to decimals
+    const taxRateDecimal = parseFloat(taxRate) / 100;
+    const interestRateDecimal = parseFloat(interestRate) / 100;
+
     const calculations = TaxCalculator.calculateTaxAndInterest(
       parseFloat(costPrice),
       parseFloat(sellingPrice),
       parseInt(quantity),
-      parseFloat(taxRate),
-      parseFloat(interestRate)
+      taxRateDecimal,
+      interestRateDecimal
     );
 
     const taxRecord = await TaxAndInterest.create({

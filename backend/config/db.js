@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-class Database {
+class  Database {
   constructor() {
     this.pool = mysql.createPool({
       host: process.env.DB_HOST || 'localhost',

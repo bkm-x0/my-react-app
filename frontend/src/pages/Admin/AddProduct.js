@@ -11,7 +11,7 @@ const calculateProfit = (costPrice, sellingPrice, taxRate, interestRate) => {
   if (!costPrice || !sellingPrice) return 0;
   const cost = parseFloat(costPrice);
   const selling = parseFloat(sellingPrice);
-  const tax = selling * (taxRate / 100);
+  const tax = cost * (taxRate / 100);
   const interest = cost * (interestRate / 100);
   const profit = selling - cost - tax - interest;
   return Math.round(profit * 100) / 100;

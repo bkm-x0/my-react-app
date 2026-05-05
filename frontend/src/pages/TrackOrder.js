@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Package, Truck, MapPin, Clock, DollarSign, Check } from 'lucide-react';
+import { Search, Package, Truck, MapPin, Clock, DollarSign, Check, Printer, AlertTriangle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import useAuthStore from './store/authStore';
 import useLangStore from './store/langStore';
+import OrderReceipt from './Admin/OrderReceipt';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -19,7 +20,8 @@ const TrackOrder = () => {
   const [error, setError] = useState('');
   const [myOrders, setMyOrders] = useState([]);
   const [showMyOrders, setShowMyOrders] = useState(false);
-  const { t } = useLangStore();
+  const [printReceipt, setPrintReceipt] = useState(null);
+  const { t, lang } = useLangStore();
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -167,17 +169,24 @@ const TrackOrder = () => {
             <motion.div className="space-y-6" initial="hidden" animate="visible" variants={fadeUp}>
               {/* Order Header */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex-1">
                     <p className="text-sm text-zinc-500 mb-1">{t('trackOrder.orderNumber')}</p>
                     <p className="text-3xl font-bold text-white">#ORD-{order.id}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-zinc-500 mb-1">{t('trackOrder.orderStatus')}</p>
-                    <p className={`text-sm font-bold px-3 py-2 rounded-xl w-fit border ${statusColors[order.status || 'pending']}`}>
-                      {String(order.status || 'pending').toUpperCase()}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setPrintReceipt(order)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-colors"
+                  >
+                    <Printer className="w-4 h-4" />
+                    {t('trackOrder.print') || 'Print'}
+                  </button>
+                </div>
+                <div>
+                  <p className="text-sm text-zinc-500 mb-1">{t('trackOrder.orderStatus')}</p>
+                  <p className={`text-sm font-bold px-3 py-2 rounded-xl w-fit border ${statusColors[order.status || 'pending']}`}>
+                    {String(order.status || 'pending').toUpperCase()}
+                  </p>
                 </div>
               </div>
 
@@ -307,6 +316,14 @@ const TrackOrder = () => {
           )}
         </div>
       </div>
+
+      {/* Print Receipt Modal */}
+      {printReceipt && (
+        <OrderReceipt
+          order={printReceipt}
+          onClose={() => setPrintReceipt(null)}
+        />
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, Mail, Calendar, Save, X
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import useLangStore from '../store/langStore';
 
 const UsersManager = () => {
   const [users, setUsers] = useState([]);
@@ -20,6 +21,7 @@ const UsersManager = () => {
   const [saving, setSaving] = useState(false);
   const [deleteModal, setDeleteModal] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const { t } = useLangStore();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -33,7 +35,7 @@ const UsersManager = () => {
       setTotalPages(data.pages || 1);
       setTotal(data.total || 0);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load users');
+      setError(err.response?.data?.message || t('admin.failedLoadUsers'));
     } finally {
       setLoading(false);
     }
@@ -77,14 +79,14 @@ const UsersManager = () => {
       setDeleteModal(null);
       fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to deactivate user');
+      setError(err.response?.data?.message || t('admin.failedDeleteUser'));
     } finally {
       setDeleting(false);
     }
   };
 
   const formatDate = (d) => {
-    if (!d) return 'N/A';
+    if (!d) return t('admin.nA');
     return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
@@ -94,8 +96,8 @@ const UsersManager = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-white font-black text-xl flex items-center gap-2">
           <Users className="w-5 h-5 text-orange-400" />
-          Users Management
-          <span className="text-zinc-500 text-sm font-normal ml-2">({total} total)</span>
+          {t('admin.usersManagement')}
+          <span className="text-zinc-500 text-sm font-normal ml-2">({total} {t('admin.total')})</span>
         </h2>
       </div>
 
@@ -107,7 +109,7 @@ const UsersManager = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email..."
+            placeholder={t('admin.search')}
             className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-orange-500 transition-colors"
           />
         </form>
@@ -141,7 +143,7 @@ const UsersManager = () => {
       ) : users.length === 0 ? (
         <div className="text-center py-20">
           <Users className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-          <p className="text-zinc-500">No users found</p>
+          <p className="text-zinc-500">{t('admin.noUsers')}</p>
         </div>
       ) : (
         <>
@@ -151,12 +153,12 @@ const UsersManager = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800">
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">User</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Email</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.username')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.email')}</th>
                     <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Role</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Status</th>
-                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Joined</th>
-                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">Actions</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.status')}</th>
+                    <th className="text-left text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.joinDate')}</th>
+                    <th className="text-right text-zinc-500 text-xs font-bold uppercase tracking-wider px-5 py-3">{t('admin.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,7 +203,7 @@ const UsersManager = () => {
                         <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                           user.is_active !== false ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                         }`}>
-                          {user.is_active !== false ? 'Active' : 'Inactive'}
+                          {user.is_active !== false ? t('admin.activated') : t('admin.deactivated')}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -214,14 +216,14 @@ const UsersManager = () => {
                           <button
                             onClick={() => openEdit(user)}
                             className="p-2 bg-zinc-800 hover:bg-orange-500/20 rounded-lg text-zinc-400 hover:text-orange-400 transition-colors"
-                            title="Edit User"
+                            title={t('admin.edit')}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeleteModal(user)}
                             className="p-2 bg-zinc-800 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
-                            title="Deactivate User"
+                            title={t('admin.deleteUser')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -244,7 +246,7 @@ const UsersManager = () => {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-zinc-400 text-sm px-3">Page {page} of {totalPages}</span>
+              <span className="text-zinc-400 text-sm px-3">{t('admin.page')} {page} {t('admin.of')} {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
