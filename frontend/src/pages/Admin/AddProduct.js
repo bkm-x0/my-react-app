@@ -334,7 +334,7 @@ const AddProduct = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-bold mb-2 text-orange-400">
-                        PRICE ($) *
+                        PRICE (DZD) *
                       </label>
                       <input
                         type="number"
@@ -350,7 +350,7 @@ const AddProduct = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2 text-orange-400">
-                        COST PRICE ($)
+                        COST PRICE (DZD)
                       </label>
                       <input
                         type="number"
@@ -384,10 +384,10 @@ const AddProduct = () => {
                     <div>
                       <label className="block text-sm font-bold mb-2 text-green-400 flex items-center gap-1">
                         <TrendingUp className="w-4 h-4" />
-                        NET PROFIT ($)
+                        NET PROFIT (DZD)
                       </label>
                       <div className="w-full bg-zinc-700 border border-zinc-600 text-white text-sm px-4 py-3 rounded-xl font-bold">
-                        ${formData.profit || '0.00'}
+                        {formData.profit || '0.00'} DZD
                       </div>
                     </div>
                   </div>
@@ -681,23 +681,23 @@ const AddProduct = () => {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between text-zinc-300">
                           <span>Selling Price:</span>
-                          <span className="font-bold">${parseFloat(formData.price).toFixed(2)}</span>
+                          <span className="font-bold">{parseFloat(formData.price).toFixed(2)} DZD</span>
                         </div>
                         <div className="flex justify-between text-zinc-300">
                           <span>Cost Price:</span>
-                          <span className="font-bold text-red-400">-${parseFloat(formData.costPrice).toFixed(2)}</span>
+                          <span className="font-bold text-red-400">-{parseFloat(formData.costPrice).toFixed(2)} DZD</span>
                         </div>
                         <div className="flex justify-between text-zinc-300">
                           <span>Tax ({formData.taxRate}%):</span>
-                          <span className="font-bold text-red-400">-${(parseFloat(formData.price) * formData.taxRate / 100).toFixed(2)}</span>
+                          <span className="font-bold text-red-400">-{(parseFloat(formData.price) * formData.taxRate / 100).toFixed(2)} DZD</span>
                         </div>
                         <div className="flex justify-between text-zinc-300">
                           <span>Interest ({formData.interestRate}%):</span>
-                          <span className="font-bold text-red-400">-${(parseFloat(formData.costPrice) * formData.interestRate / 100).toFixed(2)}</span>
+                          <span className="font-bold text-red-400">-{(parseFloat(formData.costPrice) * formData.interestRate / 100).toFixed(2)} DZD</span>
                         </div>
                         <div className="flex justify-between border-t border-emerald-500/30 pt-2 mt-2">
                           <span className="font-bold text-emerald-400">NET PROFIT:</span>
-                          <span className="font-black text-emerald-400 text-lg">${formData.profit || '0.00'}</span>
+                          <span className="font-black text-emerald-400 text-lg">{formData.profit || '0.00'} DZD</span>
                         </div>
                       </div>
                     </div>
@@ -728,7 +728,7 @@ const AddProduct = () => {
                     {formData.name || 'Product Name'}
                   </div>
                   <div className="text-emerald-400 font-mono mb-2">
-                    {formData.price ? `$${formData.price}` : '$0'}
+                    {formData.price ? `${formData.price} DZD` : '0 DZD'}
                   </div>
                   <div className="text-sm text-zinc-400 mb-3">
                     {formData.category ? categories.find(c => c.value === formData.category)?.label : 'Category'}
@@ -739,11 +739,11 @@ const AddProduct = () => {
                     <div className="border-t border-zinc-700 pt-3 mt-3">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-zinc-400">Cost:</span>
-                        <span className="text-red-400">${parseFloat(formData.costPrice).toFixed(2)}</span>
+                        <span className="text-red-400">{parseFloat(formData.costPrice).toFixed(2)} DZD</span>
                       </div>
                       <div className="flex justify-between text-sm font-bold">
                         <span className="text-emerald-400">Net Profit:</span>
-                        <span className="text-emerald-400">${formData.profit || '0.00'}</span>
+                        <span className="text-emerald-400">{formData.profit || '0.00'} DZD</span>
                       </div>
                     </div>
                   )}

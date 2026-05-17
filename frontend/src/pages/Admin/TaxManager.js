@@ -168,49 +168,49 @@ const TaxManager = () => {
             {result.costPrice && (
               <div className="bg-zinc-800 rounded-xl p-4">
                 <p className="text-zinc-400 text-sm mb-1">COST PRICE</p>
-                <p className="text-white font-bold text-lg">${result.costPrice}</p>
+                <p className="text-white font-bold text-lg">{result.costPrice} DZD</p>
               </div>
             )}
             {result.sellingPrice && (
               <div className="bg-zinc-800 rounded-xl p-4">
                 <p className="text-zinc-400 text-sm mb-1">SELLING PRICE</p>
-                <p className="text-white font-bold text-lg">${result.sellingPrice}</p>
+                <p className="text-white font-bold text-lg">{result.sellingPrice} DZD</p>
               </div>
             )}
             {result.costTotal && (
               <div className="bg-zinc-800 rounded-xl p-4">
                 <p className="text-zinc-400 text-sm mb-1">TOTAL COST</p>
-                <p className="text-white font-bold text-lg">${result.costTotal}</p>
+                <p className="text-white font-bold text-lg">{result.costTotal} DZD</p>
               </div>
             )}
             {result.sellingTotal && (
               <div className="bg-zinc-800 rounded-xl p-4">
                 <p className="text-zinc-400 text-sm mb-1">TOTAL REVENUE</p>
-                <p className="text-white font-bold text-lg">${result.sellingTotal}</p>
+                <p className="text-white font-bold text-lg">{result.sellingTotal} DZD</p>
               </div>
             )}
             {result.profit !== undefined && (
               <div className="bg-zinc-800 rounded-xl p-4">
                 <p className="text-zinc-400 text-sm mb-1">GROSS PROFIT</p>
-                <p className="text-green-400 font-bold text-lg">${result.profit}</p>
+                <p className="text-green-400 font-bold text-lg">{result.profit} DZD</p>
               </div>
             )}
             {result.taxAmount && (
               <div className="bg-zinc-800 rounded-xl p-4 border border-red-500/20">
                 <p className="text-zinc-400 text-sm mb-1">TAX ({result.taxRate}%)</p>
-                <p className="text-red-400 font-bold text-lg">${result.taxAmount}</p>
+                <p className="text-red-400 font-bold text-lg">{result.taxAmount} DZD</p>
               </div>
             )}
             {result.interestAmount && (
               <div className="bg-zinc-800 rounded-xl p-4 border border-orange-500/20">
                 <p className="text-zinc-400 text-sm mb-1">INTEREST ({result.interestRate}%)</p>
-                <p className="text-orange-400 font-bold text-lg">${result.interestAmount}</p>
+                <p className="text-orange-400 font-bold text-lg">{result.interestAmount} DZD</p>
               </div>
             )}
             {result.netProfit !== undefined && (
               <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/50 lg:col-span-1 sm:col-span-2">
                 <p className="text-zinc-300 text-sm mb-1">NET PROFIT ✅</p>
-                <p className="text-emerald-400 font-black text-2xl">${result.netProfit}</p>
+                <p className="text-emerald-400 font-black text-2xl">{result.netProfit} DZD</p>
                 {result.netProfitMargin !== undefined && (
                   <p className="text-emerald-400/70 text-xs mt-1">{result.netProfitMargin}% MARGIN</p>
                 )}
@@ -440,19 +440,19 @@ const TaxManager = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <p className="text-zinc-400 text-sm mb-2">إجمالي الضرائب</p>
-                <p className="text-white font-black text-2xl">${summary.total_taxes}</p>
+                <p className="text-white font-black text-2xl">{summary.total_taxes} DZD</p>
               </div>
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <p className="text-zinc-400 text-sm mb-2">إجمالي الفائدة</p>
-                <p className="text-white font-black text-2xl">${summary.total_interests}</p>
+                <p className="text-white font-black text-2xl">{summary.total_interests} DZD</p>
               </div>
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <p className="text-zinc-400 text-sm mb-2">إجمالي الرسوم</p>
-                <p className="text-white font-black text-2xl">${summary.total_charges}</p>
+                <p className="text-white font-black text-2xl">{summary.total_charges} DZD</p>
               </div>
               <div className="bg-emerald-500/10 border border-emerald-500/50 rounded-2xl p-6">
                 <p className="text-zinc-400 text-sm mb-2">إجمالي الأرباح</p>
-                <p className="text-emerald-400 font-black text-2xl">${summary.total_profit}</p>
+                <p className="text-emerald-400 font-black text-2xl">{summary.total_profit} DZD</p>
               </div>
             </div>
           ) : null}
@@ -488,10 +488,10 @@ const TaxManager = () => {
                     {report.map((item, i) => (
                       <tr key={i} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                         <td className="px-4 py-3 text-white">{item.supplier_name || 'N/A'}</td>
-                        <td className="text-right px-4 py-3 text-white">${item.cost_price}</td>
+                        <td className="text-right px-4 py-3 text-white">{item.cost_price} DZD</td>
                         <td className="text-right px-4 py-3 text-white">{item.quantity}</td>
-                        <td className="text-right px-4 py-3 text-red-400">${item.tax_amount}</td>
-                        <td className="text-right px-4 py-3 text-orange-400">${item.interest_amount}</td>
+                        <td className="text-right px-4 py-3 text-red-400">{item.tax_amount} DZD</td>
+                        <td className="text-right px-4 py-3 text-orange-400">{item.interest_amount} DZD</td>
                         <td className="text-right px-4 py-3 text-zinc-400">{new Date(item.created_at).toLocaleDateString('ar-SA')}</td>
                       </tr>
                     ))}

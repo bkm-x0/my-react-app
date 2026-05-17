@@ -20,6 +20,7 @@ const CyberNavbar = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLangStore();
   const { currency, toggleCurrency } = useCurrencyStore();
+  const currencyLabel = lang === 'ar' ? 'دج' : 'DZD';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -224,7 +225,7 @@ const CyberNavbar = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-orange-500/40 rounded-lg transition-colors"
             >
               <span className="text-zinc-300 text-xs font-bold">
-                {currency === 'USD' ? '$ USD' : 'دج DZD'}
+                {currency === 'USD' ? '$ USD' : currencyLabel}
               </span>
             </motion.button>
 
@@ -346,7 +347,7 @@ const CyberNavbar = () => {
                 className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-zinc-300 hover:text-orange-400 hover:bg-zinc-800 transition-colors"
               >
                 
-                <span>{currency === 'USD' ? '  دج (DZD)' : '  $ (USD)'}</span>
+                  <span>{currency === 'USD' ? `  ${currencyLabel}` : '  USD'}</span>
               </button>
               <div className="pt-3 flex flex-col gap-2">
                 {isAuthenticated ? (

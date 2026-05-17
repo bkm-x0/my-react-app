@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import useLangStore from './langStore';
 
 // 1 USD ≈ 135 DZD (Algerian Dinar)
-const USD_TO_DZD = 135;
+const DZD_PER_USD = 135;
+
+const getDzdLabel = () => (useLangStore.getState().lang === 'ar' ? 'دج' : 'DZD');
 
 const useCurrencyStore = create(
   persist(
     (set, get) => ({
-      currency: 'USD', // 'USD' | 'DZD'
+      currency: 'DZD', // 'USD' | 'DZD'
 
       toggleCurrency: () =>
         set(state => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
@@ -15,22 +18,32 @@ const useCurrencyStore = create(
       formatPrice: (price) => {
         const { currency } = get();
         const num = Number(price);
-        if (!price && price !== 0) return currency === 'USD' ? '$0' : '0 دج';
+        const dzdLabel = getDzdLabel();
+        if (!price && price !== 0) return currency === 'USD' ? '$0' : `0 ${dzdLabel}`;
         if (currency === 'DZD') {
-          const dzdPrice = Math.round(num * USD_TO_DZD);
-          return dzdPrice.toLocaleString('ar-DZ') + ' دج';
+          return Math.round(num).toLocaleString('en-US') + ` ${dzdLabel}`;
         }
-        return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        return (Math.round((num / DZD_PER_USD) * 100) / 100).toLocaleString('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        }) + ' USD';
       },
 
       // Raw converted value (for thresholds/calculations)
       convert: (price) => {
         const { currency } = get();
         const num = Number(price);
-        return currency === 'DZD' ? Math.round(num * USD_TO_DZD) : num;
+        return currency === 'DZD' ? Math.round(num) : Math.round((num / DZD_PER_USD) * 100) / 100;
       },
     }),
-    { name: 'currency-storage' }
+    {
+      name: 'currency-storage',
+      version: 2,
+      migrate: (persistedState) => ({
+        ...persistedState,
+        currency: 'DZD'
+      })
+    }
   )
 );
 

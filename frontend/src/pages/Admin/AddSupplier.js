@@ -8,7 +8,7 @@ import {
 import { supplierAPI } from '../../services/api';
 import useLangStore from '../store/langStore';
 
-const currencies = ['USD', 'EUR', 'GBP', 'SAR', 'AED', 'EGP', 'KWD', 'QAR', 'BHD', 'OMR', 'JOD', 'IQD', 'TRY', 'CNY', 'JPY', 'INR'];
+const currencies = ['DZD', 'USD', 'EUR', 'GBP', 'SAR', 'AED', 'EGP', 'KWD', 'QAR', 'BHD', 'OMR', 'JOD', 'IQD', 'TRY', 'CNY', 'JPY', 'INR'];
 
 const AddSupplier = () => {
   const { id } = useParams();
@@ -32,7 +32,7 @@ const AddSupplier = () => {
     address: '',
     commercial_register: '',
     tax_number: '',
-    currency: 'USD',
+    currency: 'DZD',
     opening_balance: '',
   });
 
@@ -68,7 +68,7 @@ const AddSupplier = () => {
         address: s.address || '',
         commercial_register: s.commercial_register || '',
         tax_number: s.tax_number || '',
-        currency: s.currency || 'USD',
+        currency: s.currency || 'DZD',
         opening_balance: s.opening_balance || '',
       });
     } catch (err) {

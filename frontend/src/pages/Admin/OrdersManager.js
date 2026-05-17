@@ -33,7 +33,7 @@ const OrdersManager = () => {
   const [deleteModal, setDeleteModal] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [printReceipt, setPrintReceipt] = useState(null);
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -66,10 +66,16 @@ const OrdersManager = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (order) => {
     setDeleting(true);
     try {
-      await orderAPI.updateOrder(id, { status: 'cancelled' });
+      if (order?.status === 'cancelled') {
+        await orderAPI.deleteOrder(order.id);
+      } else if (order?.status === 'pending') {
+        await orderAPI.rejectOrder(order.id);
+      } else {
+        await orderAPI.updateStatus(order.id, 'cancelled');
+      }
       setDeleteModal(null);
       fetchOrders();
     } catch (err) {
@@ -90,7 +96,7 @@ const OrdersManager = () => {
 
   const formatPrice = (v) => {
     const num = parseFloat(v) || 0;
-    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' DZD';
   };
 
   const formatDate = (d) => {
@@ -213,7 +219,15 @@ const OrdersManager = () => {
                             >
                               <Printer className="w-4 h-4" />
                             </button>
-                            {order.status !== 'cancelled' && order.status !== 'completed' && (
+                            {order.status === 'cancelled' ? (
+                              <button
+                                onClick={() => setDeleteModal(order)}
+                                className="p-2 bg-zinc-800 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
+                                title={t('admin.deleteOrder')}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            ) : order.status !== 'completed' && (
                               <button
                                 onClick={() => setDeleteModal(order)}
                                 className="p-2 bg-zinc-800 hover:bg-red-500/20 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
@@ -356,9 +370,16 @@ const OrdersManager = () => {
               <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-white font-bold text-lg text-center mb-2">{t('admin.cancelOrder')}</h3>
+              <h3 className="text-white font-bold text-lg text-center mb-2">
+                {deleteModal.status === 'cancelled'
+                  ? (lang === 'ar' ? 'حذف الطلب الملغى' : 'Delete Cancelled Order')
+                  : (lang === 'ar' ? 'إلغاء الطلب' : 'Cancel Order')}
+              </h3>
               <p className="text-zinc-400 text-sm text-center mb-6">
-                {t('admin.areYouSure')} <span className="text-white font-bold">#{deleteModal.id}</span>?
+                {deleteModal.status === 'cancelled'
+                  ? (lang === 'ar' ? 'هل أنت متأكد من حذف هذا الطلب الملغى' : 'Are you sure you want to delete this cancelled order')
+                  : (lang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الطلب' : 'Are you sure you want to cancel this order')}{' '}
+                <span className="text-white font-bold">#{deleteModal.id}</span>?
               </p>
               <div className="flex gap-3">
                 <button
@@ -366,15 +387,15 @@ const OrdersManager = () => {
                   disabled={deleting}
                   className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-colors"
                 >
-                  {t('admin.keepOrder')}
+                  {lang === 'ar' ? 'تراجع' : 'Keep'}
                 </button>
                 <button
-                  onClick={() => handleDelete(deleteModal.id)}
+                  onClick={() => handleDelete(deleteModal)}
                   disabled={deleting}
                   className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
-                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                  {t('admin.cancelIt')}
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : (deleteModal.status === 'cancelled' ? <Trash2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />)}
+                  {deleteModal.status === 'cancelled' ? t('admin.deleteIt') : t('admin.cancelIt')}
                 </button>
               </div>
             </motion.div>

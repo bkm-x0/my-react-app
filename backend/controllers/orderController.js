@@ -167,17 +167,12 @@ const deleteOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Restore product stock
-    if (order.items) {
-      for (const item of order.items) {
-        await Product.update(item.product_id, { 
-          stock: Product.stock + item.quantity 
-        });
-      }
+    if (order.status !== 'cancelled') {
+      return res.status(400).json({ message: 'Only cancelled orders can be deleted' });
     }
 
     await Order.delete(req.params.id);
-    res.json({ message: 'Order removed' });
+    res.json({ message: 'Cancelled order deleted' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
