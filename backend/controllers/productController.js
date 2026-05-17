@@ -11,6 +11,7 @@ const getProducts = async (req, res) => {
   try {
     const {
       category,
+      subcategory,
       search,
       minPrice,
       maxPrice,
@@ -41,6 +42,10 @@ const getProducts = async (req, res) => {
       } else {
         options.categoryId = Number(category);
       }
+    }
+
+    if (subcategory) {
+      options.subcategory = String(subcategory).trim();
     }
 
     if (minPrice) options.minPrice = Number(minPrice);

@@ -121,6 +121,7 @@ class  Database {
           description TEXT NOT NULL,
           price DECIMAL(10, 2) NOT NULL,
           category_id INT,
+          subcategory VARCHAR(200) DEFAULT NULL,
           supplier_id INT DEFAULT NULL,
           stock INT NOT NULL DEFAULT 0,
           sku VARCHAR(50) UNIQUE NOT NULL,
@@ -187,6 +188,15 @@ class  Database {
           ADD INDEX idx_supplier (supplier_id)
         `);
         console.log('✅ Added supplier_id to products table');
+      } catch (e) {
+        // Column already exists - ignore
+      }
+
+      try {
+        await connection.execute(`
+          ALTER TABLE products ADD COLUMN subcategory VARCHAR(200) DEFAULT NULL
+        `);
+        console.log('✅ Added subcategory to products table');
       } catch (e) {
         // Column already exists - ignore
       }

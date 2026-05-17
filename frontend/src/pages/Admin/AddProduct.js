@@ -3,8 +3,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, X, Upload, Plus, Trash2, AlertCircle, Loader2, Building2, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { productAPI, supplierAPI } from '../../services/api';
 import useLangStore from '../store/langStore';
+import subcategoriesMap from '../../data/subcategoriesMap';
 
 const inputClasses = "w-full bg-zinc-800 border border-zinc-700 focus:border-orange-500 text-white text-sm px-4 py-3 rounded-xl outline-none transition-colors placeholder:text-zinc-600";
+
+const defaultCategories = [
+  { value: 'desktops', label: 'Gaming Desktops' },
+  { value: 'laptops', label: 'Laptops' },
+  { value: 'components', label: 'Components' },
+  { value: 'accessories', label: 'Accessories' },
+  { value: 'monitors', label: 'Monitors' },
+  { value: 'peripherals', label: 'Peripherals' },
+  { value: 'storage', label: 'Storage' },
+  { value: 'networking', label: 'Networking' },
+];
 
 // دالة حساب الربح
 const calculateProfit = (costPrice, sellingPrice, taxRate, interestRate) => {
@@ -26,12 +38,14 @@ const AddProduct = () => {
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [error, setError] = useState('');
   const [suppliers, setSuppliers] = useState([]);
+  const [categories, setCategories] = useState(defaultCategories);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     costPrice: '',
     category: 'desktops',
+    subcategory: '',
     stock: '',
     sku: '',
     manufacturer: '',
@@ -58,7 +72,23 @@ const AddProduct = () => {
         console.error('Error fetching suppliers:', err);
       }
     };
+    const fetchCategories = async () => {
+      try {
+        const { data } = await productAPI.getCategories();
+        const categoriesData = Array.isArray(data) ? data : data.categories || [];
+        if (categoriesData.length > 0) {
+          setCategories(categoriesData.map(category => ({
+            value: category.slug,
+            label: category.name
+          })));
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setCategories(defaultCategories);
+      }
+    };
     fetchSuppliers();
+    fetchCategories();
 
     if (!isEditMode) return;
     const fetchProduct = async () => {
@@ -72,6 +102,7 @@ const AddProduct = () => {
           price: data.price != null ? String(data.price) : '',
           costPrice: data.cost_price != null ? String(data.cost_price) : '',
           category: data.category_slug || data.category || data.category_name || 'desktops',
+          subcategory: data.subcategory || '',
           stock: data.stock != null ? String(data.stock) : '',
           sku: data.sku || '',
           manufacturer: data.manufacturer || '',
@@ -108,17 +139,6 @@ const AddProduct = () => {
   const updateSpecValue = (key, value) => setFormData(f => ({ ...f, specifications: { ...f.specifications, [key]: value } }));
   const removeSpec = (key) => setFormData(f => { const s = { ...f.specifications }; delete s[key]; return { ...f, specifications: s }; });
 
-  const categories = [
-    { value: 'desktops', label: 'Gaming Desktops' },
-    { value: 'laptops', label: 'Laptops' },
-    { value: 'components', label: 'Components' },
-    { value: 'accessories', label: 'Accessories' },
-    { value: 'monitors', label: 'Monitors' },
-    { value: 'peripherals', label: 'Peripherals' },
-    { value: 'storage', label: 'Storage' },
-    { value: 'networking', label: 'Networking' },
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -142,6 +162,7 @@ const AddProduct = () => {
         profit: formData.profit,
         stock: parseInt(formData.stock),
         category: formData.category,
+        subcategory: formData.subcategory || null,
         sku: formData.sku,
         isFeatured: formData.isFeatured,
         features: formData.features.filter(f => f.trim() !== ''),
@@ -200,6 +221,10 @@ const AddProduct = () => {
         newFormData.taxRate,
         newFormData.interestRate
       );
+    }
+
+    if (name === 'category') {
+      newFormData.subcategory = '';
     }
 
     setFormData(newFormData);
@@ -557,7 +582,7 @@ const AddProduct = () => {
               {/* Category & Status Card */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <h2 className="text-2xl font-bold mb-6 text-orange-400">
-                  CATEGORY & STATUS
+                  CATEGORY & CUSTOMIZATION
                 </h2>
 
                 <div className="space-y-4">
@@ -565,11 +590,36 @@ const AddProduct = () => {
                     <label className="block text-sm font-bold mb-2 text-orange-400">
                       CATEGORY *
                     </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {categories.map(category => {
+                        const isSelected = formData.category === category.value;
+
+                        return (
+                          <button
+                            key={category.value}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, category: category.value, subcategory: '' }))}
+                            className={`text-left p-4 rounded-2xl border transition-all duration-300 ${
+                              isSelected
+                                ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/10'
+                                : 'border-zinc-800 bg-zinc-800/60 hover:border-orange-500/30 hover:bg-zinc-800'
+                            }`}
+                          >
+                            <div className={`font-semibold text-sm ${isSelected ? 'text-orange-400' : 'text-white'}`}>
+                              {category.label}
+                            </div>
+                            <div className="text-xs text-zinc-400 mt-1 capitalize">
+                              {category.value}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                     <select
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      className={inputClasses}
+                      className="hidden"
                       required
                     >
                       {categories.map(category => (
@@ -579,6 +629,39 @@ const AddProduct = () => {
                       ))}
                     </select>
                   </div>
+
+                  {subcategoriesMap[formData.category]?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-bold mb-2 text-orange-400">
+                        SUBCATEGORY
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                        {subcategoriesMap[formData.category].map(sub => {
+                          const isSelected = formData.subcategory === sub.slug;
+
+                          return (
+                            <button
+                              key={sub.slug}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, subcategory: sub.slug }))}
+                              className={`text-left p-4 rounded-2xl border transition-all duration-300 ${
+                                isSelected
+                                  ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/10'
+                                  : 'border-zinc-800 bg-zinc-800/60 hover:border-orange-500/30 hover:bg-zinc-800'
+                              }`}
+                            >
+                              <div className={`font-semibold text-sm ${isSelected ? 'text-orange-400' : 'text-white'}`}>
+                                {sub.name}
+                              </div>
+                              <div className="text-xs text-zinc-400 mt-1 capitalize">
+                                {sub.slug}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-bold mb-2 text-orange-400">
@@ -733,6 +816,11 @@ const AddProduct = () => {
                   <div className="text-sm text-zinc-400 mb-3">
                     {formData.category ? categories.find(c => c.value === formData.category)?.label : 'Category'}
                   </div>
+                  {formData.subcategory && (
+                    <div className="text-xs text-orange-400 mb-3 uppercase tracking-wider">
+                      {formData.subcategory.replace(/-/g, ' ')}
+                    </div>
+                  )}
 
                   {/* Profit Summary */}
                   {formData.costPrice && (

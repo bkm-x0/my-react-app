@@ -8,6 +8,7 @@ import {
 import ProductCard from '../components/ProductCard';
 import { productAPI } from '../services/api';
 import useLangStore from './store/langStore';
+import subcategoriesMap from '../data/subcategoriesMap';
 
 const Products = () => {
   const location = useLocation();
@@ -35,15 +36,21 @@ const Products = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('popular');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
   const [priceRange, setPriceRange] = useState(0);
   const [minRating, setMinRating] = useState(0);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({ category: true, price: true, rating: true });
+  const [expandedSections, setExpandedSections] = useState({ category: true, subcategory: true, price: true, rating: true });
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const getCategoryValue = useCallback((category) => {
+    if (!category) return 'all';
+    return category.slug || category.id?.toString() || 'all';
+  }, []);
 
   // Fetch categories
   useEffect(() => {
@@ -65,6 +72,7 @@ const Products = () => {
     try {
       const params = { limit: 50, sort: sortBy === 'newest' ? 'newest' : sortBy === 'price-asc' ? 'price_asc' : sortBy === 'price-desc' ? 'price_desc' : 'newest' };
       if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory;
+      if (selectedSubcategory && selectedSubcategory !== 'all') params.subcategory = selectedSubcategory;
       if (searchQuery) params.search = searchQuery;
 
       const range = PRICE_RANGES[priceRange];
@@ -81,7 +89,7 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  }, [sortBy, selectedCategory, searchQuery, priceRange, minRating]);
+  }, [sortBy, selectedCategory, selectedSubcategory, searchQuery, priceRange, minRating]);
 
   useEffect(() => {
     fetchProducts();
@@ -91,8 +99,10 @@ const Products = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const cat = params.get('category');
+    const subcat = params.get('subcategory');
     const search = params.get('search');
     if (cat && cat !== selectedCategory) setSelectedCategory(cat);
+    if (subcat && subcat !== selectedSubcategory) setSelectedSubcategory(subcat);
     if (search && search !== searchQuery) setSearchQuery(search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
@@ -115,15 +125,40 @@ const Products = () => {
 
   const clearFilters = () => {
     setSelectedCategory('all');
+    setSelectedSubcategory('all');
     setPriceRange(0);
     setMinRating(0);
     setSearchQuery('');
     navigate('/products');
   };
 
-  const hasFilters = selectedCategory !== 'all' || priceRange > 0 || minRating > 0 || searchQuery;
-
   const allCategories = [{ id: 'all', name: t('products.allCategories'), slug: 'all' }, ...categories];
+  const selectedCategoryObject = allCategories.find(c => getCategoryValue(c) === selectedCategory || c.id?.toString() === selectedCategory);
+  const selectedCategorySlug = selectedCategoryObject?.slug || '';
+  const availableSubcategories = selectedCategorySlug ? (subcategoriesMap[selectedCategorySlug] || []) : [];
+
+  const hasFilters = selectedCategory !== 'all' || selectedSubcategory !== 'all' || priceRange > 0 || minRating > 0 || searchQuery;
+
+  const applyCategory = (categoryValue) => {
+    setSelectedCategory(categoryValue);
+    setSelectedSubcategory('all');
+  };
+
+  const applySubcategory = (subcategorySlug) => {
+    setSelectedSubcategory(subcategorySlug);
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory !== 'all') params.set('category', selectedCategory);
+    if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory);
+    if (searchQuery) params.set('search', searchQuery);
+
+    const nextSearch = params.toString();
+    if (nextSearch !== location.search.replace(/^\?/, '')) {
+      navigate({ pathname: '/products', search: nextSearch ? `?${nextSearch}` : '' }, { replace: true });
+    }
+  }, [selectedCategory, selectedSubcategory, searchQuery, navigate, location.search]);
 
   const SidebarContent = () => (
     <div className="space-y-1">
@@ -156,9 +191,9 @@ const Products = () => {
                 {allCategories.map(cat => (
                   <button
                     key={cat.id || cat.slug}
-                    onClick={() => setSelectedCategory(cat.slug || cat.id?.toString() || 'all')}
+                    onClick={() => applyCategory(cat.slug || cat.id?.toString() || 'all')}
                     className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-                      selectedCategory === (cat.slug || cat.id?.toString())
+                      selectedCategory === getCategoryValue(cat) || selectedCategory === cat.id?.toString()
                         ? 'bg-orange-500 text-black font-bold'
                         : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
                     }`}
@@ -166,6 +201,54 @@ const Products = () => {
                     {cat.name}
                   </button>
                 ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Subcategories */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => toggleSection('subcategory')}
+          className="w-full flex items-center justify-between p-4 text-white font-bold text-sm"
+        >
+          Subcategories {expandedSections.subcategory ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+        </button>
+        <AnimatePresence>
+          {expandedSections.subcategory && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 space-y-1">
+                <button
+                  onClick={() => applySubcategory('all')}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                    selectedSubcategory === 'all' ? 'bg-orange-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  All Subcategories
+                </button>
+                {availableSubcategories.length > 0 ? (
+                  availableSubcategories.map(sub => (
+                    <button
+                      key={sub.slug}
+                      onClick={() => applySubcategory(sub.slug)}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                        selectedSubcategory === sub.slug ? 'bg-orange-500 text-black font-bold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                      }`}
+                    >
+                      {sub.name}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-xs text-zinc-500">
+                    Select a category to view subcategories.
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -324,8 +407,14 @@ const Products = () => {
             >
               {selectedCategory !== 'all' && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-xl">
-                  {allCategories.find(c => (c.slug || c.id?.toString()) === selectedCategory)?.name || selectedCategory}
+                  {allCategories.find(c => getCategoryValue(c) === selectedCategory || c.id?.toString() === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => setSelectedCategory('all')}><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {selectedSubcategory !== 'all' && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-xl">
+                  {availableSubcategories.find(s => s.slug === selectedSubcategory)?.name || selectedSubcategory}
+                  <button onClick={() => setSelectedSubcategory('all')}><X className="w-3 h-3" /></button>
                 </span>
               )}
               {priceRange > 0 && (

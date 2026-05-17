@@ -12,14 +12,15 @@ class Product {
     const specifications = productData.specifications ? JSON.stringify(productData.specifications) : JSON.stringify({});
 
     const [result] = await pool.execute(`
-      INSERT INTO products (name, slug, description, price, category_id, supplier_id, stock, sku, features, specifications, image, rating, is_featured, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (name, slug, description, price, category_id, subcategory, supplier_id, stock, sku, features, specifications, image, rating, is_featured, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       productData.name,
       productData.slug || productData.name.toLowerCase().replace(/\s+/g, '-'),
       description,
       productData.price,
       productData.categoryId || 1,
+      productData.subcategory || null,
       productData.supplierId || null,
       productData.stock || 0,
       productData.sku,
@@ -115,6 +116,7 @@ class Product {
   static async findAll(options = {}) {
     const { 
       categoryId, 
+      subcategory,
       isFeatured, 
       isActive = true,
       minPrice, 
@@ -146,6 +148,11 @@ class Product {
     if (categoryId) {
       sql += ' AND p.category_id = ?';
       params.push(categoryId);
+    }
+
+    if (subcategory) {
+      sql += ' AND p.subcategory = ?';
+      params.push(subcategory);
     }
     
     if (isFeatured !== undefined) {
@@ -250,6 +257,11 @@ class Product {
     if (updateData.categoryId !== undefined) {
       fields.push('category_id = ?');
       values.push(updateData.categoryId);
+    }
+
+    if (updateData.subcategory !== undefined) {
+      fields.push('subcategory = ?');
+      values.push(updateData.subcategory || null);
     }
     
     if (updateData.stock !== undefined) {
